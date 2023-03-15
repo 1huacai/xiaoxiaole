@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 74a5978ea9db45948b5706f5feabb71d
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - FZCuYuan-M03S
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: font/fzcyj.ab
+  assetBundleVariant: 

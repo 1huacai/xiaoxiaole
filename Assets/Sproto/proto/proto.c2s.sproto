@@ -1,0 +1,201 @@
+.package {
+    type            0 : integer
+    session         1 : integer
+    ud              2 : string
+}
+
+ping 1 {
+    request {}
+    response {
+        server_time 0 : integer
+    }
+}
+
+.key_value {
+    id                  0 : integer
+    value               1 : integer
+}
+
+
+#------------------ login ------------------
+
+
+# 登陆游戏
+game_auth 16 {
+    request {
+        uid                 0 : string
+        version             1 : string
+    }
+    response {
+        e                   0 : integer
+        rid                 1 : string
+        server_time         2 : integer
+    }
+}
+
+# 登陆游戏
+login 17 {
+    request {
+        rid                 0 : string
+    }
+    response {
+        e                   0 : integer
+    }
+}
+
+
+
+
+
+
+
+
+# 匹配
+match 18 {
+    request {}
+    response {
+        e                   0 : integer
+    }
+}
+
+# 匹配成功
+match_success 19 {
+    request {
+        game_id             0 : string
+        rival_rid           1 : string
+        rival_rname         2 : string
+    }
+}
+
+# 匹配超时
+match_timeout 20 {
+    request {}
+}
+
+# 匹配异常
+match_wrong 21 {
+    request {
+        type                0 : integer
+    }
+}
+
+
+
+
+
+# 方块信息
+.block_info {
+    row                     0 : integer
+    col                     1 : integer
+    type                    2 : integer
+}
+
+# 生成初始方块数据
+init_data 25 {
+    request {
+        matrix              0 : *block_info
+    }
+    response {
+        e                   0 : integer
+    }
+}
+
+# 游戏准备
+game_ready 26 {
+    request {
+        init_matrix         0 : *block_info
+    }
+}
+
+# 游戏开始
+game_start 27 {
+    request {
+        start_time          0 : integer
+    }
+}
+
+# 交换方块操作
+swap_block 28 {
+    request {
+        block1              0 : block_info
+        block2              1 : block_info
+    }
+    response {
+        e                   0 : integer
+    }
+}
+
+# 同步交换方块
+sync_swap_block 29 {
+    request {
+        block1              0 : block_info
+        block2              1 : block_info
+    }
+}
+
+# 上升一行操作
+up_row 30 {
+    request {}
+    response {
+        e                   0 : integer
+    }
+}
+
+# 同步上升一行操作
+sync_up_row 31 {
+    request {}
+}
+
+# 新的一行
+new_row 32 {
+    request {
+        row_data            0 : *block_info
+        cur_row_cnt         1 : integer
+        total_row_cnt       2 : integer
+    }
+    response {
+        e                   0 : integer
+    }
+}
+
+# 同步新的一行
+sync_new_row 33 {
+    request {
+        row_data            0 : *block_info
+        cur_row_cnt         1 : integer
+        total_row_cnt       2 : integer
+    }
+}
+
+# 得分
+score 34 {
+    request {
+        score               0 : integer
+        combo_cnt           1 : integer
+    }
+    response {
+        e                   0 : integer
+    }
+}
+
+# 同步得分
+sync_score 35 {
+    request {
+        id                  0 : string
+        score               1 : integer
+        combo_cnt           2 : integer
+    }
+}
+
+touch_top 40 {
+    request {}
+    response {
+        e                   0 : integer
+    }
+}
+
+game_over 50 {
+    request {
+        winner              1 : string
+    }
+}
