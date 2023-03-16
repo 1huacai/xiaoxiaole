@@ -15,8 +15,8 @@ public class PressureBlock : MonoBehaviour
     public PressureBlockType Type;
     [SerializeField]
     private PressureBlockType _type = PressureBlockType.D1;
-    public int Row;
-    public int Column;
+    public int Row;//y
+    public int Column;//x
     public int xNum;
 
     [SerializeField]

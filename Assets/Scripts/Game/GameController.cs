@@ -238,9 +238,9 @@ public class GameController : MonoBehaviour
         SetPressureInfo(count);
         for (int i = 0; i < _pressureInfo.Count; i++)
         {
-            var block = PressureBlock.CreateBlockObject(Config.rows, 1, (int)PressureBlockType.D1, _blockBoardObj.transform);
-            block.transform.localPosition = new Vector3(Config.blockXPosShit + block.Column * Config.blockWidth, -(Config.initRows - 1- block.Row) * Config.blockHeight, 0);
-            block.GetComponent<RectTransform>().sizeDelta =new Vector2( _pressureInfo[i].Key * Config.blockWidth, _pressureInfo[i].Value * Config.blockHeight);
+            var block = PressureBlock.CreateBlockObject(Config.rows, 0, (int)PressureBlockType.D1, _blockBoardObj.transform);
+            block.GetComponent<RectTransform>().sizeDelta = new Vector2(_pressureInfo[i].Key * Config.blockWidth, _pressureInfo[i].Value * Config.blockHeight - 1);            
+            block.transform.localPosition = new Vector3(-(block.GetComponent<RectTransform>().rect.width / 2) + block.Column * Config.blockWidth, -(Config.initRows - block.Row) * Config.blockHeight, 0);
             //block.BlockOperationEvent += OnBlockOperation;
             block.gameObject.name = "1111";
             block.xNum = _pressureInfo[i].Key;
@@ -547,21 +547,21 @@ public class GameController : MonoBehaviour
                     current.IsTagged = true;
                 }
             }
-            for (int i = 0; i < _PressureMatrixList.Count; i++)
-            {
-                if (_PressureMatrixList[i].Row == upperMostRowIndex)
-                {
-                    for (int j = 0; j < _PressureMatrixList[i].xNum; j++)
-                    {
-                        if (_PressureMatrixList[i].Column + j == block.Column)
-                        {
-                            hasMatchedBlocks = true;
-                            _PressureMatrixList[i].IsTagged = true;
-                            break;
-                        }
-                    }
-                }
-            }
+            //for (int i = 0; i < _PressureMatrixList.Count; i++)
+            //{
+            //    if (_PressureMatrixList[i].Row == upperMostRowIndex)
+            //    {
+            //        for (int j = 0; j < _PressureMatrixList[i].xNum; j++)
+            //        {
+            //            if (_PressureMatrixList[i].Column + j == block.Column)
+            //            {
+            //                hasMatchedBlocks = true;
+            //                _PressureMatrixList[i].IsTagged = true;
+            //                break;
+            //            }
+            //        }
+            //    }
+            //}
         }
         return hasMatchedBlocks;
     }

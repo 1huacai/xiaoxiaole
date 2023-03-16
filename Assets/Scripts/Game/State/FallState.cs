@@ -106,6 +106,71 @@ class FallState : ControllerStateBase
         return ret;
     }
 
+    void DoMovePressureBlock(PressureBlock pressureBlock)
+    {
+        float moveDuration = 0.1f;
+        int fallStep = 0;
+        int maxX = 0;
+        foreach (var item in _controller._blockMatrix)
+        {
+            if (item != null)
+                if (pressureBlock.Column <= item.Column && item.Column <= pressureBlock.Column + pressureBlock.xNum - 1)
+                    if (_controller._blockMatrix[item.Row + 1, item.Column] == null)
+                    {
+                        Block curItem = item;
+                        bool isChekOk = true;
+                        for (int i = 0; i < pressureBlock.xNum; i++)
+                        {
+                            if (curItem.Row + 1 == pressureBlock.Row)
+                            {
+                                isChekOk = false;
+                                maxX = 0;
+                                Debug.LogError("pressureBlock111");
+                                break;
+                            }
+                            Debug.LogError("index++" + (curItem.Column + i)   +" __"+ curItem.Column + "___" + i);
+                            if (curItem.Column + i < pressureBlock.Column + pressureBlock.xNum)
+                                if (_controller._blockMatrix[curItem.Row + 1, curItem.Column + i] != null)
+                                {
+                                    curItem = _controller._blockMatrix[curItem.Row + 1, curItem.Column + i];
+                                    i = 0;
+                                    isChekOk = false;
+                                    Debug.LogError("pressureBlock222");
+                                    continue;
+                                }
+                        }
+                        if (isChekOk)
+                        {
+                            maxX = curItem.Row;
+                            Debug.LogError("pressureBlock333____" + maxX);
+                        }
+                        break;
+                    }
+        }
+        
+        fallStep = maxX <= 0 ? 0 :  pressureBlock.Row - maxX <= 0 ? 0 : pressureBlock.Row - maxX;//pressureBlock.Row - _controller._curMaxRowCnt <= 1 ? 0 :
+        Debug.LogError("______" + fallStep);
+        if (fallStep == 0)
+        {
+            Debug.LogError("FallBlocks");
+            return;
+        }
+        PressureBlock block = pressureBlock;
+
+        block.Row -= fallStep;
+        float fallDis = block.transform.localPosition.y - fallStep * Config.blockHeight;
+        block.transform.DOLocalMoveY(fallDis, moveDuration).OnComplete(() =>
+        {
+            _controller._isPressureFallingDone = true;
+        });
+        foreach (var item in _controller._PressureMatrixList)
+        {
+            if (item.Row > _controller._curMaxRowCnt)
+                _controller._curMaxRowCnt = item.Row;
+        }
+        _controller.CheckAlarm();
+    }
+
     public override void Enter()
     {
         base.Enter();
@@ -129,7 +194,8 @@ class FallState : ControllerStateBase
         if (_controller._PressureMatrixList.Count > 0)
         {
             for (int i = 0; i < _controller._PressureMatrixList.Count; i++)
-                hasPBlockFalled = FallBlocks(_controller._PressureMatrixList[i]) || hasPBlockFalled;
+                DoMovePressureBlock(_controller._PressureMatrixList[i]);
+                //hasPBlockFalled = FallBlocks(_controller._PressureMatrixList[i]) || hasPBlockFalled;
         }
 
         {
@@ -177,7 +243,6 @@ class FallState : ControllerStateBase
         _time += Time.deltaTime;
         if (_controller._isFallingDone)
         {
-            Debug.LogError("DestroyBlankRow");
             _controller.DestroyBlankRow();
 
         }
@@ -185,14 +250,13 @@ class FallState : ControllerStateBase
         { 
             //_controller._isPressureFallingDone = false;
             _controller.DestroyPBlockRow();
-            bool hasFalled = false;
             if (_controller._PressureMatrixList.Count > 0)
             {
-                for (int i = 0; i < _controller._PressureMatrixList.Count; i++)
-                    hasFalled = FallBlocks(_controller._PressureMatrixList[i]) || hasFalled;
+                //for (int i = 0; i < _controller._PressureMatrixList.Count; i++)
+                  //  DoMovePressureBlock(_controller._PressureMatrixList[i]);
             }
         }
-        if (_controller._isFallingDone || _controller._isPressureFallingDone)
+        if (_controller._isFallingDone)// || _controller._isPressureFallingDone
         {
             bool hasMatchedGames = _controller.CalculateSwappedBlocks();
             if (hasMatchedGames)
