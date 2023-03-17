@@ -214,10 +214,10 @@ public class Block : MonoBehaviour
     // 判断两个方块是否相邻
     public bool IsAdjacent(Block other)
     {
-        return other == null ? false : IsLocked || other.IsLocked ? false :
-            Row != other.Row ? 
-            true : System.Math.Abs(Column - other.Column) > 1 ?
-            false : true;
+        return other == null ? false : IsLocked || other.IsLocked ? false : ((Row == other.Row && System.Math.Abs(Column - other.Column) == 1) || (Column == other.Column && System.Math.Abs(Row - other.Row) == 1));
+        //Row != other.Row ? 
+        //true : System.Math.Abs(Column - other.Column) > 1 ?
+        //false : true;
     }
 
     // 判断两个方块类型是否相同
