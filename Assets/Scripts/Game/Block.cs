@@ -287,6 +287,7 @@ public class Block : MonoBehaviour
         block.Row = row;
         block.Column = col;
         block._image.sprite = Config._sprites[(int)block._type];
+        block.gameObject.name = row + "+ " + col;
 
         return block;
     }

@@ -24,8 +24,8 @@ public class GameController : MonoBehaviour
     public static bool _gameOver = false;
 
     public Block[,] _blockMatrix; // 方块行列矩阵
-    public PressureBlock[,] _PressureMatrix; // 方块行列矩阵
     public List<PressureBlock> _PressureMatrixList = new List<PressureBlock>();
+    public List<Dictionary<int, Vector3>> _rowY_pos = new List<Dictionary<int, Vector3>>();
 
     public bool _multiPlayer = false;
     public bool isExMode = false;
@@ -144,7 +144,7 @@ public class GameController : MonoBehaviour
     {
         for (int i = 0; i < _PressureMatrixList.Count; i++)
         {
-            if (_PressureMatrixList[i].Row >= Config.alarmRow)
+            if (_PressureMatrixList[i].Row_y >= Config.alarmRow)
             {
                 _alarmSet = true;
             }
@@ -173,8 +173,9 @@ public class GameController : MonoBehaviour
             {
                 for (int row = 0; row < _curRowCnt; row++)
                 {
-                    if (_blockMatrix[row, col].IsTrembled)
-                        _blockMatrix[row, col].TrembleChange(false);
+                    var item = _blockMatrix[row, col];
+                    if (item.IsTrembled)
+                        item.TrembleChange(false);
                 }
             }
         }
@@ -219,7 +220,6 @@ public class GameController : MonoBehaviour
     public void InitBlocks()
     {
         _blockMatrix = new Block[Config.matrixRows, Config.columns];
-        _PressureMatrix = new PressureBlock[10, 10];
         foreach (SprotoType.block_info data in _initMatrix)
         {
             int row = (int)data.row;
@@ -238,27 +238,13 @@ public class GameController : MonoBehaviour
         SetPressureInfo(count);
         for (int i = 0; i < _pressureInfo.Count; i++)
         {
-            var block = PressureBlock.CreateBlockObject(Config.rows, 0, (int)PressureBlockType.D1, _blockBoardObj.transform);
-            block.GetComponent<RectTransform>().sizeDelta = new Vector2(_pressureInfo[i].Key * Config.blockWidth, _pressureInfo[i].Value * Config.blockHeight - 1);            
-            block.transform.localPosition = new Vector3(-(block.GetComponent<RectTransform>().rect.width / 2) + block.Column * Config.blockWidth, -(Config.initRows - block.Row) * Config.blockHeight, 0);
+            var block = PressureBlock.CreateBlockObject(Config.rows - 1, 0, (int)PressureBlockType.D1, _blockBoardObj.transform);
+            block.GetComponent<RectTransform>().sizeDelta = new Vector2(_pressureInfo[i].Key * Config.blockWidth, _pressureInfo[i].Value * Config.blockHeight - 1);
+            block.transform.localPosition = new Vector3((Config.blockXPosShit - Config.blockWidth / 2 + block.xNum * Config.blockWidth), -(Config.initRows - block.Row_y - 1) * Config.blockHeight, 0);//block.GetComponent<RectTransform>().rect.width / 2  // + block.Column_x * Config.blockWidth
             //block.BlockOperationEvent += OnBlockOperation;
             block.gameObject.name = "1111";
             block.xNum = _pressureInfo[i].Key;
             int _row = 0;
-            for (int j = 0; j < _curRowCnt; j++)
-            {
-                for (int y = 0; y < Config.columns; y++)
-                {
-                    if (_blockMatrix[j, y] != null && j > _row)
-                        _row = j;
-                }
-            }
-            foreach (var item in _PressureMatrix)
-            {
-                if (item != null && item.Row > _row)
-                    _row += 1;
-            }
-            _PressureMatrix[_row, 1] = block;
             _PressureMatrixList.Add(block);
         }
     }
@@ -392,6 +378,11 @@ public class GameController : MonoBehaviour
             }
             opRow -= 1;
         }
+        for (int i = 0; i < _PressureMatrixList.Count; i++)
+        {
+            var item = _PressureMatrixList[i];
+            item.Row_y++;
+        }
     }
 
     public void AddNewRow(List<BlockData> newRow)
@@ -435,7 +426,6 @@ public class GameController : MonoBehaviour
         }
         _curRowCnt += 1;
         _totalRowCnt += 1;
-        _curMaxRowCnt += 1;
 
         CheckAlarm();
 
@@ -443,10 +433,15 @@ public class GameController : MonoBehaviour
         {
             ChangeToState(GameBoardState.Blank);
         }
-
+        foreach (var item in _blockMatrix)
+        {
+            if (item != null)
+                item.gameObject.name = item.Row + "+ " + item.Column;
+        }
+        Debug.LogError("+++++++++++++++++++++++++++++++++++" + _curRowCnt);
         _addNewRow = false;
         _delta = 0;
-    }    
+    }
 
     public bool CalculateSwappedBlocks()
     {
@@ -471,8 +466,8 @@ public class GameController : MonoBehaviour
             // Left
             for (int col = block.Column; col >= minColumnIndex; col--)
             {
-                var leftBlock = _blockMatrix[block.Row, col];
-                var currentBlock = _blockMatrix[block.Row, leftMostColumnIndex];
+                var leftBlock = _controller._blockMatrix[block.Row, col];
+                var currentBlock = _controller._blockMatrix[block.Row, leftMostColumnIndex];
                 if (leftBlock.IsMatched(currentBlock))
                 {
                     leftMostColumnIndex = col;
@@ -485,8 +480,8 @@ public class GameController : MonoBehaviour
             // Right
             for (int col = block.Column; col < maxColumnIndex; col++)
             {
-                var rightBlock = _blockMatrix[block.Row, col];
-                var currentBlock = _blockMatrix[block.Row, rightMostColumnIndex];
+                var rightBlock = _controller._blockMatrix[block.Row, col];
+                var currentBlock = _controller._blockMatrix[block.Row, rightMostColumnIndex];
                 if (rightBlock.IsMatched(currentBlock))
                 {
                     rightMostColumnIndex = col;
@@ -503,8 +498,8 @@ public class GameController : MonoBehaviour
             // Up
             for (int row = block.Row; row >= minRowIndex; row--)
             {
-                var upperBlock = _blockMatrix[row, block.Column];
-                var currentBlock = _blockMatrix[upperMostRowIndex, block.Column];
+                var upperBlock = _controller._blockMatrix[row, block.Column];
+                var currentBlock = _controller._blockMatrix[upperMostRowIndex, block.Column];
                 if (upperBlock.IsMatched(currentBlock))
                 {
                     upperMostRowIndex = row;
@@ -517,8 +512,8 @@ public class GameController : MonoBehaviour
             // Low
             for (int row = block.Row; row < maxRowIndex; row++)
             {
-                var lowerBlock = _blockMatrix[row, block.Column];
-                var currentBlock = _blockMatrix[lowestRowIndex, block.Column];
+                var lowerBlock = _controller._blockMatrix[row, block.Column];
+                var currentBlock = _controller._blockMatrix[lowestRowIndex, block.Column];
                 if (lowerBlock.IsMatched(currentBlock))
                 {
                     lowestRowIndex = row;
@@ -534,8 +529,15 @@ public class GameController : MonoBehaviour
                 hasMatchedBlocks = true;
                 for (int i = leftMostColumnIndex; i <= rightMostColumnIndex; i++)
                 {
-                    var current = _blockMatrix[block.Row, i];
+                    var current = _controller._blockMatrix[block.Row, i];
                     current.IsTagged = true;
+
+                    for (int j = 0; j < _PressureMatrixList.Count; j++)
+                    {
+                        var item = current;
+                        if (item.Row + 1 == _PressureMatrixList[j].Row_y && _PressureMatrixList[j].Column_x <= item.Column && item.Column <= _PressureMatrixList[j].Column_x + _PressureMatrixList[j].comboNum)
+                            _PressureMatrixList[j].IsTagged = true;
+                    }
                 }
             }
             if (lowestRowIndex - upperMostRowIndex >= 2)
@@ -543,36 +545,28 @@ public class GameController : MonoBehaviour
                 hasMatchedBlocks = true;
                 for (int i = upperMostRowIndex; i <= lowestRowIndex; i++)
                 {
-                    var current = _blockMatrix[i, block.Column];
+                    var current = _controller._blockMatrix[i, block.Column];
                     current.IsTagged = true;
+
+                    for (int j = 0; j < _PressureMatrixList.Count; j++)
+                    {
+                        if (current.Row + 1 == _PressureMatrixList[j].Row_y && _PressureMatrixList[j].Column_x <= current.Column && current.Column <= _PressureMatrixList[j].Column_x + _PressureMatrixList[j].comboNum)
+                            _PressureMatrixList[j].IsTagged = true;
+                    }
                 }
             }
-            //for (int i = 0; i < _PressureMatrixList.Count; i++)
-            //{
-            //    if (_PressureMatrixList[i].Row == upperMostRowIndex)
-            //    {
-            //        for (int j = 0; j < _PressureMatrixList[i].xNum; j++)
-            //        {
-            //            if (_PressureMatrixList[i].Column + j == block.Column)
-            //            {
-            //                hasMatchedBlocks = true;
-            //                _PressureMatrixList[i].IsTagged = true;
-            //                break;
-            //            }
-            //        }
-            //    }
-            //}
         }
         return hasMatchedBlocks;
     }
 
     public void DestroyBlock(int row, int column)
     {
-        if (_blockMatrix[row, column] != null)
+        var item = _controller._blockMatrix[row, column];
+        if (item != null)
         {
-            _blockMatrix[row, column].BlockOperationEvent -= OnBlockOperation;
-            _blockMatrix[row, column].DoDestroy();
-            _blockMatrix[row, column] = null;
+            item.BlockOperationEvent -= OnBlockOperation;
+            item.DoDestroy();
+            item = null;
         }
     }
 
@@ -582,7 +576,8 @@ public class GameController : MonoBehaviour
         {
             for (int col = 0; col < Config.columns; col++)
             {
-                if (_blockMatrix[row, col].Type != BlockType.None)
+                var item = _controller._blockMatrix[row, col];
+                if (item != null  && _controller._blockMatrix[row, col].Type != BlockType.None)
                 {
                     return;
                 }
@@ -614,4 +609,16 @@ public class GameController : MonoBehaviour
             _states[_curGameBoardState].OnBlockOperation(row, column, operation);
         }
     }
+
+    public Block GetBlockByX_Y(int row, int col)
+    {
+        foreach (var item in _blockMatrix)
+        {
+            if (item != null)
+                if (item.Row == row && item.Column == col)
+                    return item;
+        }
+        return null;
+    }
+
 }

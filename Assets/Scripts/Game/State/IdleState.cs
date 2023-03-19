@@ -33,8 +33,9 @@ class IdleState : ControllerStateBase
             var selectedBlock = _controller._blockMatrix[row, column];
             if (selectedBlock.Type != BlockType.None)
             {
+                Debug.LogError("first" + row + "+" + column);
                 _controller._firstSelected = selectedBlock;
-                _controller.ChangeToState(GameBoardState.FirstSelection);
+                _controller.ChangeToState(GameBoardState.FirstSelection);               
             }
         }
     }

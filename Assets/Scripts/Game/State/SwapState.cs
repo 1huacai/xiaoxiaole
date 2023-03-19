@@ -45,7 +45,6 @@ class SwapState : ControllerStateBase
         mySequence.Join(second.transform.DOLocalMove(first.transform.localPosition, moveDuration));
         mySequence.AppendCallback(() =>
         {
-            _controller._isSwappingDone = true;
             _controller._blockMatrix[first.Row, first.Column] = second;
             _controller._blockMatrix[second.Row, second.Column] = first;
             var row = first.Row;
@@ -54,6 +53,7 @@ class SwapState : ControllerStateBase
             first.Column = second.Column;
             second.Row = row;
             second.Column = column;
+            _controller._isSwappingDone = true;
 
             _controller.CheckAlarm();
         });

@@ -36,6 +36,7 @@ class FirstSelectionState : ControllerStateBase
                 {
                     if (selectedBlock != null && selectedBlock.Type != BlockType.None)
                     {
+                        Debug.LogError("selected" + row + "+" + column);
                         _controller._firstSelected.IsSelected = false;
                         _controller._firstSelected = selectedBlock;
                         _controller._firstSelected.IsSelected = true;

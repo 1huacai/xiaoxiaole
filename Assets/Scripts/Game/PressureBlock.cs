@@ -15,8 +15,8 @@ public class PressureBlock : MonoBehaviour
     public PressureBlockType Type;
     [SerializeField]
     private PressureBlockType _type = PressureBlockType.D1;
-    public int Row;//y
-    public int Column;//x
+    public int Row_y;//y
+    public int Column_x;//x
     public int xNum;
 
     [SerializeField]
@@ -61,8 +61,8 @@ public class PressureBlock : MonoBehaviour
         PressureBlock block = obj.GetComponent<PressureBlock>();
         block._image = obj.GetComponent<Image>();
         block.Type = (PressureBlockType)type;
-        block.Row = row;
-        block.Column = col;
+        block.Row_y = row;
+        block.Column_x = col;
         //block._image.sprite = Config._sprites[(int)block._type];
 
         return block;

@@ -121,6 +121,7 @@ public class MainController : GameController
         {
             RaiseOneStep();
         }
+
         _delta += Time.deltaTime;
     }
 
