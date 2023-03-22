@@ -240,13 +240,14 @@ public class GameController : MonoBehaviour
         {
             var block = PressureBlock.CreateBlockObject(Config.rows - 1, 0, (int)PressureBlockType.D1, _blockBoardObj.transform);
             block.GetComponent<RectTransform>().sizeDelta = new Vector2(_pressureInfo[i].Key * Config.blockWidth, _pressureInfo[i].Value * Config.blockHeight - 1);
-            block.transform.localPosition = new Vector3((Config.blockXPosShit - Config.blockWidth / 2 + block.xNum * Config.blockWidth), -(Config.initRows - block.Row_y - 1) * Config.blockHeight, 0);//block.GetComponent<RectTransform>().rect.width / 2  // + block.Column_x * Config.blockWidth
+            block.transform.localPosition = new Vector3((Config.blockXPosShit - Config.blockWidth / 2 + block.xNum * Config.blockWidth), (block.Row_y - 1) * Config.blockHeight + Config.StartPosY, 0);//block.GetComponent<RectTransform>().rect.width / 2  // + block.Column_x * Config.blockWidth
             //block.BlockOperationEvent += OnBlockOperation;
             block.gameObject.name = "1111";
             block.xNum = _pressureInfo[i].Key;
             int _row = 0;
             _PressureMatrixList.Add(block);
         }
+        _PressureMatrixList.Sort((a, b) => a.Row_y - b.Row_y);
     }
     List<KeyValuePair<int, int>> _pressureInfo = new List<KeyValuePair<int, int>>();
     int PressureWith, PressureHeight;
@@ -535,7 +536,7 @@ public class GameController : MonoBehaviour
                     for (int j = 0; j < _PressureMatrixList.Count; j++)
                     {
                         var item = current;
-                        if (item.Row + 1 == _PressureMatrixList[j].Row_y && _PressureMatrixList[j].Column_x <= item.Column && item.Column <= _PressureMatrixList[j].Column_x + _PressureMatrixList[j].comboNum)
+                        if (item.Row + 1 == _PressureMatrixList[j].Row_y && _PressureMatrixList[j].Column_x <= item.Column && item.Column <= _PressureMatrixList[j].Column_x + _PressureMatrixList[j].xNum - 1)
                             _PressureMatrixList[j].IsTagged = true;
                     }
                 }
@@ -550,7 +551,7 @@ public class GameController : MonoBehaviour
 
                     for (int j = 0; j < _PressureMatrixList.Count; j++)
                     {
-                        if (current.Row + 1 == _PressureMatrixList[j].Row_y && _PressureMatrixList[j].Column_x <= current.Column && current.Column <= _PressureMatrixList[j].Column_x + _PressureMatrixList[j].comboNum)
+                        if (current.Row + 1 == _PressureMatrixList[j].Row_y && _PressureMatrixList[j].Column_x <= current.Column && current.Column <= _PressureMatrixList[j].Column_x + _PressureMatrixList[j].xNum - 1)
                             _PressureMatrixList[j].IsTagged = true;
                     }
                 }
@@ -598,7 +599,9 @@ public class GameController : MonoBehaviour
             {
                 var pblok = _controller._PressureMatrixList[i];
                 _controller._PressureMatrixList.Remove(pblok);
-                GameObject.Destroy(pblok);
+                pblok.DoDestroy();
+                Debug.LogError("destroy pblok");
+                _controller._curMaxRowCnt -= 1;
             }
         }
     }

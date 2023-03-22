@@ -198,6 +198,8 @@ public class Config : ScriptableObject
     public const int raiseSteps = 11; // 上升一行需要的步数
     public const float raiseDis = blockHeight / raiseSteps; // 每次上升的距离
 
+    public const float StartPosY = -720;
+
     public const int maxSpeed = 50;
 
     // speed to raise time

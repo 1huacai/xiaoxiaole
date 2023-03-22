@@ -19,6 +19,8 @@ public class PressureBlock : MonoBehaviour
     public int Column_x;//x
     public int xNum;
 
+    public float localPos;
+
     [SerializeField]
     private int _state = (int)BlockState.None;
     public bool IsTagged // ±ê¼Ç
@@ -71,5 +73,9 @@ public class PressureBlock : MonoBehaviour
     void Update()
     {
 
+    }
+    public void DoDestroy()
+    {
+        Destroy(gameObject);
     }
 }

@@ -40,7 +40,7 @@ class SwapState : ControllerStateBase
         }
 
         var mySequence = DOTween.Sequence();
-        float moveDuration = 0.18f;
+        float moveDuration = 0.08f;
         mySequence.Append(first.transform.DOLocalMove(second.transform.localPosition, moveDuration));
         mySequence.Join(second.transform.DOLocalMove(first.transform.localPosition, moveDuration));
         mySequence.AppendCallback(() =>
@@ -53,8 +53,11 @@ class SwapState : ControllerStateBase
             first.Column = second.Column;
             second.Row = row;
             second.Column = column;
-            _controller._isSwappingDone = true;
 
+        });
+        mySequence.OnComplete(() =>
+        {
+            _controller._isSwappingDone = true;
             _controller.CheckAlarm();
         });
     }

@@ -82,8 +82,9 @@ class BlankState : ControllerStateBase
         }
         else
         {
-            
+
         }
+        _controller.DestroyPBlockRow();
     }
 
     public override void Update()

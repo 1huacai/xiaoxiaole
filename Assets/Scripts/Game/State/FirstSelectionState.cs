@@ -49,4 +49,21 @@ class FirstSelectionState : ControllerStateBase
             _controller.ChangeToState(GameBoardState.Idle);
         }
     }
+    private bool CheckHasPblock(int row_y,int col_x)
+    {
+        var block = _controller._blockMatrix[row_y, col_x];
+        foreach (var item in _controller._PressureMatrixList)
+        {
+            if (block == null || block.Type !=  BlockType.None)
+            {
+                if (item.Column_x <= col_x - 1 && col_x >= item.Column_x + item.xNum)
+                    return false;
+                if (item.Column_x <= col_x + 1 && col_x >= item.Column_x + item.xNum - 1)
+                    return false;
+                if (item.Row_y <= row_y + 1 && item.Column_x <= col_x && col_x >= item.Column_x + item.xNum - 1)
+                    return false;
+            }
+        }
+        return true;
+    }
 }
