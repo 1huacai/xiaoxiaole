@@ -79,6 +79,7 @@ class BlankState : ControllerStateBase
         if (_blankCnt > 3)
         {
             _controller.GreatPressureBlock(_blankCnt);
+            //技能释放控制器逻辑添加
         }
         else
         {
