@@ -17,7 +17,7 @@ class FallState : ControllerStateBase
         bool ret = false;
 
         var col = blankBlock.Column;
-        float moveDuration = 0.1f;
+        float moveDuration = 0;
         int fallCnt = 0;
         int fallStep = 0;
         var raiseBlock = new Dictionary<int, Block>();
@@ -74,22 +74,15 @@ class FallState : ControllerStateBase
     }
     void DoMovePressureBlock(PressureBlock pressureBlock)
     {
-        //int valueStep = CheckDownHasPblok(pressureBlock);
-
-        int fallStep = 0;// valueStep == 0 ? 0 : valueStep;
+        int fallStep = 0;
         int maxY = GetMaxYIndex(pressureBlock);
-        fallStep = maxY <= 0 ? pressureBlock.Row_y : pressureBlock.Row_y - maxY <= 0 ? pressureBlock.Row_y : pressureBlock.Row_y - maxY;
-        Debug.LogError(pressureBlock.Row_y  + "__________________________" + maxY);
+
+        //Debug.LogError(pressureBlock.Row_y  + "__________________________" + maxY);
         PressureBlock block = pressureBlock;
-        //if (block.transform.localPosition.y / Config.blockHeight != pressureBlock.Row_y)
-        //{
-        //    _controller._curMaxRowCnt = _controller._curRowCnt + _controller._PressureMatrixList.Count;
-        //    Debug.LogError("FallBlocks");
-        //    return;
-        //}
+
         fallStep =-( block.Row_y - maxY);
         block.Row_y = maxY;// fallStep;
-        float fallDis = (block.Row_y) * Config.blockHeight + Config.StartPosY;// - ((Config.initRows - block.Row_y - 1) * Config.blockHeight);// block.transform.localPosition.y - );//       fallStep * Config.blockHeight;
+        float fallDis = (block.Row_y) * Config.blockHeight + Config.StartPosY;
         block.transform.localPosition = new Vector3(block.transform.localPosition.x, block.transform.localPosition.y + fallStep * Config.blockHeight, block.transform.localPosition.z);
         //block.transform.DOLocalMoveY(fallDis, 0).OnComplete(() =>
         //{
@@ -157,10 +150,6 @@ class FallState : ControllerStateBase
                     }
                 }
         }
-        //if (!isChekOk && maxX == 0)
-        //{
-        //    maxX = _controller._curRowCnt + _controller._PressureMatrixList.Count - 1;
-        //}
         return maxX;
     }
     private int GetMaxYIndex(PressureBlock pressureBlock)
@@ -175,12 +164,25 @@ class FallState : ControllerStateBase
                         index = item.Row;
                 }
         }
+        int value = 10;
         foreach (var item in _controller._PressureMatrixList)
         {
             if (item.GetHashCode() != pressureBlock.GetHashCode())
             {
                 if (item.Row_y < pressureBlock.Row_y)
-                    index = item.Row_y;
+                {
+                    if ((pressureBlock.Row_y - item.Row_y < value) && _controller._PressureMatrixList.Count > 2)
+                    {
+                        value = pressureBlock.Row_y - item.Row_y;
+                        if (index < item.Row_y)
+                            index = item.Row_y;
+                    }
+                    else if (_controller._PressureMatrixList.Count == 2)
+                    {
+                        if (index < item.Row_y)
+                            index = item.Row_y;
+                    }
+                }
             }
         }
         if (index + 1 == pressureBlock.Row_y)
@@ -239,16 +241,7 @@ class FallState : ControllerStateBase
             _controller.DestroyBlankRow();
 
         }
-        //if (_controller._isPressureFallingDone)
-        { 
-            //_controller._isPressureFallingDone = false;
-            
-            //if (_controller._PressureMatrixList.Count > 0)
-            //{
-                //for (int i = 0; i < _controller._PressureMatrixList.Count; i++)
-                 //   DoMovePressureBlock(_controller._PressureMatrixList[i]);
-            //}
-        }
+
         if (_controller._isFallingDone)// || _controller._isPressureFallingDone
         {
             bool hasMatchedGames = _controller.CalculateSwappedBlocks();

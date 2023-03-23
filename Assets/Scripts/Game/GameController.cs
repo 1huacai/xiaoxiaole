@@ -238,9 +238,9 @@ public class GameController : MonoBehaviour
         SetPressureInfo(count);
         for (int i = 0; i < _pressureInfo.Count; i++)
         {
-            var block = PressureBlock.CreateBlockObject(Config.rows - 1, 0, (int)PressureBlockType.D1, _blockBoardObj.transform);
+            var block = PressureBlock.CreateBlockObject(Config.rows, 0, (int)PressureBlockType.D1, _blockBoardObj.transform);
             block.GetComponent<RectTransform>().sizeDelta = new Vector2(_pressureInfo[i].Key * Config.blockWidth, _pressureInfo[i].Value * Config.blockHeight - 1);
-            block.transform.localPosition = new Vector3((Config.blockXPosShit - Config.blockWidth / 2 + block.xNum * Config.blockWidth), (block.Row_y - 1) * Config.blockHeight + Config.StartPosY, 0);//block.GetComponent<RectTransform>().rect.width / 2  // + block.Column_x * Config.blockWidth
+            block.transform.localPosition = new Vector3((Config.blockXPosShit - Config.blockWidth / 2 + block.xNum * Config.blockWidth), (block.Row_y - 1) * Config.blockHeight + Config.StartPosY + _blockAreaObj.transform.localPosition.y, 0);//block.GetComponent<RectTransform>().rect.width / 2  // + block.Column_x * Config.blockWidth
             //block.BlockOperationEvent += OnBlockOperation;
             block.gameObject.name = "1111";
             block.xNum = _pressureInfo[i].Key;
@@ -439,7 +439,7 @@ public class GameController : MonoBehaviour
             if (item != null)
                 item.gameObject.name = item.Row + "+ " + item.Column;
         }
-        Debug.LogError("+++++++++++++++++++++++++++++++++++" + _curRowCnt);
+
         _addNewRow = false;
         _delta = 0;
     }
