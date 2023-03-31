@@ -240,7 +240,7 @@ public class GameController : MonoBehaviour
         {
             var block = PressureBlock.CreateBlockObject(Config.rows, 0, (int)PressureBlockType.D1, _blockBoardObj.transform);
             block.GetComponent<RectTransform>().sizeDelta = new Vector2(_pressureInfo[i].Key * Config.blockWidth, _pressureInfo[i].Value * Config.blockHeight - 1);
-            block.transform.localPosition = new Vector3((Config.blockXPosShit - Config.blockWidth / 2 + block.xNum * Config.blockWidth), (block.Row_y - 1) * Config.blockHeight + Config.StartPosY + _blockAreaObj.transform.localPosition.y, 0);//block.GetComponent<RectTransform>().rect.width / 2  // + block.Column_x * Config.blockWidth
+            block.transform.localPosition = new Vector3((Config.blockXPosShit - Config.blockWidth / 2 + block.xNum * Config.blockWidth), (block.Row_y - 1) * Config.blockHeight + Config.StartPosY + 20 , 0);//   + _blockAreaObj.transform.localPosition.y   ==> y
             //block.BlockOperationEvent += OnBlockOperation;
             block.gameObject.name = "1111";
             block.xNum = _pressureInfo[i].Key;

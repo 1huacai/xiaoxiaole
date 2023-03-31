@@ -288,6 +288,7 @@ public class Block : MonoBehaviour
         block.Column = col;
         block._image.sprite = Config._sprites[(int)block._type];
         block.gameObject.name = row + "+ " + col;
+        block.transform.localScale = new Vector3(0.8f, 0.8f, 0.8f);
 
         return block;
     }

@@ -191,8 +191,8 @@ public class Config : ScriptableObject
     public const int initRows = 7; // 初始行数
     public const int initCols = 6; // 初始列数
 
-    public const float blockWidth = 144.0f; // 方块宽度
-    public const float blockHeight = 144.0f; // 方块高度
+    public const float blockWidth = 140.0f; // 方块宽度
+    public const float blockHeight = 140.0f; // 方块高度
 
     public const float blockXPosShit = -359.0f; // 方块位置x坐标偏移值
     public const int raiseSteps = 11; // 上升一行需要的步数
