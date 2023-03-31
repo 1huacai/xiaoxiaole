@@ -22,6 +22,8 @@ public class Main : MonoBehaviour
     private GameObject _mainGamerObj;
     private GameObject _rivalGamerObj;
 
+    private GameObject _emmyGamerObj;
+
     private GameObject _comingSoonObj;
     private Tweener _comingSoonTw;
     private GameObject _timerObj;
@@ -153,6 +155,10 @@ public class Main : MonoBehaviour
             _timerObj.GetComponent<CountDown>()._countDown = _multiPlayer;
             
             _multiPlayer = false;
+
+            var emmyparent = Config.gameObj.transform.Find("emmybg");
+            _emmyGamerObj = Instantiate(Config.emmyGameAreaObj, emmyparent) as GameObject;
+            
         }
     }
 

@@ -77,6 +77,9 @@ public class Config : ScriptableObject
     public const string mainGamerPrefabPath = "Prefabs/MainGameArea";
     public static Object _mainGamerObj = Resources.Load(mainGamerPrefabPath);
 
+    public const string emmyGameAreaPath = "Prefabs/emmyGameArea";
+    public static Object emmyGameAreaObj = Resources.Load(emmyGameAreaPath);
+
     public const string rivalGamerPrefabPath = "Prefabs/RivalGameArea";
     public static Object _rivalGamerObj = Resources.Load(rivalGamerPrefabPath);
 
