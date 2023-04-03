@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+public enum CheckerboardType
+{
+    mine,
+    emmy,
+}
 
 public class Main : MonoBehaviour
 {
@@ -37,6 +42,9 @@ public class Main : MonoBehaviour
     private Button _chargeBtn;
     private Button _mallBtn;
     private Button _diaryBtn;
+
+    private Button _loginBtn;
+    private Button _unmatchBtn;
 
 
     private bool _enterGame = false; // 进入游戏开关
@@ -94,6 +102,11 @@ public class Main : MonoBehaviour
         _diaryBtn = GameObject.Find(Config.diaryBtnPath).GetComponent<Button>();
         _diaryBtn.onClick.AddListener(OnOtherBtnClick);
 
+        _loginBtn = GameObject.Find("login").GetComponent<Button>();
+        _loginBtn.onClick.AddListener(OnLoginClick);
+        _unmatchBtn = GameObject.Find("Matching/Button").GetComponent<Button>();
+        _unmatchBtn.onClick.AddListener(OnUnmatchClick);
+
         Config.gameObj.SetActive(false);
     }
 
@@ -140,7 +153,9 @@ public class Main : MonoBehaviour
             var parent = Config.gameObj.transform.Find("GameArea");
             GameController._initMatrix = _initMatrix;
             _mainGamerObj = Instantiate(Config._mainGamerObj, parent) as GameObject;
+            _mainGamerObj.name = "MainGameArea";
             var mainController = _mainGamerObj.GetComponent<MainController>();
+            mainController.type = CheckerboardType.mine;
             mainController._multiPlayer = _multiPlayer;
             mainController.isExMode = _isExMode;
             if (_multiPlayer)
@@ -158,7 +173,13 @@ public class Main : MonoBehaviour
 
             var emmyparent = Config.gameObj.transform.Find("emmybg");
             _emmyGamerObj = Instantiate(Config.emmyGameAreaObj, emmyparent) as GameObject;
-            
+            var emmymainController = _emmyGamerObj.GetComponent<RivalController>();
+            emmymainController.name = "emmyGameArea";
+            emmymainController.type = CheckerboardType.emmy;
+            emmymainController._multiPlayer = _multiPlayer;
+            emmymainController.isExMode = _isExMode;
+
+
         }
     }
 
@@ -200,7 +221,7 @@ public class Main : MonoBehaviour
 
     void OnOtherBtnClick()
     {
-        Debug.Log("OnOtherBtnClick");
+        Debug.Log("OnLoginClick");
         Util.PlayClickSound(_multiBtn.gameObject);
         if (_comingSoonObj == null)
         {
@@ -212,6 +233,36 @@ public class Main : MonoBehaviour
         {
             _comingSoonTw.Restart();
         }
+    }
+    void OnLoginClick()
+    {
+        Debug.Log("OnLoginClick");
+        Util.PlayClickSound(_loginBtn.gameObject);
+        var req = new SprotoType.login.request();
+        req.rid = "1111";
+        NetSender.Send<Protocol.login>(req, (data) =>
+        {
+            var resp = data as SprotoType.match_start.response;
+            Debug.LogFormat("login response : {0}", resp.e);
+            if (resp.e == 0)
+            {
+            }
+        });
+    }
+    void OnUnmatchClick()
+    {
+        Debug.Log("OnUnmatchClick");
+        Util.PlayClickSound(_unmatchBtn.gameObject);
+
+        var req = new SprotoType.match_cancel.request();
+        NetSender.Send<Protocol.match_cancel>(req, (data) =>
+        {
+            var resp = data as SprotoType.match_cancel.response;
+            Debug.LogFormat("match_cancel response : {0}", resp.e);
+            if (resp.e == 0)
+            {
+            }
+        });
     }
 
     void DestroyComingSoonObj()
@@ -253,7 +304,7 @@ public class Main : MonoBehaviour
     {
         var req = new SprotoType.game_auth.request()
         {
-            uid = SystemInfo.deviceUniqueIdentifier,
+            imei = SystemInfo.deviceUniqueIdentifier,
             version = "0.1",
         };
         NetSender.Send<Protocol.game_auth>(req, (data) =>
@@ -288,10 +339,10 @@ public class Main : MonoBehaviour
 
     void MatchReq()
     {
-        var req = new SprotoType.match.request();
-        NetSender.Send<Protocol.match>(req, (data) =>
+        var req = new SprotoType.match_start.request();
+        NetSender.Send<Protocol.match_start>(req, (data) =>
         {
-            var resp = data as SprotoType.match.response;
+            var resp = data as SprotoType.match_start.response;
             Debug.LogFormat("match response : {0}", resp.e);
             if (resp.e == 0)
             {
@@ -306,19 +357,19 @@ public class Main : MonoBehaviour
 
     void InitDataReq(List<SprotoType.block_info> pack)
     {
-        var req = new SprotoType.init_data.request()
-        {
-            matrix = pack,
-        };
-        NetSender.Send<Protocol.init_data>(req, (data) =>
-        {
-            var resp = data as SprotoType.init_data.response;
-            Debug.LogFormat(" init_data response : {0}", resp.e);
-            if (resp.e == 0)
-            {
+        //var req = new SprotoType.init_data.request()
+        //{
+        //    matrix = pack,
+        //};
+        //NetSender.Send<Protocol.init_data>(req, (data) =>
+        //{
+        //    var resp = data as SprotoType.init_data.response;
+        //    Debug.LogFormat(" init_data response : {0}", resp.e);
+        //    if (resp.e == 0)
+        //    {
 
-            }
-        });
+        //    }
+        //});
     }
 
     void ShowMatchMsgBox(string title)
@@ -354,7 +405,7 @@ public class Main : MonoBehaviour
     }
 
     // 匹配异常处理
-    public void MatchWrong(SprotoType.match_wrong.request data)
+    public void MatchWrong(SprotoType.match_error.request data)
     {
         ShowMatchMsgBox(Config.matchErrorMsgBoxTitle);
     }
@@ -362,7 +413,7 @@ public class Main : MonoBehaviour
     // 比赛准备阶段
     public void GameReady(SprotoType.game_ready.request data)
     {
-        _initMatrix = data.init_matrix;
+        _initMatrix = data.matrix;
         _enterGame = true;
     }
 

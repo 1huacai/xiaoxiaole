@@ -67,6 +67,8 @@ public class Config : ScriptableObject
     public const string upButtonPath = uiGameRoot + "/Up/Button";
     public const string setupButtonPath = uiGameRoot + "/Setup";
     public const string preparePath = uiGameRoot + "/Prepare";
+    public const string skill1Path = uiGameRoot + "/skill1";
+    public const string skill2Path = uiGameRoot + "/skill2";
 
     public const string MsgBoxPrefabPath = "Prefabs/MessageBox";
     public static Object _msgBoxObj = Resources.Load(MsgBoxPrefabPath);
@@ -197,9 +199,13 @@ public class Config : ScriptableObject
     public const float blockWidth = 140.0f; // 方块宽度
     public const float blockHeight = 140.0f; // 方块高度
 
+    public const float emmyblockWidth = 12.0f; // 方块宽度
+    public const float emmyblockHeight = 12.0f; // 方块高度
+
     public const float blockXPosShit = -359.0f; // 方块位置x坐标偏移值
     public const int raiseSteps = 11; // 上升一行需要的步数
     public const float raiseDis = blockHeight / raiseSteps; // 每次上升的距离
+    public const float emmyraiseDis = emmyblockHeight / raiseSteps; // 每次上升的距离
 
     public const float StartPosY = -720;
 

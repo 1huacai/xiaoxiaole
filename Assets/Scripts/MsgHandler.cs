@@ -39,10 +39,10 @@ public class MsgHandler : MonoBehaviour
             return null;
         });
 
-        NetReceiver.AddHandler<Protocol.match_wrong>((data) =>
+        NetReceiver.AddHandler<Protocol.match_error>((data) =>
         {
             Debug.Log("========= match_wrong");
-            _mainInst.MatchWrong(data as SprotoType.match_wrong.request);
+            _mainInst.MatchWrong(data as SprotoType.match_error.request);
             return null;
         });
 
@@ -53,12 +53,13 @@ public class MsgHandler : MonoBehaviour
             return null;
         });
 
-        NetReceiver.AddHandler<Protocol.game_start>((data) =>
+        NetReceiver.AddHandler<Protocol.match_start>((data) =>
         {
             Debug.Log("========= game_start");
             _mainControllerInst.GameStart(data as SprotoType.game_start.request);
             return null;
         });
+
 
         NetReceiver.AddHandler<Protocol.game_over>((data) =>
         {
@@ -67,36 +68,53 @@ public class MsgHandler : MonoBehaviour
             return null;
         });
 
-        NetReceiver.AddHandler<Protocol.sync_swap_block>((data) =>
+
+        //∂‘ ÷
+
+
+        NetReceiver.AddHandler<Protocol.game_use_skill_broadcast>((data) =>
+        {
+            Debug.Log("========= game_use_skill_broadcast");
+            _rivalControllerInst.Usekill(data as SprotoType.game_use_skill_broadcast.request);
+            return null;
+        });
+
+        NetReceiver.AddHandler<Protocol.game_swap_broadcast>((data) =>
         {
             Debug.Log("========= sync_swap_block");
-            _rivalControllerInst.SyncSwapBlock(data as SprotoType.sync_swap_block.request);
+            _rivalControllerInst.SyncSwapBlock(data as SprotoType.game_swap_broadcast.request);
             return null;
         });
 
-        NetReceiver.AddHandler<Protocol.sync_up_row>((data) =>
+        NetReceiver.AddHandler<Protocol.game_up_row_broadcast>((data) =>
         {
             Debug.Log("========= sync_up_row");
-            _rivalControllerInst.SyncUpRow(data as SprotoType.sync_up_row.request);
+            _rivalControllerInst.SyncUpRow(data as SprotoType.game_up_row_broadcast.request);
             return null;
         });
 
-        NetReceiver.AddHandler<Protocol.sync_new_row>((data) =>
+        NetReceiver.AddHandler<Protocol.game_new_row_broadcast>((data) =>
         {
             Debug.Log("========= sync_new_row");
-            _rivalControllerInst.SyncNewRow(data as SprotoType.sync_new_row.request);
+            _rivalControllerInst.SyncNewRow(data as SprotoType.game_new_row_broadcast.request);
+            return null;
+        });
+        NetReceiver.AddHandler<Protocol.eliminate_broadcast>((data) =>
+        {
+            Debug.Log("========= SyncNewpreBlock");
+            _rivalControllerInst.SyncNewpreBlock(data as SprotoType.eliminate_broadcast.request);
             return null;
         });
 
-        NetReceiver.AddHandler<Protocol.sync_score>((data) =>
-        {
-            Debug.Log("========= sync_score");
-            var req = data as SprotoType.sync_score.request;
-            if (req.id == Main.rid)
-                _rivalControllerInst.SyncScore(data as SprotoType.sync_score.request);
-            else
-                _mainControllerInst.SyncScore(data as SprotoType.sync_score.request);
-            return null;
-        });
+        //NetReceiver.AddHandler<Protocol.sync_score>((data) =>
+        //{
+        //    Debug.Log("========= sync_score");
+        //    var req = data as SprotoType.sync_score.request;
+        //    if (req.id == Main.rid)
+        //        _rivalControllerInst.SyncScore(data as SprotoType.sync_score.request);
+        //    else
+        //        _mainControllerInst.SyncScore(data as SprotoType.sync_score.request);
+        //    return null;
+        //});
     }
 }

@@ -18,7 +18,7 @@ class SwapState : ControllerStateBase
         // 多人模式需要同步交换操作
         if (_controller.IsMultiPlayer())
         {
-            var req = new SprotoType.swap_block.request();
+            var req = new SprotoType.game_swap.request();
             req.block1 = new SprotoType.block_info
             {
                 row = first.Row,
@@ -31,9 +31,9 @@ class SwapState : ControllerStateBase
                 col = second.Column,
                 type = (int)second.Type
             };
-            NetSender.Send<Protocol.swap_block>(req, (data) =>
+            NetSender.Send<Protocol.game_swap>(req, (data) =>
             {
-                var resp = data as SprotoType.swap_block.response;
+                var resp = data as SprotoType.game_swap.response;
                 Debug.LogFormat(" swap_block response : {0}", resp.e);
                 if (resp.e == 0) { }
             });

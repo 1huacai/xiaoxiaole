@@ -7,6 +7,8 @@ using DG.Tweening;
 
 public class MainController : GameController
 {
+    public CheckerboardType type;
+
     private Animator _prePareAnim; // 准备开始动画
     private Text _timer; // 倒计时
     private Button _upBtn; // 方块上升一行按钮
@@ -18,6 +20,8 @@ public class MainController : GameController
     private GameObject _rivalObj; // 对手展示区
     private GameObject _comingSoonObj;
     private Tweener _comingSoonTw;
+    private Button _skill1Btn; // 设置按钮
+    private Button _skill2Btn; // 设置按钮
 
     void Awake()
     {
@@ -39,6 +43,12 @@ public class MainController : GameController
 
         _setupBtn = GameObject.Find(Config.setupButtonPath).GetComponent<Button>();
         _setupBtn.onClick.AddListener(OnOtherBtnClick);
+
+        _skill1Btn = GameObject.Find(Config.skill1Path).GetComponent<Button>();
+        _skill1Btn.onClick.AddListener(OnSkill1BtnClick);
+
+        _skill2Btn = GameObject.Find(Config.skill2Path).GetComponent<Button>();
+        _skill2Btn.onClick.AddListener(OnSkill2BtnClick);
 
         _resultObj = GameObject.Find(Config.resultPath);
         _resultInfoText = GameObject.Find(Config.resultInfoPath).GetComponent<Text>();
@@ -106,7 +116,7 @@ public class MainController : GameController
         if (_addNewRow)
         {
             var newRow = SpawnBlock();
-            AddNewRow(newRow);
+            AddNewRow(newRow, CheckerboardType.mine);
             return;
         }
 
@@ -141,10 +151,10 @@ public class MainController : GameController
         _raiseOneRow = true;
         if (_multiPlayer)
         {
-            var req = new SprotoType.up_row.request();
-            NetSender.Send<Protocol.up_row>(req, (data) =>
+            var req = new SprotoType.game_up_row.request();
+            NetSender.Send<Protocol.game_up_row>(req, (data) =>
             {
-                var resp = data as SprotoType.up_row.response;
+                var resp = data as SprotoType.game_up_row.response;
                 Debug.LogFormat(" up_row response : {0}", resp.e);
                 if (resp.e == 0) { }
             });
@@ -166,6 +176,36 @@ public class MainController : GameController
             _comingSoonTw.Restart();
         }
     }
+
+    void OnSkill1BtnClick()
+    {
+        Debug.Log("OnSkill1BtnClick");
+        Util.PlayClickSound(_setupBtn.gameObject);
+
+        var req = new SprotoType.game_use_skill.request();
+        req.skill_id = 1001;
+        NetSender.Send<Protocol.game_use_skill>(req, (data) =>
+        {
+            var resp = data as SprotoType.game_use_skill.response;
+            Debug.LogFormat(" score response : {0}", resp.e);
+            if (resp.e == 0) { }
+        });
+    }
+    void OnSkill2BtnClick()
+    {
+        Debug.Log("OnSkill2BtnClick");
+        Util.PlayClickSound(_setupBtn.gameObject);
+
+        var req = new SprotoType.game_use_skill.request();
+        req.skill_id = 1002;
+        NetSender.Send<Protocol.game_use_skill>(req, (data) =>
+        {
+            var resp = data as SprotoType.game_use_skill.response;
+            Debug.LogFormat(" score response : {0}", resp.e);
+            if (resp.e == 0) { }
+        });
+    }
+
 
     void DestroyComingSoonObj()
     {
@@ -190,15 +230,15 @@ public class MainController : GameController
 
     void SyncScore(int score, int combo_cnt)
     {
-        var req = new SprotoType.score.request();
-        req.score = score;
-        req.combo_cnt = combo_cnt;
-        NetSender.Send<Protocol.score>(req, (data) =>
-        {
-            var resp = data as SprotoType.score.response;
-            Debug.LogFormat(" score response : {0}", resp.e);
-            if (resp.e == 0) { }
-        });
+        //var req = new SprotoType.score.request();
+        //req.score = score;
+        //req.combo_cnt = combo_cnt;
+        //NetSender.Send<Protocol.score>(req, (data) =>
+        //{
+        //    var resp = data as SprotoType.score.response;
+        //    Debug.LogFormat(" score response : {0}", resp.e);
+        //    if (resp.e == 0) { }
+        //});
     }
 
     void ShowResult()
@@ -212,10 +252,10 @@ public class MainController : GameController
         _gameOver = true;
         if (_multiPlayer)
         {
-            var req = new SprotoType.touch_top.request();
-            NetSender.Send<Protocol.touch_top>(req, (data) =>
+            var req = new SprotoType.game_up_row.request();
+            NetSender.Send<Protocol.game_up_row>(req, (data) =>
             {
-                var resp = data as SprotoType.touch_top.response;
+                var resp = data as SprotoType.game_up_row.response;
                 Debug.LogFormat(" touch_top response : {0}", resp.e);
                 if (resp.e == 0) { }
             });
@@ -237,17 +277,17 @@ public class MainController : GameController
         ShowResult();
     }
 
-    public void SyncScore(SprotoType.sync_score.request data)
-    {
-        int comboCnt = (int)data.combo_cnt;
-        if (isExMode)
-        {
-            if (comboCnt > 7)
-                comboCnt = 7;
-            if (comboCnt > 3)
-            {
-                var obj = Instantiate(Config.obstacleObjs[comboCnt - 4], _blockBoardObj.transform) as GameObject;
-            }
-        }
-    }
+    //public void SyncScore(SprotoType.sync_score.request data)
+    //{
+    //    int comboCnt = (int)data.combo_cnt;
+    //    if (isExMode)
+    //    {
+    //        if (comboCnt > 7)
+    //            comboCnt = 7;
+    //        if (comboCnt > 3)
+    //        {
+    //            var obj = Instantiate(Config.obstacleObjs[comboCnt - 4], _blockBoardObj.transform) as GameObject;
+    //        }
+    //    }
+    //}
 }

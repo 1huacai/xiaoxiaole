@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class RivalController : GameController
 {
-
+    public CheckerboardType type;
     void Awake()
     {
         _controller = this;
@@ -18,10 +18,10 @@ public class RivalController : GameController
         InitStateHandlers();
 
         // variable init     
-        InitMembers();
+        InitMembers( CheckerboardType.emmy);
 
         // initial block init
-        InitBlocks();
+        InitBlocks( CheckerboardType.emmy);
 
         // 删除初始生成的空行
         DestroyBlankRow();
@@ -53,7 +53,7 @@ public class RivalController : GameController
 
         if (!_suspendRaise && _delta * 1000 >= _curRaiseTime)
         {
-            RaiseOneStep();
+            RaiseOneStep(CheckerboardType.emmy);
         }
         _delta += Time.deltaTime;
     }
@@ -77,22 +77,22 @@ public class RivalController : GameController
         base.ChangeScore(score, combo_cnt);
     }
 
-    public void SyncSwapBlock(SprotoType.sync_swap_block.request data)
+    public void SyncSwapBlock(SprotoType.game_swap_broadcast.request data)
     {
         Debug.LogFormat("-------- SyncSwapBlock block1[{0},{1}], block2[{2},{3}]", data.block1.row, data.block1.col, data.block2.row, data.block2.col);
         OnBlockOperation((int)data.block1.row, (int)data.block1.col, BlockOperation.TouchDown);
         OnBlockOperation((int)data.block2.row, (int)data.block2.col, BlockOperation.TouchDown);
     }
 
-    public void SyncUpRow(SprotoType.sync_up_row.request data)
+    public void SyncUpRow(SprotoType.game_up_row_broadcast.request data)
     {
         _raiseOneRow = true;
     }
 
-    public void SyncNewRow(SprotoType.sync_new_row.request data)
+    public void SyncNewRow(SprotoType.game_new_row_broadcast.request data)
     {
         List<BlockData> newRow = new List<BlockData>();
-        foreach(SprotoType.block_info info in data.row_data)
+        foreach(SprotoType.block_info info in data.matrix)
         {
             newRow.Add(new BlockData
             {
@@ -102,23 +102,33 @@ public class RivalController : GameController
             });
             Debug.LogFormat("--- syncNewRow, [{0},{1},{2}]", info.row, info.col, info.type);
         }
-        AddNewRow(newRow);
+        AddNewRow(newRow , CheckerboardType.emmy);
+        //_curRowCnt = (int)data.cur_row_cnt;
+        //_totalRowCnt = (int)data.total_row_cnt;
+    }
+    public void SyncNewpreBlock(SprotoType.eliminate_broadcast.request data)
+    {
+        GreatPressureBlock((int)data.count, CheckerboardType.emmy);
         //_curRowCnt = (int)data.cur_row_cnt;
         //_totalRowCnt = (int)data.total_row_cnt;
     }
 
-    public void SyncScore(SprotoType.sync_score.request data)
+    public void Usekill(SprotoType.game_use_skill_broadcast.request data)
     {
-        int comboCnt = (int)data.combo_cnt;
-        ChangeScore((int)data.score, comboCnt);
-        if (isExMode)
-        {
-            if (comboCnt > 7)
-                comboCnt = 7;
-            if (comboCnt > 3)
-            {
-                var obj = Instantiate(Config.obstacleObjs[comboCnt - 4], _blockBoardObj.transform) as GameObject;
-            }
-        }
+        var use = data.skill_id;
     }
+    //public void SyncScore(SprotoType.sync_score.request data)
+    //{
+    //    int comboCnt = (int)data.combo_cnt;
+    //    ChangeScore((int)data.score, comboCnt);
+    //    if (isExMode)
+    //    {
+    //        if (comboCnt > 7)
+    //            comboCnt = 7;
+    //        if (comboCnt > 3)
+    //        {
+    //            var obj = Instantiate(Config.obstacleObjs[comboCnt - 4], _blockBoardObj.transform) as GameObject;
+    //        }
+    //    }
+    //}
 }

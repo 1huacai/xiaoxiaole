@@ -1,14 +1,7 @@
 .package {
-    type            0 : integer
-    session         1 : integer
-    ud              2 : string
-}
-
-ping 1 {
-    request {}
-    response {
-        server_time 0 : integer
-    }
+    type                0 : integer
+    session             1 : integer
+    ud                  2 : string
 }
 
 .key_value {
@@ -16,14 +9,19 @@ ping 1 {
     value               1 : integer
 }
 
-
-#------------------ login ------------------
-
-
-# 登陆游戏
-game_auth 16 {
+error 1 {
     request {
-        uid                 0 : string
+        id              0 : integer
+        txt             1 : string
+    }
+}
+
+
+#------------------ login 20 - 39 start ------------------
+# 登陆游戏
+game_auth 20 {
+    request {
+        imei                0 : string
         version             1 : string
     }
     response {
@@ -34,7 +32,7 @@ game_auth 16 {
 }
 
 # 登陆游戏
-login 17 {
+login 21 {
     request {
         rid                 0 : string
     }
@@ -42,47 +40,53 @@ login 17 {
         e                   0 : integer
     }
 }
+#------------------ login 20 - 39 end ------------------
 
 
+#------------------ match 40 - 49 start ------------------
+# 参数者数据
+.player_info {
+    rid                     0 : string
+    rname                   1 : string
+}
 
-
-
-
-
-
-# 匹配
-match 18 {
+# 开始匹配
+match_start 40 {
     request {}
     response {
         e                   0 : integer
     }
 }
 
+# 取消匹配
+match_cancel 41 {
+    request {}
+    response {
+        e                   0 : integer
+    }
+}
 # 匹配成功
-match_success 19 {
+match_success 42 {
     request {
-        game_id             0 : string
-        rival_rid           1 : string
-        rival_rname         2 : string
+        players             0 : *player_info # 比赛双方信息
     }
 }
 
 # 匹配超时
-match_timeout 20 {
+match_timeout 43 {
     request {}
 }
 
 # 匹配异常
-match_wrong 21 {
+match_error 44 {
     request {
-        type                0 : integer
+        type                0 : integer # 异常类型
     }
 }
+#------------------ match 40 - 49 end ------------------
 
 
-
-
-
+#------------------ game 50 - 69 start ------------------
 # 方块信息
 .block_info {
     row                     0 : integer
@@ -90,32 +94,22 @@ match_wrong 21 {
     type                    2 : integer
 }
 
-# 生成初始方块数据
-init_data 25 {
-    request {
-        matrix              0 : *block_info
-    }
-    response {
-        e                   0 : integer
-    }
-}
-
 # 游戏准备
-game_ready 26 {
+game_ready 50 {
     request {
-        init_matrix         0 : *block_info
+        matrix              0 : *block_info #初始方块信息
     }
 }
 
 # 游戏开始
-game_start 27 {
+game_start 51 {
     request {
         start_time          0 : integer
     }
 }
 
 # 交换方块操作
-swap_block 28 {
+game_swap 52 {
     request {
         block1              0 : block_info
         block2              1 : block_info
@@ -125,77 +119,88 @@ swap_block 28 {
     }
 }
 
-# 同步交换方块
-sync_swap_block 29 {
+# 交换方块
+game_swap_broadcast 53 {
     request {
         block1              0 : block_info
         block2              1 : block_info
     }
 }
 
-# 上升一行操作
-up_row 30 {
+# 提升一行操作
+game_up_row 54 {
     request {}
     response {
         e                   0 : integer
     }
 }
 
-# 同步上升一行操作
-sync_up_row 31 {
+# 手动提升一行
+game_up_row_broadcast 55 {
     request {}
 }
 
-# 新的一行
-new_row 32 {
+# 使用技能
+game_use_skill 56 {
     request {
-        row_data            0 : *block_info
-        cur_row_cnt         1 : integer
-        total_row_cnt       2 : integer
+        skill_id            0 : integer # 技能ID
     }
     response {
         e                   0 : integer
     }
 }
 
-# 同步新的一行
-sync_new_row 33 {
+# 使用技能
+game_use_skill_broadcast 57 {
     request {
-        row_data            0 : *block_info
-        cur_row_cnt         1 : integer
-        total_row_cnt       2 : integer
+        skill_id            0 : integer # 技能ID
     }
 }
 
-# 得分
-score 34 {
-    request {
-        score               0 : integer
-        combo_cnt           1 : integer
-    }
-    response {
-        e                   0 : integer
-    }
-}
-
-# 同步得分
-sync_score 35 {
-    request {
-        id                  0 : string
-        score               1 : integer
-        combo_cnt           2 : integer
-    }
-}
-
-touch_top 40 {
+# 游戏结束
+game_over 58 {
     request {}
     response {
         e                   0 : integer
     }
 }
 
-game_over 50 {
+
+# 比赛结束
+game_over_broadcast 59 {
     request {
         winner              1 : string
     }
 }
+
+# 创建新的一行
+game_new_row 60 {
+    request {
+        matrix              0 : *block_info #新的一行
+    }
+    response {
+        e                   0 : integer
+    }
+}
+game_new_row_broadcast 61 {
+    request {
+        matrix              0 : *block_info #新的一行
+    }
+}
+
+#消除了几个
+eliminate 62 {
+    request {
+        count          0 : integer
+    }
+    response {
+        e                   0 : integer
+    }
+}
+#消除了几个
+eliminate_broadcast 63 {
+    request {
+        count          0 : integer
+    }
+}
+#------------------ game 50 - 69 end ------------------

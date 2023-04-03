@@ -12,6 +12,9 @@ public class GameController : MonoBehaviour
     public GameObject _blockBoardObj; // 方块面板区
     public GameObject _blockAreaObj; // 方块面板区底图
 
+    public GameObject emmy_blockBoardObj; // 方块面板区
+    public GameObject emmy_blockAreaObj; // 方块面板区底图
+
     public Dictionary<GameBoardState, ControllerStateBase> _states;
     public GameBoardState _curGameBoardState = GameBoardState.Idle;
 
@@ -55,6 +58,9 @@ public class GameController : MonoBehaviour
 
     public float _delta = 0;
 
+    public MainController minContr;
+    public MainController emmyContr;
+
     void Awake()
     { }
 
@@ -82,10 +88,18 @@ public class GameController : MonoBehaviour
         //_states.Add(GameBoardState.Destroy, new DestroyState(this));
     }
 
-    public void InitMembers()
+    public void InitMembers(CheckerboardType _type = CheckerboardType.mine)
     {
-        _blockBoardObj = transform.Find("BlockBoard").gameObject;
-        _blockAreaObj = transform.Find("BlockBoard/AreaBottom").gameObject;
+        if (_type == CheckerboardType.mine)
+        {
+            _blockBoardObj = transform.Find("BlockBoard").gameObject;
+            _blockAreaObj = _blockBoardObj.transform.Find("AreaBottom").gameObject;
+        }
+        else
+        {
+            emmy_blockBoardObj = transform.Find("BlockBoard").gameObject;
+            emmy_blockAreaObj = emmy_blockBoardObj.transform.Find("AreaBottom").gameObject;
+        }
 
         _gameReady = true;
         _gameStart = false;
@@ -183,26 +197,28 @@ public class GameController : MonoBehaviour
     }
 
     // 提升一行
-    public void RaiseOneRow()
+    public void RaiseOneRow(CheckerboardType _type = CheckerboardType.mine)
     {
+        Transform _tran = _type == CheckerboardType.mine ? _blockBoardObj.transform : emmy_blockBoardObj.transform;
         _raiseOneRow = false;
         _suspendRaise = true;
         var moveDis = (_totalRowCnt - Config.initRows + 1) * Config.blockHeight;
-        _blockBoardObj.transform.DOLocalMoveY(moveDis, 0.2f).OnComplete(() =>
+        _tran.DOLocalMoveY(moveDis, 0.2f).OnComplete(() =>
         {
-            _blockAreaObj.transform.DOLocalMoveY(_blockAreaObj.transform.localPosition.y - Config.blockHeight, 0);
+            _tran.DOLocalMoveY(_tran.localPosition.y - Config.blockHeight, 0);
             _addNewRow = true;
             _suspendRaise = false;
         });
     }
 
-    public void RaiseOneStep()
+    public void RaiseOneStep(CheckerboardType _type = CheckerboardType.mine)
     {
-        _blockBoardObj.transform.DOLocalMoveY(_blockBoardObj.transform.localPosition.y + Config.raiseDis, 0);
+        Transform _tran = _type == CheckerboardType.mine ? _blockBoardObj.transform : emmy_blockBoardObj.transform;
+        _tran.DOLocalMoveY(_tran.localPosition.y + Config.raiseDis, 0);
 
-        if (_blockBoardObj.transform.localPosition.y > (_totalRowCnt - Config.initRows + 1) * Config.blockHeight - 15)
+        if (_tran.localPosition.y > (_totalRowCnt - Config.initRows + 1) * Config.blockHeight - 15)
         {
-            _blockAreaObj.transform.DOLocalMoveY(_blockAreaObj.transform.localPosition.y - Config.blockHeight, 0);
+            _tran.DOLocalMoveY(_tran.localPosition.y - Config.blockHeight, 0);
             _addNewRow = true;
         }
         _delta = 0;
@@ -215,17 +231,24 @@ public class GameController : MonoBehaviour
             _states[_curGameBoardState].Update();
         }
     }
-
+    public float BlockWith(CheckerboardType _type)
+    {
+        return Config.msgHandler._mainControllerInst.type == _type ? Config.blockWidth : Config.emmyblockWidth;
+    }
+    public float BlockHeight(CheckerboardType _type)
+    {
+        return Config.msgHandler._mainControllerInst.type == _type ? Config.blockHeight : Config.emmyblockHeight;
+    }
     //生成初始的方块
-    public void InitBlocks()
+    public void InitBlocks(CheckerboardType _type = CheckerboardType.mine)
     {
         _blockMatrix = new Block[Config.matrixRows, Config.columns];
         foreach (SprotoType.block_info data in _initMatrix)
         {
             int row = (int)data.row;
             int col = (int)data.col;
-            var block = Block.CreateBlockObject(row, col, (int)data.type, _blockBoardObj.transform);
-            block.transform.localPosition = new Vector3(Config.blockXPosShit + col * Config.blockWidth, -(Config.initRows - 1 - row) * Config.blockHeight, 0);
+            var block = Block.CreateBlockObject(row, col, (int)data.type, _type == CheckerboardType.mine ? _blockBoardObj.transform : emmy_blockBoardObj.transform);
+            block.transform.localPosition = new Vector3(Config.blockXPosShit + col * BlockWith(_type), -(Config.initRows - 1 - row) * BlockHeight(_type), 0);
             block.BlockOperationEvent += OnBlockOperation;
 
             _blockMatrix[row, col] = block;
@@ -233,14 +256,14 @@ public class GameController : MonoBehaviour
         _curRowCnt = Config.initRows;
         _totalRowCnt = Config.initRows;
     }
-    public void GreatPressureBlock(int count)
+    public void GreatPressureBlock(int count, CheckerboardType _type = CheckerboardType.mine)
     {
         SetPressureInfo(count);
         for (int i = 0; i < _pressureInfo.Count; i++)
         {
-            var block = PressureBlock.CreateBlockObject(Config.rows, 0, (int)PressureBlockType.D1, _blockBoardObj.transform);
-            block.GetComponent<RectTransform>().sizeDelta = new Vector2(_pressureInfo[i].Key * Config.blockWidth, _pressureInfo[i].Value * Config.blockHeight - 1);
-            block.transform.localPosition = new Vector3((Config.blockXPosShit - Config.blockWidth / 2 + block.xNum * Config.blockWidth), (block.Row_y - 1) * Config.blockHeight + Config.StartPosY + 20 , 0);//   + _blockAreaObj.transform.localPosition.y   ==> y
+            var block = PressureBlock.CreateBlockObject(Config.rows, 0, (int)PressureBlockType.D1, _type == CheckerboardType.mine ? _blockBoardObj.transform : emmy_blockBoardObj.transform);
+            block.GetComponent<RectTransform>().sizeDelta = new Vector2(_pressureInfo[i].Key * BlockWith(_type), _pressureInfo[i].Value * BlockHeight(_type) - 1);
+            block.transform.localPosition = new Vector3((Config.blockXPosShit - BlockWith(_type) / 2 + block.xNum * BlockWith(_type)), (block.Row_y - 1) * BlockHeight(_type) + Config.StartPosY + 20 , 0);//   + _blockAreaObj.transform.localPosition.y   ==> y
             //block.BlockOperationEvent += OnBlockOperation;
             block.gameObject.name = "1111";
             block.xNum = _pressureInfo[i].Key;
@@ -386,7 +409,7 @@ public class GameController : MonoBehaviour
         }
     }
 
-    public void AddNewRow(List<BlockData> newRow)
+    public void AddNewRow(List<BlockData> newRow, CheckerboardType _type)
     {
         //已有方块整体上移一行
         BringForward();
@@ -394,22 +417,22 @@ public class GameController : MonoBehaviour
         // 多人模式同步数据
         if (IsMultiPlayer())
         {
-            var req = new SprotoType.new_row.request();
-            req.row_data = new List<SprotoType.block_info>();
+            var req = new SprotoType.game_new_row.request();
+            req.matrix = new List<SprotoType.block_info>();
             foreach (BlockData data in newRow)
             {
-                req.row_data.Add(new SprotoType.block_info
+                req.matrix.Add(new SprotoType.block_info
                 {
                     row = data.row,
                     col = data.col,
                     type = (int)data.type,
                 });
             }
-            req.cur_row_cnt = _curRowCnt;
-            req.total_row_cnt = _totalRowCnt;
-            NetSender.Send<Protocol.new_row>(req, (data) =>
+            //req.cur_row_cnt = _curRowCnt;
+            //req.total_row_cnt = _totalRowCnt;
+            NetSender.Send<Protocol.game_new_row>(req, (data) =>
             {
-                var resp = data as SprotoType.new_row.response;
+                var resp = data as SprotoType.game_new_row.response;
                 Debug.LogFormat(" new_row response : {0}", resp.e);
                 if (resp.e == 0)
                 {
@@ -419,8 +442,8 @@ public class GameController : MonoBehaviour
         }
         foreach (BlockData data in newRow)
         {
-            var block = Block.CreateBlockObject(0, data.col, (int)data.type, _blockBoardObj.transform);
-            block.transform.localPosition = new Vector3(Config.blockXPosShit + data.col * Config.blockWidth, -_totalRowCnt * Config.blockHeight, 0);
+            var block = Block.CreateBlockObject(0, data.col, (int)data.type, _type == CheckerboardType.mine ? _blockBoardObj.transform : emmy_blockBoardObj.transform);
+            block.transform.localPosition = new Vector3(Config.blockXPosShit + data.col * BlockWith(_type), -_totalRowCnt * BlockHeight(_type), 0);
             block.BlockOperationEvent += OnBlockOperation;
 
             _blockMatrix[0, data.col] = block;
