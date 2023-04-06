@@ -18,10 +18,10 @@ public class RivalController : GameController
         InitStateHandlers();
 
         // variable init     
-        InitMembers( CheckerboardType.emmy);
+        InitMembers( );//CheckerboardType.emmy
 
         // initial block init
-        InitBlocks( CheckerboardType.emmy);
+        InitBlocks();// CheckerboardType.emmy
 
         // 删除初始生成的空行
         DestroyBlankRow();
@@ -53,7 +53,7 @@ public class RivalController : GameController
 
         if (!_suspendRaise && _delta * 1000 >= _curRaiseTime)
         {
-            RaiseOneStep(CheckerboardType.emmy);
+            RaiseOneStep();//CheckerboardType.emmy
         }
         _delta += Time.deltaTime;
     }
@@ -102,20 +102,9 @@ public class RivalController : GameController
             });
             Debug.LogFormat("--- syncNewRow, [{0},{1},{2}]", info.row, info.col, info.type);
         }
-        AddNewRow(newRow , CheckerboardType.emmy);
+        AddNewRow(newRow);// CheckerboardType.emmy
         //_curRowCnt = (int)data.cur_row_cnt;
         //_totalRowCnt = (int)data.total_row_cnt;
-    }
-    public void SyncNewpreBlock(SprotoType.eliminate_broadcast.request data)
-    {
-        GreatPressureBlock((int)data.count, CheckerboardType.emmy);
-        //_curRowCnt = (int)data.cur_row_cnt;
-        //_totalRowCnt = (int)data.total_row_cnt;
-    }
-
-    public void Usekill(SprotoType.game_use_skill_broadcast.request data)
-    {
-        var use = data.skill_id;
     }
     //public void SyncScore(SprotoType.sync_score.request data)
     //{

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
-
+using Spine.Unity;
 
 public class MainController : GameController
 {
@@ -22,6 +22,9 @@ public class MainController : GameController
     private Tweener _comingSoonTw;
     private Button _skill1Btn; // 设置按钮
     private Button _skill2Btn; // 设置按钮
+
+    private SkeletonGraphic _minRole;
+    private SkeletonGraphic _emmyRole;
 
     void Awake()
     {
@@ -60,6 +63,17 @@ public class MainController : GameController
 
         _rivalObj = GameObject.Find(Config.rivalShowPath);
         _rivalObj.SetActive(_multiPlayer);
+
+        _minRole = GameObject.Find(Config.uiGameRoot + "/Player1/role").GetComponent<SkeletonGraphic>();
+        _minRole.AnimationState.Complete += (a) =>
+        {
+            PlayAnima("idle");
+        };
+        _emmyRole = GameObject.Find(Config.uiGameRoot + "/Player2/role").GetComponent<SkeletonGraphic>();
+        _emmyRole.AnimationState.Complete += (a) =>
+        {
+            PlayAnima("idle");
+        };
 
         // state handler init        
         InitStateHandlers();
@@ -187,8 +201,9 @@ public class MainController : GameController
         NetSender.Send<Protocol.game_use_skill>(req, (data) =>
         {
             var resp = data as SprotoType.game_use_skill.response;
-            Debug.LogFormat(" score response : {0}", resp.e);
+            Debug.LogFormat(" game_use_skill response : {0}", resp.e);
             if (resp.e == 0) { }
+            _minRole.AnimationState.SetAnimation(0, "atk", false);
         });
     }
     void OnSkill2BtnClick()
@@ -201,8 +216,9 @@ public class MainController : GameController
         NetSender.Send<Protocol.game_use_skill>(req, (data) =>
         {
             var resp = data as SprotoType.game_use_skill.response;
-            Debug.LogFormat(" score response : {0}", resp.e);
+            Debug.LogFormat(" game_use_skill response : {0}", resp.e);
             if (resp.e == 0) { }
+            _minRole.AnimationState.SetAnimation(0, "atk2", false);
         });
     }
 
@@ -244,7 +260,7 @@ public class MainController : GameController
     void ShowResult()
     {
         _resultObj.SetActive(true);
-        _resultInfoText.text = "You scored " + _score.ToString() + " in " + Util.FormatTime(Time.realtimeSinceStartup);
+        _resultInfoText.text = Util.FormatTime(Time.realtimeSinceStartup);
     }
 
     void TouchTop()
@@ -252,13 +268,14 @@ public class MainController : GameController
         _gameOver = true;
         if (_multiPlayer)
         {
-            var req = new SprotoType.game_up_row.request();
-            NetSender.Send<Protocol.game_up_row>(req, (data) =>
+            var req = new SprotoType.game_over.request();
+            NetSender.Send<Protocol.game_over>(req, (data) =>
             {
-                var resp = data as SprotoType.game_up_row.response;
-                Debug.LogFormat(" touch_top response : {0}", resp.e);
+                var resp = data as SprotoType.game_over.response;
+                Debug.LogFormat("game_over : {0}", resp.e);
                 if (resp.e == 0) { }
             });
+            ShowResult();
         }
         else
         {
@@ -271,23 +288,33 @@ public class MainController : GameController
         _gameStart = true;
     }
 
-    public void GameOver(SprotoType.game_over.request data)
+    public void GameOver(SprotoType.game_over_broadcast.request data)
     {
         _gameOver = true;
         ShowResult();
     }
 
-    //public void SyncScore(SprotoType.sync_score.request data)
-    //{
-    //    int comboCnt = (int)data.combo_cnt;
-    //    if (isExMode)
-    //    {
-    //        if (comboCnt > 7)
-    //            comboCnt = 7;
-    //        if (comboCnt > 3)
-    //        {
-    //            var obj = Instantiate(Config.obstacleObjs[comboCnt - 4], _blockBoardObj.transform) as GameObject;
-    //        }
-    //    }
-    //}
+    public void SyncNewpreBlock(SprotoType.eliminate_broadcast.request data)
+    {
+        GreatPressureBlock((int)data.count);
+        //_curRowCnt = (int)data.cur_row_cnt;
+        //_totalRowCnt = (int)data.total_row_cnt;
+    }
+
+    public void Usekill(SprotoType.game_use_skill_broadcast.request data)
+    {
+        PlayAnima(data.skill_id == 1001 ? "atk" : "atk2", false);
+    }
+
+    private void PlayAnima(string animaname,bool ismin = true)
+    {
+        if (ismin)
+        {
+            _minRole.AnimationState.SetAnimation(0, animaname, false);
+        }
+        else
+        {
+            _emmyRole.AnimationState.SetAnimation(0, animaname, false);
+        }
+    }
 }

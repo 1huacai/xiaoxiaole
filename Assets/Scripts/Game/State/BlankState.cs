@@ -78,14 +78,27 @@ class BlankState : ControllerStateBase
         }
         if (_blankCnt > 3)
         {
-            _controller.GreatPressureBlock(_blankCnt);
+            //_controller.GreatPressureBlock(_blankCnt);
             //技能释放控制器逻辑添加
         }
         else
         {
 
         }
+
+        SendNet(_blankCnt);
         _controller.DestroyPBlockRow();
+    }
+    private void SendNet(int _count)
+    {
+        var req = new SprotoType.eliminate.request();
+        req.count = _count;
+        NetSender.Send<Protocol.eliminate>(req, (data) =>
+        {
+            var resp = data as SprotoType.eliminate.response;
+            Debug.LogFormat("eliminate : {0}", resp.e);
+            if (resp.e == 0) { }
+        });
     }
 
     public override void Update()

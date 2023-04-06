@@ -53,7 +53,7 @@ public class MsgHandler : MonoBehaviour
             return null;
         });
 
-        NetReceiver.AddHandler<Protocol.match_start>((data) =>
+        NetReceiver.AddHandler<Protocol.game_start>((data) =>
         {
             Debug.Log("========= game_start");
             _mainControllerInst.GameStart(data as SprotoType.game_start.request);
@@ -61,10 +61,10 @@ public class MsgHandler : MonoBehaviour
         });
 
 
-        NetReceiver.AddHandler<Protocol.game_over>((data) =>
+        NetReceiver.AddHandler<Protocol.game_over_broadcast>((data) =>
         {
             Debug.Log("========= game_over");
-            _mainControllerInst.GameOver(data as SprotoType.game_over.request);
+            _mainControllerInst.GameOver(data as SprotoType.game_over_broadcast.request);
             return null;
         });
 
@@ -75,7 +75,7 @@ public class MsgHandler : MonoBehaviour
         NetReceiver.AddHandler<Protocol.game_use_skill_broadcast>((data) =>
         {
             Debug.Log("========= game_use_skill_broadcast");
-            _rivalControllerInst.Usekill(data as SprotoType.game_use_skill_broadcast.request);
+            _mainControllerInst.Usekill(data as SprotoType.game_use_skill_broadcast.request);
             return null;
         });
 
@@ -102,7 +102,7 @@ public class MsgHandler : MonoBehaviour
         NetReceiver.AddHandler<Protocol.eliminate_broadcast>((data) =>
         {
             Debug.Log("========= SyncNewpreBlock");
-            _rivalControllerInst.SyncNewpreBlock(data as SprotoType.eliminate_broadcast.request);
+            _mainControllerInst.SyncNewpreBlock(data as SprotoType.eliminate_broadcast.request);
             return null;
         });
 

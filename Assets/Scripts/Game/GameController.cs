@@ -200,12 +200,13 @@ public class GameController : MonoBehaviour
     public void RaiseOneRow(CheckerboardType _type = CheckerboardType.mine)
     {
         Transform _tran = _type == CheckerboardType.mine ? _blockBoardObj.transform : emmy_blockBoardObj.transform;
+        Transform _Areatran = _type == CheckerboardType.mine ? _blockAreaObj.transform : emmy_blockAreaObj.transform;
         _raiseOneRow = false;
         _suspendRaise = true;
         var moveDis = (_totalRowCnt - Config.initRows + 1) * Config.blockHeight;
         _tran.DOLocalMoveY(moveDis, 0.2f).OnComplete(() =>
         {
-            _tran.DOLocalMoveY(_tran.localPosition.y - Config.blockHeight, 0);
+            _Areatran.DOLocalMoveY(_Areatran.localPosition.y - Config.blockHeight, 0);
             _addNewRow = true;
             _suspendRaise = false;
         });
@@ -214,11 +215,12 @@ public class GameController : MonoBehaviour
     public void RaiseOneStep(CheckerboardType _type = CheckerboardType.mine)
     {
         Transform _tran = _type == CheckerboardType.mine ? _blockBoardObj.transform : emmy_blockBoardObj.transform;
+        Transform _Areatran = _type == CheckerboardType.mine ? _blockAreaObj.transform : emmy_blockAreaObj.transform;
         _tran.DOLocalMoveY(_tran.localPosition.y + Config.raiseDis, 0);
 
         if (_tran.localPosition.y > (_totalRowCnt - Config.initRows + 1) * Config.blockHeight - 15)
         {
-            _tran.DOLocalMoveY(_tran.localPosition.y - Config.blockHeight, 0);
+            _Areatran.DOLocalMoveY(_Areatran.localPosition.y - Config.blockHeight, 0);
             _addNewRow = true;
         }
         _delta = 0;
@@ -251,7 +253,16 @@ public class GameController : MonoBehaviour
             block.transform.localPosition = new Vector3(Config.blockXPosShit + col * BlockWith(_type), -(Config.initRows - 1 - row) * BlockHeight(_type), 0);
             block.BlockOperationEvent += OnBlockOperation;
 
-            _blockMatrix[row, col] = block;
+            try
+            {
+                _blockMatrix[row, col] = block;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
         }
         _curRowCnt = Config.initRows;
         _totalRowCnt = Config.initRows;
@@ -271,6 +282,7 @@ public class GameController : MonoBehaviour
             _PressureMatrixList.Add(block);
         }
         _PressureMatrixList.Sort((a, b) => a.Row_y - b.Row_y);
+        _controller.ChangeToState(GameBoardState.Fall);
     }
     List<KeyValuePair<int, int>> _pressureInfo = new List<KeyValuePair<int, int>>();
     int PressureWith, PressureHeight;
@@ -409,7 +421,7 @@ public class GameController : MonoBehaviour
         }
     }
 
-    public void AddNewRow(List<BlockData> newRow, CheckerboardType _type)
+    public void AddNewRow(List<BlockData> newRow, CheckerboardType _type = CheckerboardType.mine)
     {
         //已有方块整体上移一行
         BringForward();

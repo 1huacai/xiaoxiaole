@@ -44,7 +44,7 @@ public class Main : MonoBehaviour
     private Button _diaryBtn;
 
     private Button _loginBtn;
-    private Button _unmatchBtn;
+    public Button _unmatchBtn;
 
 
     private bool _enterGame = false; // 进入游戏开关
@@ -79,6 +79,7 @@ public class Main : MonoBehaviour
         _matchingDotText = GameObject.Find(Config.matchingDotTextPath).GetComponent<Text>();
         _matchingUI.SetActive(false);
 
+
         _matchSuccessUI = GameObject.Find(Config.matchSuccessPath);
         _matchSuccessText = GameObject.Find(Config.matchSuccessTextPath).GetComponent<Text>();
         _matchSuccessUI.SetActive(false);
@@ -104,7 +105,6 @@ public class Main : MonoBehaviour
 
         _loginBtn = GameObject.Find("login").GetComponent<Button>();
         _loginBtn.onClick.AddListener(OnLoginClick);
-        _unmatchBtn = GameObject.Find("Matching/Button").GetComponent<Button>();
         _unmatchBtn.onClick.AddListener(OnUnmatchClick);
 
         Config.gameObj.SetActive(false);
@@ -163,6 +163,14 @@ public class Main : MonoBehaviour
                 _rivalGamerObj = Instantiate(Config._rivalGamerObj, parent) as GameObject;
                 var rivalController = _rivalGamerObj.GetComponent<RivalController>();
                 rivalController.isExMode = _isExMode;
+
+                //var emmyparent = Config.gameObj.transform.Find("emmybg");
+                //_emmyGamerObj = Instantiate(Config.emmyGameAreaObj, emmyparent) as GameObject;
+                //var emmymainController = _emmyGamerObj.GetComponent<RivalController>();
+                //emmymainController.name = "emmyGameArea";
+                //emmymainController.type = CheckerboardType.emmy;
+                ////emmymainController._multiPlayer = _multiPlayer;
+                //emmymainController.isExMode = _isExMode;
             }
 
             var timerParent = Config.gameObj.transform.Find("Timer");
@@ -170,14 +178,6 @@ public class Main : MonoBehaviour
             _timerObj.GetComponent<CountDown>()._countDown = _multiPlayer;
             
             _multiPlayer = false;
-
-            var emmyparent = Config.gameObj.transform.Find("emmybg");
-            _emmyGamerObj = Instantiate(Config.emmyGameAreaObj, emmyparent) as GameObject;
-            var emmymainController = _emmyGamerObj.GetComponent<RivalController>();
-            emmymainController.name = "emmyGameArea";
-            emmymainController.type = CheckerboardType.emmy;
-            emmymainController._multiPlayer = _multiPlayer;
-            emmymainController.isExMode = _isExMode;
 
 
         }
@@ -238,16 +238,50 @@ public class Main : MonoBehaviour
     {
         Debug.Log("OnLoginClick");
         Util.PlayClickSound(_loginBtn.gameObject);
-        var req = new SprotoType.login.request();
-        req.rid = "1111";
-        NetSender.Send<Protocol.login>(req, (data) =>
+
+        if (NetCore.connected == false)
         {
-            var resp = data as SprotoType.match_start.response;
-            Debug.LogFormat("login response : {0}", resp.e);
-            if (resp.e == 0)
+            _server_logind = false;
+            NetCore.Connect(Config.serverIP, Config.serverPort, () =>
             {
-            }
-        });
+                var req = new SprotoType.game_auth.request()
+                {
+                    imei = SystemInfo.deviceUniqueIdentifier,
+                    version = "2023040512",
+                };
+                NetSender.Send<Protocol.game_auth>(req, (data) =>
+                {
+                    var resp = data as SprotoType.game_auth.response;
+                    Debug.LogFormat("game_auth response : {0}, rid={1}", resp.e, resp.rid);
+                    if (resp.e == 0)
+                    {
+                        rid = resp.rid;
+                        var _req = new SprotoType.login.request();
+                        _req.rid = rid;
+
+                        NetSender.Send<Protocol.login>(_req, (_data) =>
+                        {
+                            var resp = _data as SprotoType.login.response;
+                            Debug.LogFormat("login response : {0}", resp.e);
+
+                            _server_logind = true;
+                            GameBattle();
+                            if (resp.e == 0)
+                            {
+                            }
+                        });
+
+                    }
+                });
+                Debug.Log("connect server success");
+            });
+        }
+        else
+        {
+            GameBattle();
+        }
+
+
     }
     void OnUnmatchClick()
     {
@@ -321,20 +355,21 @@ public class Main : MonoBehaviour
 
     void LoginReq(string rid)
     {
-        var req = new SprotoType.login.request()
-        {
-            rid = rid,
-        };
-        NetSender.Send<Protocol.login>(req, (data) =>
-        {
-            var resp = data as SprotoType.login.response;
-            Debug.LogFormat("login response : {0}", resp.e);
-            if (resp.e == 0)
-            {
-                _server_logind = true;
-                MatchReq();
-            }
-        });
+        GameBattle();
+        //var req = new SprotoType.login.request()
+        //{
+        //    rid = rid,
+        //};
+        //NetSender.Send<Protocol.login>(req, (data) =>
+        //{
+        //    var resp = data as SprotoType.login.response;
+        //    Debug.LogFormat("login response : {0}", resp.e);
+        //    if (resp.e == 0)
+        //    {
+        //        _server_logind = true;
+        //        MatchReq();
+        //    }
+        //});
     }
 
     void MatchReq()
@@ -413,6 +448,11 @@ public class Main : MonoBehaviour
     // 比赛准备阶段
     public void GameReady(SprotoType.game_ready.request data)
     {
+        foreach (var item in data.matrix)
+        {
+            item.row -= 1;
+            item.col -= 1;
+        }
         _initMatrix = data.matrix;
         _enterGame = true;
     }
