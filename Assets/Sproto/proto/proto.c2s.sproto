@@ -48,6 +48,7 @@ login 21 {
 .player_info {
     rid                     0 : string
     rname                   1 : string
+    render                  2 : integer
 }
 
 # 开始匹配

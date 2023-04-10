@@ -1772,7 +1772,7 @@ namespace SprotoType {
 
 
 	public class player_info : SprotoTypeBase {
-		private static int max_field_count = 2;
+		private static int max_field_count = 3;
 		
 		
 		private string _rid; // tag 0
@@ -1793,6 +1793,15 @@ namespace SprotoType {
 			get { return base.has_field.has_field (1); }
 		}
 
+		private Int64 _render; // tag 2
+		public Int64 render {
+			get { return _render; }
+			set { base.has_field.set_field (2, true); _render = value; }
+		}
+		public bool HasRender {
+			get { return base.has_field.has_field (2); }
+		}
+
 		public player_info () : base(max_field_count) {}
 
 		public player_info (byte[] buffer) : base(max_field_count, buffer) {
@@ -1808,6 +1817,9 @@ namespace SprotoType {
 					break;
 				case 1:
 					this.rname = base.deserialize.read_string ();
+					break;
+				case 2:
+					this.render = base.deserialize.read_integer ();
 					break;
 				default:
 					base.deserialize.read_unknow_data ();
@@ -1825,6 +1837,10 @@ namespace SprotoType {
 
 			if (base.has_field.has_field (1)) {
 				base.serialize.write_string (this.rname, 1);
+			}
+
+			if (base.has_field.has_field (2)) {
+				base.serialize.write_integer (this.render, 2);
 			}
 
 			return base.serialize.close ();

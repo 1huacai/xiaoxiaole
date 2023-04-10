@@ -78,15 +78,31 @@ class BlankState : ControllerStateBase
         }
         if (_blankCnt > 3)
         {
+            
+
             //_controller.GreatPressureBlock(_blankCnt);
             //技能释放控制器逻辑添加
+
+            if (_controller is MainController)
+            {
+                MainManager.Ins._rivalController.GreatPressureBlock(_blankCnt);
+                //var main = _controller as MainController;
+                //main.PlayAnima(main._minroleData.specialAtkAnimaName);
+            }
         }
         else
         {
-
+            //if (_controller is MainController)
+            //{
+            //    var main = _controller as MainController;
+            //    main.PlayAnima(main._minroleData.atkAnimaName);
+            //}
         }
-
-        SendNet(_blankCnt);
+        if (_controller is MainController)
+        {
+            SendNet(_blankCnt);
+            MainManager.Ins._mainController._minroleData.Skill_2_Value++;
+        }
         _controller.DestroyPBlockRow();
     }
     private void SendNet(int _count)

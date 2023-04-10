@@ -11,8 +11,6 @@ public enum CheckerboardType
 
 public class Main : MonoBehaviour
 {
-    public static string rid = "";
-
     private Button _singleBtn;
     private Button _multiBtn;
     private Button _multiExBtn;
@@ -58,12 +56,12 @@ public class Main : MonoBehaviour
     public static bool _reset = false;
 
 
-
     // Start is called before the first frame update
     void Start()
     {
         Config.msgHandler._mainInst = this;
         Application.runInBackground = true;
+        Screen.sleepTimeout = SleepTimeout.NeverSleep;
 
         _singleBtn = GameObject.Find(Config.singleStartPath).GetComponent<Button>();
         _singleBtn.onClick.AddListener(OnSingleBtnClick);
@@ -132,6 +130,8 @@ public class Main : MonoBehaviour
                 GameObject.Destroy(_timerObj);
                 _timerObj = null;
             }
+            if (_loginBtn != null)
+                _loginBtn.gameObject.SetActive(true);
             _reset = false;
         }
 
@@ -158,11 +158,15 @@ public class Main : MonoBehaviour
             mainController.type = CheckerboardType.mine;
             mainController._multiPlayer = _multiPlayer;
             mainController.isExMode = _isExMode;
+
+            MainManager.Ins._mainController = mainController;
             if (_multiPlayer)
             {
                 _rivalGamerObj = Instantiate(Config._rivalGamerObj, parent) as GameObject;
                 var rivalController = _rivalGamerObj.GetComponent<RivalController>();
                 rivalController.isExMode = _isExMode;
+
+                MainManager.Ins._rivalController = rivalController;
 
                 //var emmyparent = Config.gameObj.transform.Find("emmybg");
                 //_emmyGamerObj = Instantiate(Config.emmyGameAreaObj, emmyparent) as GameObject;
@@ -210,6 +214,7 @@ public class Main : MonoBehaviour
     void OnMatchCancelClick()
     {
         _matchingUI.SetActive(false);
+        _loginBtn.gameObject.SetActive(true);
     }
 
     // ∆•≈‰ ß∞‹»∑»œøÚ÷ÿ ‘
@@ -255,9 +260,9 @@ public class Main : MonoBehaviour
                     Debug.LogFormat("game_auth response : {0}, rid={1}", resp.e, resp.rid);
                     if (resp.e == 0)
                     {
-                        rid = resp.rid;
+                        MainManager.Ins.Uid = resp.rid;
                         var _req = new SprotoType.login.request();
-                        _req.rid = rid;
+                        _req.rid = MainManager.Ins.Uid;
 
                         NetSender.Send<Protocol.login>(_req, (_data) =>
                         {
@@ -278,6 +283,7 @@ public class Main : MonoBehaviour
         }
         else
         {
+            _server_logind = true;
             GameBattle();
         }
 
@@ -296,6 +302,8 @@ public class Main : MonoBehaviour
             if (resp.e == 0)
             {
             }
+            _matchingUI.gameObject.SetActive(false);
+            _loginBtn.gameObject.SetActive(true);
         });
     }
 
@@ -347,8 +355,8 @@ public class Main : MonoBehaviour
             Debug.LogFormat("game_auth response : {0}, rid={1}", resp.e, resp.rid);
             if (resp.e == 0)
             {
-                rid = resp.rid;
-                LoginReq(rid);
+                MainManager.Ins.Uid = resp.rid;
+                LoginReq(MainManager.Ins.Uid);
             }
         });
     }
@@ -382,6 +390,7 @@ public class Main : MonoBehaviour
             if (resp.e == 0)
             {
                 _matchingUI.SetActive(true);
+                _loginBtn.gameObject.SetActive(false);
                 SwitchMatchingText(true);
                 _matchingDotText.text = "";
                 Tweener textTW = _matchingDotText.DOText("...", 3.0f);
@@ -433,6 +442,8 @@ public class Main : MonoBehaviour
     {
         _multiPlayer = true;
         GenInitBlocks(true);
+
+        MainManager.Ins.players = data.players;
 
         var colorTW = _matchSuccessText.DOColor(Color.red, 0.1f);
         colorTW.SetLoops(3);

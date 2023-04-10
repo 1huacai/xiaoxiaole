@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 using Spine.Unity;
+using Spine;
+using System.Collections;
 
 public class MainController : GameController
 {
@@ -23,13 +25,30 @@ public class MainController : GameController
     private Button _skill1Btn; // 设置按钮
     private Button _skill2Btn; // 设置按钮
 
+    private Transform _minRoleTF;
+    private Transform _emmyRoleTF;
+
     private SkeletonGraphic _minRole;
     private SkeletonGraphic _emmyRole;
 
+    public Role _minroleData;
+    public Role _emmyroleData;
+
+    private Slider _minHp;
+    private Slider _minShield;
+    private Text _minHpLable;
+    private Text _minShieldLable;
+
+
+    private Slider _emmyHp;
+    private Slider _emmyShield;
+    private Text _emmyHpLable;
+    private Text _emmyShieldLable;
     void Awake()
     {
         _controller = this;
         Config.msgHandler._mainControllerInst = this;
+        StartTimer();
     }
 
     void Start()
@@ -64,16 +83,21 @@ public class MainController : GameController
         _rivalObj = GameObject.Find(Config.rivalShowPath);
         _rivalObj.SetActive(_multiPlayer);
 
-        _minRole = GameObject.Find(Config.uiGameRoot + "/Player1/role").GetComponent<SkeletonGraphic>();
-        _minRole.AnimationState.Complete += (a) =>
-        {
-            PlayAnima("idle");
-        };
-        _emmyRole = GameObject.Find(Config.uiGameRoot + "/Player2/role").GetComponent<SkeletonGraphic>();
-        _emmyRole.AnimationState.Complete += (a) =>
-        {
-            PlayAnima("idle");
-        };
+        _minRoleTF = GameObject.Find(Config.uiGameRoot + "/Player1/role").transform;
+        _emmyRoleTF = GameObject.Find(Config.uiGameRoot + "/Player2/role").transform;
+
+        _minHp = GameObject.Find(Config.uiGameRoot + "/Player1/HpBar/Hp").GetComponent<Slider>();
+        _minShield = GameObject.Find(Config.uiGameRoot + "/Player1/HpBar/Shield").GetComponent<Slider>();
+        _minHpLable = GameObject.Find(Config.uiGameRoot + "/Player1/HpBar/Hp/Text").GetComponent<Text>();
+        _minShieldLable = GameObject.Find(Config.uiGameRoot + "/Player1/HpBar/Shield/Text").GetComponent<Text>();
+
+
+        _emmyHp = GameObject.Find(Config.uiGameRoot + "/Player2/HpBar/Hp").GetComponent<Slider>();
+        _emmyShield = GameObject.Find(Config.uiGameRoot + "/Player2/HpBar/Shield").GetComponent<Slider>();
+        _emmyHpLable = GameObject.Find(Config.uiGameRoot + "/Player2/HpBar/Hp/Text").GetComponent<Text>();
+        _emmyShieldLable = GameObject.Find(Config.uiGameRoot + "/Player2/HpBar/Shield/Text").GetComponent<Text>();
+
+        InitRoleData(MainManager.Ins.players);
 
         // state handler init        
         InitStateHandlers();
@@ -88,6 +112,33 @@ public class MainController : GameController
         DestroyBlankRow();
     }
 
+    public void InitRoleData(List<SprotoType.player_info> infos)
+    {
+        for (int i = 0; i < infos.Count; i++)
+        {
+            if (infos[i].rid == MainManager.Ins.Uid)
+            {
+                _minroleData = new Role();
+                _minroleData.sid = (int)infos[i].render;
+            }
+            else
+            {
+                _emmyroleData = new Role();
+                _emmyroleData.sid = (int)infos[i].render;
+            }
+        }
+
+        _minHp.maxValue = _minroleData.MaxHp;
+        _minShield.maxValue = _minroleData.MaxShield;
+        UpdateMinSlider();
+
+        _emmyHp.maxValue = _emmyroleData.MaxHp;
+        _emmyShield.maxValue = _emmyroleData.MaxShield;
+        UpdateEmmySlider();
+        ShowRolrModel();
+
+        ShowInitAnima();
+    }
     void Update()
     {
         if (_gameOver)
@@ -193,32 +244,48 @@ public class MainController : GameController
 
     void OnSkill1BtnClick()
     {
-        Debug.Log("OnSkill1BtnClick");
+        if (!_minroleData.Skill_1_CD)
+        {
+            Debug.LogError("skill _ cd");
+            return;
+        }
+            Debug.Log("OnSkill1BtnClick");
         Util.PlayClickSound(_setupBtn.gameObject);
 
         var req = new SprotoType.game_use_skill.request();
-        req.skill_id = 1001;
+        req.skill_id = _minroleData.skillId_1;
         NetSender.Send<Protocol.game_use_skill>(req, (data) =>
         {
             var resp = data as SprotoType.game_use_skill.response;
             Debug.LogFormat(" game_use_skill response : {0}", resp.e);
             if (resp.e == 0) { }
-            _minRole.AnimationState.SetAnimation(0, "atk", false);
+            PlayAnima(_minroleData.skillAnimaName_1);
+            PlayAnima("hurt",false);
+            _minroleData.UseSkill1Time();
         });
     }
     void OnSkill2BtnClick()
     {
+        if (!_minroleData.Skill_2_CD)
+        {
+            Debug.LogError("skill_2_cd");
+            return;
+        }
         Debug.Log("OnSkill2BtnClick");
         Util.PlayClickSound(_setupBtn.gameObject);
 
         var req = new SprotoType.game_use_skill.request();
-        req.skill_id = 1002;
+        req.skill_id = _minroleData.skillId_2;
         NetSender.Send<Protocol.game_use_skill>(req, (data) =>
         {
             var resp = data as SprotoType.game_use_skill.response;
             Debug.LogFormat(" game_use_skill response : {0}", resp.e);
             if (resp.e == 0) { }
-            _minRole.AnimationState.SetAnimation(0, "atk2", false);
+            PlayAnima(_minroleData.skillAnimaName_2);
+            PlayAnima("hurt", false);
+            _minroleData.UseSkill2();
+            _emmyroleData.ChangeHpValue(30);
+            UpdateEmmySlider();
         });
     }
 
@@ -296,6 +363,9 @@ public class MainController : GameController
 
     public void SyncNewpreBlock(SprotoType.eliminate_broadcast.request data)
     {
+        PlayAnima(data.count == 3 ? "atk" : "atk2", false);
+        PlayAnima("hurt");
+
         GreatPressureBlock((int)data.count);
         //_curRowCnt = (int)data.cur_row_cnt;
         //_totalRowCnt = (int)data.total_row_cnt;
@@ -303,10 +373,14 @@ public class MainController : GameController
 
     public void Usekill(SprotoType.game_use_skill_broadcast.request data)
     {
-        PlayAnima(data.skill_id == 1001 ? "atk" : "atk2", false);
+        PlayAnima(data.skill_id / 1000 > 10 ? "kill2" : "kill1", false);
+        PlayAnima("hurt");
+
+        _minroleData.ChangeHpValue(30);
+        UpdateMinSlider();
     }
 
-    private void PlayAnima(string animaname,bool ismin = true)
+    public void PlayAnima(string animaname,bool ismin = true)
     {
         if (ismin)
         {
@@ -315,6 +389,94 @@ public class MainController : GameController
         else
         {
             _emmyRole.AnimationState.SetAnimation(0, animaname, false);
+        }
+    }
+    private void ShowRolrModel()
+    {
+        if (_minRoleTF.childCount == 0)
+        {
+            var min = Resources.Load<SkeletonDataAsset>(_minroleData.pathName);
+            Material minmaterial = new Material(Shader.Find("Spine/SkeletonGraphic"));
+            _minRole = SkeletonGraphic.NewSkeletonGraphicGameObject(min, _minRoleTF, minmaterial);
+
+            _minRole.skeletonDataAsset = min;
+            _minRole.initialSkinName = "default";
+            _minRole.startingAnimation = "idle";
+            _minRole.startingLoop = true;
+            _minRole.MatchRectTransformWithBounds();
+            _minRole.material = minmaterial;
+            _minRole.Initialize(true);
+
+            _minRole.AnimationState.Complete += (a) =>
+            {
+                PlayAnima(_minroleData.idleAnimaName);
+            };
+        }
+        else
+            _minRole = _minRoleTF.GetChild(0).GetComponent<SkeletonGraphic>();
+
+        if (_emmyRoleTF.childCount == 0)
+        {
+            var emmy = Resources.Load<SkeletonDataAsset>(_emmyroleData.pathName);
+            Material emmymaterial = new Material(Shader.Find("Spine/SkeletonGraphic"));
+            _emmyRole = SkeletonGraphic.NewSkeletonGraphicGameObject(emmy, _emmyRoleTF, emmymaterial);
+
+            _emmyRole.skeletonDataAsset = emmy;
+            _emmyRole.initialSkinName = "default";
+            _emmyRole.startingAnimation = "idle";
+            _emmyRole.startingLoop = true;
+            _emmyRole.MatchRectTransformWithBounds();
+            _emmyRole.material = emmymaterial;
+            _emmyRole.Initialize(true);
+
+            _emmyRole.AnimationState.Complete += (a) =>
+            {
+                PlayAnima(_emmyroleData.idleAnimaName, false);
+            };
+        }
+        else
+            _emmyRole = _minRoleTF.GetChild(0).GetComponent<SkeletonGraphic>();
+    }
+
+    private void ShowInitAnima()
+    {
+        _minRole.AnimationState.SetAnimation(0, "appear_annimation", false);
+        _emmyRole.AnimationState.SetAnimation(0, "appear_annimation", false);
+    }
+
+    public void UpdateMinSlider()
+    {
+        float hpValue = (float)_minroleData.Hp;
+        float shieldValue = (float)_minroleData.Shield;
+        _minHp.value = hpValue;
+        _minShield.value = shieldValue;
+
+        _minHpLable.text = string.Format("{0}/{1}", _minroleData.Hp, _minroleData.MaxHp);
+        _minShieldLable.text = string.Format("{0}/{1}", _minroleData.Shield, _minroleData.MaxShield);
+    }
+    public void UpdateEmmySlider()
+    {
+        float hpValue = (float)_emmyroleData.Hp;
+        float shieldValue = (float)_emmyroleData.Shield;
+        _emmyHp.value = hpValue;
+        _emmyShield.value = shieldValue;
+
+        _emmyHpLable.text = string.Format("{0}/{1}", _emmyroleData.Hp, _emmyroleData.MaxHp);
+        _emmyShieldLable.text = string.Format("{0}/{1}", _emmyroleData.Shield, _emmyroleData.MaxShield);
+    }
+
+
+
+    private void StartTimer()
+    {
+        StartCoroutine(Timer());
+    }
+    IEnumerator Timer()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(1);
+            MainManager.Ins.Timer++;
         }
     }
 }
