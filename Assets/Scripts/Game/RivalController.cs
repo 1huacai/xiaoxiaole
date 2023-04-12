@@ -37,7 +37,10 @@ public class RivalController : GameController
 
         if (!_gameStart)
             return;
-
+        if (_curRowCnt > Config.rows)
+            return;
+        if (_curMaxRowCnt > Config.rows)
+            return;
         if (_raiseOneRow)
         {
             RaiseOneRow();
@@ -53,7 +56,7 @@ public class RivalController : GameController
 
         if (!_suspendRaise && _delta * 1000 >= _curRaiseTime)
         {
-            RaiseOneStep();//CheckerboardType.emmy
+            RaiseOneStep();
         }
         _delta += Time.deltaTime;
     }
@@ -106,18 +109,4 @@ public class RivalController : GameController
         //_curRowCnt = (int)data.cur_row_cnt;
         //_totalRowCnt = (int)data.total_row_cnt;
     }
-    //public void SyncScore(SprotoType.sync_score.request data)
-    //{
-    //    int comboCnt = (int)data.combo_cnt;
-    //    ChangeScore((int)data.score, comboCnt);
-    //    if (isExMode)
-    //    {
-    //        if (comboCnt > 7)
-    //            comboCnt = 7;
-    //        if (comboCnt > 3)
-    //        {
-    //            var obj = Instantiate(Config.obstacleObjs[comboCnt - 4], _blockBoardObj.transform) as GameObject;
-    //        }
-    //    }
-    //}
 }

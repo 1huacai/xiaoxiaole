@@ -78,6 +78,8 @@ public class Role
         }
     }
 
+    public int hurtTimer;
+
     public Role()
     {
         sid = Random.Range(1, 6);
@@ -87,16 +89,57 @@ public class Role
         Shield = MaxShield;
     }
 
-    public void UseSkill1Time()
+    public void UseSkill1()
     {
         Cd = MainManager.Ins.Timer + 15;
+
+        if (sid < 4)
+        {
+            //ÑÌÎíµ¯
+        }
+        else
+        { 
+            //¿ìËÙ³äÄÜ
+        }
     }
+    public bool IsRecoverHpSKill
+    {
+        get
+        {
+            return sid > 3;
+        }
+    }
+    public int UseRecoverSkillTime;
+
+
     public void UseSkill2()
     {
         Skill_2_Value = 0;
+        if (IsRecoverHpSKill)
+            UseRecoverSkillTime = MainManager.Ins.Timer + 8;
     }
+    public void ChangeSkill2Cd(int value)
+    {
+        Skill_2_Value += value;
+    }
+    public void UpdateSkill2(int  count)
+    {
+        ChangeSkill2Cd(1);
+        if (count > 3 && count - 3 <=8 && MainManager.Ins.Timer < UseRecoverSkillTime)
+        {
+            addHpValue(count - 1);
+        }
+    }
+    public void addHpValue(int changeValue)
+    {
+        if (Hp + changeValue >= MaxHp)
+            Hp = MaxHp;
+        else
+            Hp += changeValue;
 
-
+        if(changeValue < 0)
+            hurtTimer = MainManager.Ins.Timer;
+    }
     public void ChangeHpValue(int changeValue)
     {
         if (changeValue >= Shield)
@@ -109,5 +152,17 @@ public class Role
             Shield = Shield - changeValue;
         }
         if (Hp <= 0) Hp = 0;
+
+        hurtTimer = MainManager.Ins.Timer;
     }
+    public void ChangeShildValue(int changeValue)
+    {
+        if (Shield + changeValue >= MaxShield)
+            Shield = MaxShield;
+        else
+            Shield += changeValue;
+    }
+
+
+    public int ChangeShieldTime;
 }

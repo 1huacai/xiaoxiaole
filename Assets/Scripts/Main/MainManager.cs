@@ -27,4 +27,8 @@ public class MainManager
     public RivalController _rivalController;
 
     public int Timer;
+
+    public bool DragBlock = true;
+
+    public int DragTime;
 }

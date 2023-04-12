@@ -78,7 +78,7 @@ public class Block : MonoBehaviour
 
     // Update is called once per frame
     void Update() {
-        if (drag)
+        if (drag && MainManager.Ins.DragBlock)
         {
             _dragOffset = mousePosition - Camera.main.ScreenToWorldPoint(Input.mousePosition);
             moveEvent(_dragOffset);

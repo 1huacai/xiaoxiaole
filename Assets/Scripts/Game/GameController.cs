@@ -90,16 +90,18 @@ public class GameController : MonoBehaviour
 
     public void InitMembers(CheckerboardType _type = CheckerboardType.mine)
     {
-        if (_type == CheckerboardType.mine)
-        {
-            _blockBoardObj = transform.Find("BlockBoard").gameObject;
-            _blockAreaObj = _blockBoardObj.transform.Find("AreaBottom").gameObject;
-        }
-        else
-        {
-            emmy_blockBoardObj = transform.Find("BlockBoard").gameObject;
-            emmy_blockAreaObj = emmy_blockBoardObj.transform.Find("AreaBottom").gameObject;
-        }
+        _blockBoardObj = transform.Find("BlockBoard").gameObject;
+        _blockAreaObj = _blockBoardObj.transform.Find("AreaBottom").gameObject;
+        //if (_type == CheckerboardType.mine)
+        //{
+        //    _blockBoardObj = transform.Find("BlockBoard").gameObject;
+        //    _blockAreaObj = _blockBoardObj.transform.Find("AreaBottom").gameObject;
+        //}
+        //else
+        //{
+        //    emmy_blockBoardObj = transform.Find("BlockBoard").gameObject;
+        //    emmy_blockAreaObj = emmy_blockBoardObj.transform.Find("AreaBottom").gameObject;
+        //}
 
         _gameReady = true;
         _gameStart = false;

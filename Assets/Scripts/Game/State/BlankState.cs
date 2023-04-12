@@ -101,7 +101,8 @@ class BlankState : ControllerStateBase
         if (_controller is MainController)
         {
             SendNet(_blankCnt);
-            MainManager.Ins._mainController._minroleData.Skill_2_Value++;
+
+            MainManager.Ins._mainController._minroleData.UpdateSkill2(_blankCnt);
         }
         _controller.DestroyPBlockRow();
     }

@@ -68,6 +68,7 @@
     <Compile Include="Assets\Sproto\sproto-Csharp\src\SprotoStream.cs" />
     <Compile Include="Assets\Scripts\Game\State\IdleState.cs" />
     <Compile Include="Assets\Scripts\Game\State\SecondSelectionState.cs" />
+    <Compile Include="Assets\Scripts\Main\MainManager.cs" />
     <Compile Include="Assets\Scripts\Game\GameController.cs" />
     <Compile Include="Assets\Sproto\sproto-Csharp\src\ProtocolBase.cs" />
     <Compile Include="Assets\Sproto\sproto-Csharp\src\SprotoTypeFieldOP.cs" />
@@ -103,7 +104,6 @@
     <Compile Include="Assets\Scripts\Root.cs" />
     <Compile Include="Assets\Sproto\sproto-Unity\sproto-Unity\NetReceiver.cs" />
     <Compile Include="Assets\Scripts\Misc\CountDown.cs" />
-    <Compile Include="Assets\Scripts\Main\MainManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Spine\version.txt" />

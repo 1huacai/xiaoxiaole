@@ -261,7 +261,7 @@ public class MainController : GameController
             if (resp.e == 0) { }
             PlayAnima(_minroleData.skillAnimaName_1);
             PlayAnima("hurt",false);
-            _minroleData.UseSkill1Time();
+            _minroleData.UseSkill1();
         });
     }
     void OnSkill2BtnClick()
@@ -332,6 +332,9 @@ public class MainController : GameController
 
     void TouchTop()
     {
+        if (_minroleData.Hp > 0)
+            return;
+
         _gameOver = true;
         if (_multiPlayer)
         {
@@ -376,8 +379,21 @@ public class MainController : GameController
         PlayAnima(data.skill_id / 1000 > 10 ? "kill2" : "kill1", false);
         PlayAnima("hurt");
 
-        _minroleData.ChangeHpValue(30);
-        UpdateMinSlider();
+        var value = data.skill_id % 1000;
+        if (value < 4)
+        {
+            MainManager.Ins.DragBlock = false;
+            MainManager.Ins.DragTime = MainManager.Ins.Timer + 5;
+        }
+        else if (value > 3 && value < 10)
+        {
+            _minroleData.ChangeShieldTime = MainManager.Ins.Timer + 5;
+        }
+        else if (data.skill_id % 10000 < 4)
+        {
+            _minroleData.ChangeHpValue(30);
+            UpdateMinSlider();
+        }
     }
 
     public void PlayAnima(string animaname,bool ismin = true)
@@ -477,6 +493,44 @@ public class MainController : GameController
         {
             yield return new WaitForSeconds(1);
             MainManager.Ins.Timer++;
+            CheckGameOver();
+            CheckDrag();
+            CheckReCoverHp();
+        }
+    }
+    void CheckGameOver()
+    {
+        if (_curRowCnt > Config.rows || _curMaxRowCnt > Config.rows)
+        {
+            if (_minroleData.Hp > 0)
+            {
+                _minroleData.ChangeHpValue(3);
+                UpdateMinSlider();
+            }
+        }
+        if (MainManager.Ins._rivalController._curRowCnt > Config.rows || MainManager.Ins._rivalController._curMaxRowCnt > Config.rows)
+        {
+            if (_emmyroleData.Hp > 0)
+            {
+                _emmyroleData.ChangeHpValue(3);
+                UpdateEmmySlider();
+            }
+        }
+    }
+    void CheckDrag()
+    {
+        if (MainManager.Ins.Timer >= MainManager.Ins.DragTime)
+            MainManager.Ins.DragBlock = true;
+    }
+    void CheckReCoverHp()
+    {
+        if (MainManager.Ins.Timer - 3 > _minroleData.hurtTimer)
+        {
+            _minroleData.ChangeShildValue(MainManager.Ins.Timer < _minroleData.ChangeShieldTime ? 5 : 2);
+        }
+        if (MainManager.Ins.Timer - 3 > _emmyroleData.hurtTimer)
+        {
+            _emmyroleData.ChangeShildValue(2);
         }
     }
 }
