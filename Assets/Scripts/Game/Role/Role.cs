@@ -63,7 +63,7 @@ public class Role
     public bool Skill_1_CD
     {
         get {
-            return MainManager.Ins.Timer > Cd;
+            return Cd > MainManager.Ins.Timer;
         }
     }
     public int Cd;
@@ -87,6 +87,8 @@ public class Role
         MaxShield = 50;
         Hp = MaxHp;
         Shield = MaxShield;
+
+        Skill_2_Value = 30;
     }
 
     public void UseSkill1()
@@ -152,6 +154,19 @@ public class Role
             Shield = Shield - changeValue;
         }
         if (Hp <= 0) Hp = 0;
+
+        hurtTimer = MainManager.Ins.Timer;
+    }
+    public void ChangeHpValue2(int changeValue)
+    {
+        if (changeValue >= Hp)
+        {
+            Hp = 0;
+        }
+        else
+        {
+            Hp = Hp - changeValue;
+        }
 
         hurtTimer = MainManager.Ins.Timer;
     }

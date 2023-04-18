@@ -204,4 +204,19 @@ eliminate_broadcast 63 {
         count          0 : integer
     }
 }
+#生成的新方块
+createBlock 64 {
+    request {
+        matrix              0 : *block_info #方块信息
+    }
+    response {
+        e                   0 : integer
+    }
+}
+#消除了几个
+createBlock_broadcast 65 {
+    request {
+        matrix              0 : *block_info #方块信息
+    }
+}
 #------------------ game 50 - 69 end ------------------

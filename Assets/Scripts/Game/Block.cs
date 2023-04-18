@@ -260,12 +260,12 @@ public class Block : MonoBehaviour
 
         if (danger)
         {
-            _anim.runtimeAnimatorController = Config._animTremble[(int)_type];
+            //_anim.runtimeAnimatorController = Config._animTremble[(int)_type];
             IsTrembled = true;
         }
         else
         {
-            _anim.runtimeAnimatorController = null;
+            //_anim.runtimeAnimatorController = null;
             _image.sprite = Config._sprites[(int)_type];
             IsTrembled = false;
         }

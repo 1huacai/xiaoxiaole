@@ -109,4 +109,20 @@ public class RivalController : GameController
         //_curRowCnt = (int)data.cur_row_cnt;
         //_totalRowCnt = (int)data.total_row_cnt;
     }
+    public void SyncNewRow(SprotoType.createBlock_broadcast.request data)
+    {
+        List<BlockData> newRow = new List<BlockData>();
+        foreach (SprotoType.block_info info in data.matrix)
+        {
+            newRow.Add(new BlockData
+            {
+                row = (int)info.row,
+                col = (int)info.col,
+                type = (BlockType)info.type,
+            });
+            Debug.LogFormat("--- createBlock_broadcast, [{0},{1},{2}]", info.row, info.col, info.type);
+        }
+        AddNewBlock(newRow);
+
+    }
 }

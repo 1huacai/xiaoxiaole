@@ -88,8 +88,19 @@ class FallState : ControllerStateBase
         //{
             _controller._isPressureFallingDone = true;
         //});
-        _controller._curMaxRowCnt = _controller._curRowCnt + _controller._PressureMatrixList.Count;
+
+
+        CheckMaxRowCnt();
+
         _controller.CheckAlarm();
+    }
+    private void CheckMaxRowCnt()
+    {
+        foreach (var item in _controller._PressureMatrixList)
+        {
+            if (item.Row_y > _controller._curRowCnt)
+                _controller._curMaxRowCnt += 1;
+        }
     }
     private int CheckDownHasPblok(PressureBlock pressureBlock)
     {

@@ -276,7 +276,7 @@ public class GameController : MonoBehaviour
         {
             var block = PressureBlock.CreateBlockObject(Config.rows, 0, (int)PressureBlockType.D1, _type == CheckerboardType.mine ? _blockBoardObj.transform : emmy_blockBoardObj.transform);
             block.GetComponent<RectTransform>().sizeDelta = new Vector2(_pressureInfo[i].Key * BlockWith(_type), _pressureInfo[i].Value * BlockHeight(_type) - 1);
-            block.transform.localPosition = new Vector3((Config.blockXPosShit - BlockWith(_type) / 2 + block.xNum * BlockWith(_type)), (block.Row_y - 1) * BlockHeight(_type) + Config.StartPosY + 20 , 0);//   + _blockAreaObj.transform.localPosition.y   ==> y
+            block.transform.localPosition = new Vector3((Config.blockXPosShit - BlockWith(_type) / 2 + block.xNum * BlockWith(_type)), (block.Row_y - 1) * BlockHeight(_type) + Config.StartPosY + 20, 0);//   + _blockAreaObj.transform.localPosition.y   ==> y
             //block.BlockOperationEvent += OnBlockOperation;
             block.gameObject.name = "1111";
             block.xNum = _pressureInfo[i].Key;
@@ -398,6 +398,29 @@ public class GameController : MonoBehaviour
         return newRow;
     }
 
+    public List<BlockData> SpawnBlock(int blockCount, int _row, int index)
+    {
+        List<BlockData> newRow = new List<BlockData>();
+        var rand = new System.Random(Util.GetRandomSeed());
+        for (int col = index; col < blockCount + index; col++)
+        {
+            BlockType newType = (BlockType)rand.Next((int)BlockType.B1, (int)BlockType.Count);
+            BlockType aboveType = _blockMatrix[1, col].Type;
+            while (aboveType == newType || !CheckRowType(newRow, col, newType))
+            {
+                newType = (BlockType)rand.Next((int)BlockType.B1, (int)BlockType.Count);
+            }
+            BlockData data = new BlockData
+            {
+                row = _row,
+                col = col,
+                type = newType,
+            };
+            newRow.Add(data);
+        }
+        return newRow;
+    }
+
     //所有方块上移一行
     public void BringForward()
     {
@@ -465,6 +488,8 @@ public class GameController : MonoBehaviour
         _curRowCnt += 1;
         _totalRowCnt += 1;
 
+        CheckMaxRowCnt();
+
         CheckAlarm();
 
         if (CalculateSwappedBlocks())
@@ -479,6 +504,40 @@ public class GameController : MonoBehaviour
 
         _addNewRow = false;
         _delta = 0;
+    }
+    private void CheckMaxRowCnt()
+    {
+        foreach (var item in _controller._PressureMatrixList)
+        {
+            if (item.Row_y > _curRowCnt)
+                _controller._curMaxRowCnt += 1;
+        }
+    }
+    public void AddNewBlock(List<BlockData> newRow, CheckerboardType _type = CheckerboardType.mine)
+    {
+        foreach (BlockData data in newRow)
+        {
+            var block = Block.CreateBlockObject(data.row, data.col, (int)data.type, _type == CheckerboardType.mine ? _blockBoardObj.transform : emmy_blockBoardObj.transform);
+            block.transform.localPosition = new Vector3(Config.blockXPosShit + data.col * BlockWith(_type),  (-_totalRowCnt + data.row + 1) * BlockHeight(_type), 0);
+            block.BlockOperationEvent += OnBlockOperation;
+
+            _blockMatrix[data.row, data.col] = block;
+        }
+        //_curRowCnt += 1;
+        //_totalRowCnt += 1;
+
+
+        CheckAlarm();
+
+        if (CalculateSwappedBlocks())
+        {
+            ChangeToState(GameBoardState.Blank);
+        }
+        foreach (var item in _blockMatrix)
+        {
+            if (item != null)
+                item.gameObject.name = item.Row + "+ " + item.Column;
+        }
     }
 
     public bool CalculateSwappedBlocks()
@@ -615,7 +674,7 @@ public class GameController : MonoBehaviour
             for (int col = 0; col < Config.columns; col++)
             {
                 var item = _controller._blockMatrix[row, col];
-                if (item != null  && _controller._blockMatrix[row, col].Type != BlockType.None)
+                if (item != null && _controller._blockMatrix[row, col].Type != BlockType.None)
                 {
                     return;
                 }
@@ -634,13 +693,43 @@ public class GameController : MonoBehaviour
         {
             if (_controller._PressureMatrixList[i].IsTagged)
             {
+                var newBlock = SpawnBlock(_controller._PressureMatrixList[i].xNum, _controller._PressureMatrixList[i].Row_y, _controller._PressureMatrixList[i].Column_x);
+
                 var pblok = _controller._PressureMatrixList[i];
                 _controller._PressureMatrixList.Remove(pblok);
                 pblok.DoDestroy();
                 Debug.LogError("destroy pblok");
-                _controller._curMaxRowCnt -= 1;
+
+
+                AddNewBlock(newBlock);
+                SendNet(newBlock);
+                //_controller._curMaxRowCnt -= 1;
             }
         }
+
+    }
+    private void SendNet(List<BlockData> _list)
+    {
+        var req = new SprotoType.createBlock.request();
+        req.matrix = new List<SprotoType.block_info>();
+        foreach (BlockData data in _list)
+        {
+            req.matrix.Add(new SprotoType.block_info
+            {
+                row = data.row,
+                col = data.col,
+                type = (int)data.type,
+            });
+        }
+        NetSender.Send<Protocol.createBlock>(req, (data) =>
+        {
+            var resp = data as SprotoType.createBlock.response;
+            Debug.LogFormat(" new_row response : {0}", resp.e);
+            if (resp.e == 0)
+            {
+
+            }
+        });
     }
     public void OnBlockOperation(int row, int column, BlockOperation operation)
     {

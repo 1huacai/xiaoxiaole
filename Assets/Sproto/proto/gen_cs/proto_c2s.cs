@@ -83,6 +83,151 @@ namespace SprotoType {
 	}
 
 
+	public class createBlock {
+	
+		public class request : SprotoTypeBase {
+			private static int max_field_count = 1;
+			
+			
+			private List<block_info> _matrix; // tag 0
+			public List<block_info> matrix {
+				get { return _matrix; }
+				set { base.has_field.set_field (0, true); _matrix = value; }
+			}
+			public bool HasMatrix {
+				get { return base.has_field.has_field (0); }
+			}
+
+			public request () : base(max_field_count) {}
+
+			public request (byte[] buffer) : base(max_field_count, buffer) {
+				this.decode ();
+			}
+
+			protected override void decode () {
+				int tag = -1;
+				while (-1 != (tag = base.deserialize.read_tag ())) {
+					switch (tag) {
+					case 0:
+						this.matrix = base.deserialize.read_obj_list<block_info> ();
+						break;
+					default:
+						base.deserialize.read_unknow_data ();
+						break;
+					}
+				}
+			}
+
+			public override int encode (SprotoStream stream) {
+				base.serialize.open (stream);
+
+				if (base.has_field.has_field (0)) {
+					base.serialize.write_obj (this.matrix, 0);
+				}
+
+				return base.serialize.close ();
+			}
+		}
+
+
+		public class response : SprotoTypeBase {
+			private static int max_field_count = 1;
+			
+			
+			private Int64 _e; // tag 0
+			public Int64 e {
+				get { return _e; }
+				set { base.has_field.set_field (0, true); _e = value; }
+			}
+			public bool HasE {
+				get { return base.has_field.has_field (0); }
+			}
+
+			public response () : base(max_field_count) {}
+
+			public response (byte[] buffer) : base(max_field_count, buffer) {
+				this.decode ();
+			}
+
+			protected override void decode () {
+				int tag = -1;
+				while (-1 != (tag = base.deserialize.read_tag ())) {
+					switch (tag) {
+					case 0:
+						this.e = base.deserialize.read_integer ();
+						break;
+					default:
+						base.deserialize.read_unknow_data ();
+						break;
+					}
+				}
+			}
+
+			public override int encode (SprotoStream stream) {
+				base.serialize.open (stream);
+
+				if (base.has_field.has_field (0)) {
+					base.serialize.write_integer (this.e, 0);
+				}
+
+				return base.serialize.close ();
+			}
+		}
+
+
+	}
+
+
+	public class createBlock_broadcast {
+	
+		public class request : SprotoTypeBase {
+			private static int max_field_count = 1;
+			
+			
+			private List<block_info> _matrix; // tag 0
+			public List<block_info> matrix {
+				get { return _matrix; }
+				set { base.has_field.set_field (0, true); _matrix = value; }
+			}
+			public bool HasMatrix {
+				get { return base.has_field.has_field (0); }
+			}
+
+			public request () : base(max_field_count) {}
+
+			public request (byte[] buffer) : base(max_field_count, buffer) {
+				this.decode ();
+			}
+
+			protected override void decode () {
+				int tag = -1;
+				while (-1 != (tag = base.deserialize.read_tag ())) {
+					switch (tag) {
+					case 0:
+						this.matrix = base.deserialize.read_obj_list<block_info> ();
+						break;
+					default:
+						base.deserialize.read_unknow_data ();
+						break;
+					}
+				}
+			}
+
+			public override int encode (SprotoStream stream) {
+				base.serialize.open (stream);
+
+				if (base.has_field.has_field (0)) {
+					base.serialize.write_obj (this.matrix, 0);
+				}
+
+				return base.serialize.close ();
+			}
+		}
+
+
+	}
+
+
 	public class eliminate {
 	
 		public class request : SprotoTypeBase {
@@ -1854,6 +1999,13 @@ namespace SprotoType {
 public class Protocol : ProtocolBase {
 	public static  Protocol Instance = new Protocol();
 	private Protocol() {
+		Protocol.SetProtocol<createBlock> (createBlock.Tag);
+		Protocol.SetRequest<SprotoType.createBlock.request> (createBlock.Tag);
+		Protocol.SetResponse<SprotoType.createBlock.response> (createBlock.Tag);
+
+		Protocol.SetProtocol<createBlock_broadcast> (createBlock_broadcast.Tag);
+		Protocol.SetRequest<SprotoType.createBlock_broadcast.request> (createBlock_broadcast.Tag);
+
 		Protocol.SetProtocol<eliminate> (eliminate.Tag);
 		Protocol.SetRequest<SprotoType.eliminate.request> (eliminate.Tag);
 		Protocol.SetResponse<SprotoType.eliminate.response> (eliminate.Tag);
@@ -1930,6 +2082,14 @@ public class Protocol : ProtocolBase {
 		Protocol.SetProtocol<match_timeout> (match_timeout.Tag);
 		Protocol.SetRequest<SprotoType.match_timeout.request> (match_timeout.Tag);
 
+	}
+
+	public class createBlock {
+		public const int Tag = 64;
+	}
+
+	public class createBlock_broadcast {
+		public const int Tag = 65;
 	}
 
 	public class eliminate {

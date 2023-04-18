@@ -44,6 +44,9 @@ public class MainController : GameController
     private Slider _emmyShield;
     private Text _emmyHpLable;
     private Text _emmyShieldLable;
+
+    private Text _skill1Cd;
+    private Text _skill2Cd;
     void Awake()
     {
         _controller = this;
@@ -97,6 +100,9 @@ public class MainController : GameController
         _emmyHpLable = GameObject.Find(Config.uiGameRoot + "/Player2/HpBar/Hp/Text").GetComponent<Text>();
         _emmyShieldLable = GameObject.Find(Config.uiGameRoot + "/Player2/HpBar/Shield/Text").GetComponent<Text>();
 
+        _skill1Cd = _skill1Btn.transform.Find("Text").GetComponent<Text>();
+        _skill2Cd = _skill2Btn.transform.Find("Text").GetComponent<Text>();
+
         InitRoleData(MainManager.Ins.players);
 
         // state handler init        
@@ -138,6 +144,8 @@ public class MainController : GameController
         ShowRolrModel();
 
         ShowInitAnima();
+
+        UpdateSkill2Cd();
     }
     void Update()
     {
@@ -160,6 +168,8 @@ public class MainController : GameController
 
         if (!_gameStart)
             return;
+
+        UpdateState();
 
         if (_curRowCnt > Config.rows)
         {
@@ -189,8 +199,6 @@ public class MainController : GameController
         {
             SoundAlarm();
         }
-
-        UpdateState();
 
         if (!_suspendRaise && _delta * 1000 >= _curRaiseTime)
         {
@@ -244,7 +252,7 @@ public class MainController : GameController
 
     void OnSkill1BtnClick()
     {
-        if (!_minroleData.Skill_1_CD)
+        if (_minroleData.Skill_1_CD)
         {
             Debug.LogError("skill _ cd");
             return;
@@ -262,6 +270,7 @@ public class MainController : GameController
             PlayAnima(_minroleData.skillAnimaName_1);
             PlayAnima("hurt",false);
             _minroleData.UseSkill1();
+            UpdateSkill1Cd();
         });
     }
     void OnSkill2BtnClick()
@@ -286,6 +295,7 @@ public class MainController : GameController
             _minroleData.UseSkill2();
             _emmyroleData.ChangeHpValue(30);
             UpdateEmmySlider();
+            UpdateSkill2Cd();
         });
     }
 
@@ -370,6 +380,11 @@ public class MainController : GameController
         PlayAnima("hurt");
 
         GreatPressureBlock((int)data.count);
+        if (data.count > 3)
+        {
+            _minroleData.ChangeHpValue((int)(data.count) - 1);
+            UpdateMinSlider();
+        }
         //_curRowCnt = (int)data.cur_row_cnt;
         //_totalRowCnt = (int)data.total_row_cnt;
     }
@@ -481,10 +496,30 @@ public class MainController : GameController
         _emmyShieldLable.text = string.Format("{0}/{1}", _emmyroleData.Shield, _emmyroleData.MaxShield);
     }
 
-
+    public void UpdateSkill1Cd()
+    {
+        if (_minroleData.Skill_1_CD)
+        {
+            _skill1Cd.gameObject.SetActive(true);
+            _skill1Cd.text = string.Format("{0}/{1}", _minroleData.Cd - MainManager.Ins.Timer, 15);
+        }
+        else
+            _skill1Cd.gameObject.SetActive(false);
+    }
+    public void UpdateSkill2Cd()
+    {
+        if (!_minroleData.Skill_2_CD)
+        {
+            _skill2Cd.gameObject.SetActive(true);
+            _skill2Cd.text = string.Format("{0}/{1}", _minroleData.Skill_2_Value >= 30 ? 30 : _minroleData.Skill_2_Value, 30);
+        }
+        else
+            _skill2Cd.gameObject.SetActive(false);
+    }
 
     private void StartTimer()
     {
+        StopAllCoroutines();
         StartCoroutine(Timer());
     }
     IEnumerator Timer()
@@ -496,6 +531,7 @@ public class MainController : GameController
             CheckGameOver();
             CheckDrag();
             CheckReCoverHp();
+            UpdateSkill1Cd();
         }
     }
     void CheckGameOver()
@@ -504,7 +540,7 @@ public class MainController : GameController
         {
             if (_minroleData.Hp > 0)
             {
-                _minroleData.ChangeHpValue(3);
+                _minroleData.ChangeHpValue2(3);
                 UpdateMinSlider();
             }
         }
@@ -512,7 +548,7 @@ public class MainController : GameController
         {
             if (_emmyroleData.Hp > 0)
             {
-                _emmyroleData.ChangeHpValue(3);
+                _emmyroleData.ChangeHpValue2(3);
                 UpdateEmmySlider();
             }
         }

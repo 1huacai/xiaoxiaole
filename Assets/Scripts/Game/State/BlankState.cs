@@ -86,6 +86,8 @@ class BlankState : ControllerStateBase
             if (_controller is MainController)
             {
                 MainManager.Ins._rivalController.GreatPressureBlock(_blankCnt);
+                MainManager.Ins._mainController._emmyroleData.ChangeHpValue(_blankCnt - 1);
+                MainManager.Ins._mainController.UpdateEmmySlider();
                 //var main = _controller as MainController;
                 //main.PlayAnima(main._minroleData.specialAtkAnimaName);
             }
@@ -103,6 +105,7 @@ class BlankState : ControllerStateBase
             SendNet(_blankCnt);
 
             MainManager.Ins._mainController._minroleData.UpdateSkill2(_blankCnt);
+            MainManager.Ins._mainController.UpdateSkill2Cd();
         }
         _controller.DestroyPBlockRow();
     }

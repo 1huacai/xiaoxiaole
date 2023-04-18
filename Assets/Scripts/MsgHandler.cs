@@ -105,16 +105,11 @@ public class MsgHandler : MonoBehaviour
             _mainControllerInst.SyncNewpreBlock(data as SprotoType.eliminate_broadcast.request);
             return null;
         });
-
-        //NetReceiver.AddHandler<Protocol.sync_score>((data) =>
-        //{
-        //    Debug.Log("========= sync_score");
-        //    var req = data as SprotoType.sync_score.request;
-        //    if (req.id == Main.rid)
-        //        _rivalControllerInst.SyncScore(data as SprotoType.sync_score.request);
-        //    else
-        //        _mainControllerInst.SyncScore(data as SprotoType.sync_score.request);
-        //    return null;
-        //});
+        NetReceiver.AddHandler<Protocol.createBlock_broadcast>((data) =>
+        {
+            Debug.Log("========= SyncNewpreBlock");
+            _rivalControllerInst.SyncNewRow(data as SprotoType.createBlock_broadcast.request);
+            return null;
+        });
     }
 }
