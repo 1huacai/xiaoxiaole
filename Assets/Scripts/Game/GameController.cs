@@ -529,6 +529,8 @@ public class GameController : MonoBehaviour
 
         CheckAlarm();
 
+        ChangeToState(GameBoardState.Fall);
+
         if (CalculateSwappedBlocks())
         {
             ChangeToState(GameBoardState.Blank);
