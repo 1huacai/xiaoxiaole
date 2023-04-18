@@ -133,6 +133,10 @@ class BlankState : ControllerStateBase
         }
         if (_blankDone && _blankCnt > 0)
         {
+            foreach (var block in _wait2Blank)
+            {
+                block.IsBlanked = false;
+            }
             _blankDone = false;
             if (_blankCnt > 0)
                 _addScore = _addScore + 10 + Config.scoreChain[_controller._chainCnt -1];

@@ -240,7 +240,7 @@ public class Block : MonoBehaviour
     {
         if (_row == 0)
             return;
-
+        IsBlanked = false;
         _anim.runtimeAnimatorController = Config._animDestroy[(int)_type];
     }
 
