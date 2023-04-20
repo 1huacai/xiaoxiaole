@@ -125,15 +125,18 @@ public class GameController : MonoBehaviour
 
     public void ChangeToState(GameBoardState newState)
     {
-        Debug.Log(string.Format("Change to new state:{0}", newState.ToString()));
-        if (_states.ContainsKey(_curGameBoardState))
+        Debug.Log(string.Format("Change to new state:{0}£¬cur state:£û1£ý", newState.ToString(),_curGameBoardState.ToString()));
+        if(_curGameBoardState != newState)
         {
-            _states[_curGameBoardState].Exit();
-        }
-        _curGameBoardState = newState;
-        if (_states.ContainsKey(_curGameBoardState))
-        {
-            _states[_curGameBoardState].Enter();
+            if (_states.ContainsKey(_curGameBoardState))
+            {
+                _states[_curGameBoardState].Exit();
+            }
+            _curGameBoardState = newState;
+            if (_states.ContainsKey(_curGameBoardState))
+            {
+                _states[_curGameBoardState].Enter();
+            }
         }
     }
 
