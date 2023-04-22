@@ -196,9 +196,9 @@ class FallState : ControllerStateBase
                 }
             }
         }
-        if (index + 1 == pressureBlock.Row_y)
-            return pressureBlock.Row_y;
-        return index + 1;
+        if (index == pressureBlock.Row_y)
+            return pressureBlock.Row_y + 1;
+        return index;
     }
     public override void Enter()
     {
@@ -225,6 +225,7 @@ class FallState : ControllerStateBase
             for (int i = 0; i < _controller._PressureMatrixList.Count; i++)
                 DoMovePressureBlock(_controller._PressureMatrixList[i]);
         }
+        _controller.UpdateMaxCnt();
         if (hasFalled)
         {
             if (_controller._firstSelected)

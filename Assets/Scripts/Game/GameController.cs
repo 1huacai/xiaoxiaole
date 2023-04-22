@@ -486,25 +486,35 @@ public class GameController : MonoBehaviour
 
             _blockMatrix[0, data.col] = block;
         }
-        _curRowCnt += 1;
         _totalRowCnt += 1;
 
         CheckMaxRowCnt();
 
+        ChangeToState(GameBoardState.Fall);
+
         CheckAlarm();
 
-        if (CalculateSwappedBlocks())
-        {
-            ChangeToState(GameBoardState.Blank);
-        }
+        UpdateMaxCnt();
+
+        _addNewRow = false;
+        _delta = 0;
+    }
+    public void UpdateMaxCnt()
+    {
+        _curRowCnt = 0;
         foreach (var item in _blockMatrix)
         {
             if (item != null)
                 item.gameObject.name = item.Row + "+ " + item.Column;
+            if (item != null && item.Type !=  BlockType.None && item.Row > _curRowCnt)
+                _curRowCnt = item.Row;
         }
-
-        _addNewRow = false;
-        _delta = 0;
+        foreach (var item in _PressureMatrixList)
+        {
+            if (item.Row_y > _curRowCnt)
+                _curRowCnt = item.Row_y;
+        }
+        _curRowCnt += 1;
     }
     private void CheckMaxRowCnt()
     {
@@ -687,7 +697,7 @@ public class GameController : MonoBehaviour
                 DestroyBlock(row, col);
             }
             CheckAlarm();
-            _curRowCnt -= 1;
+            UpdateMaxCnt();
         }
     }
     public void DestroyPBlockRow()

@@ -81,33 +81,33 @@ public class MsgHandler : MonoBehaviour
 
         NetReceiver.AddHandler<Protocol.game_swap_broadcast>((data) =>
         {
-            Debug.Log("========= sync_swap_block");
+            Debug.Log("========= game_swap_broadcast");
             _rivalControllerInst.SyncSwapBlock(data as SprotoType.game_swap_broadcast.request);
             return null;
         });
 
         NetReceiver.AddHandler<Protocol.game_up_row_broadcast>((data) =>
         {
-            Debug.Log("========= sync_up_row");
+            Debug.Log("========= game_up_row_broadcast");
             _rivalControllerInst.SyncUpRow(data as SprotoType.game_up_row_broadcast.request);
             return null;
         });
 
         NetReceiver.AddHandler<Protocol.game_new_row_broadcast>((data) =>
         {
-            Debug.Log("========= sync_new_row");
+            Debug.Log("========= game_new_row_broadcast");
             _rivalControllerInst.SyncNewRow(data as SprotoType.game_new_row_broadcast.request);
             return null;
         });
         NetReceiver.AddHandler<Protocol.eliminate_broadcast>((data) =>
         {
-            Debug.Log("========= SyncNewpreBlock");
+            Debug.Log("========= eliminate_broadcast");
             _mainControllerInst.SyncNewpreBlock(data as SprotoType.eliminate_broadcast.request);
             return null;
         });
         NetReceiver.AddHandler<Protocol.createBlock_broadcast>((data) =>
         {
-            Debug.Log("========= SyncNewpreBlock");
+            Debug.Log("========= createBlock_broadcast");
             _rivalControllerInst.SyncNewRow(data as SprotoType.createBlock_broadcast.request);
             return null;
         });
