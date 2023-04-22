@@ -379,9 +379,9 @@ public class MainController : GameController
         PlayAnima(data.count == 3 ? "atk" : "atk2", false);
         PlayAnima("hurt");
 
-        GreatPressureBlock((int)data.count);
         if (data.count > 3)
         {
+            GreatPressureBlock((int)data.count);
             _minroleData.ChangeHpValue((int)(data.count) - 1);
             UpdateMinSlider();
         }

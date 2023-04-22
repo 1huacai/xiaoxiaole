@@ -125,18 +125,16 @@ public class GameController : MonoBehaviour
 
     public void ChangeToState(GameBoardState newState)
     {
-        Debug.Log(string.Format("Change to new state:{0}£¬cur state:£û1£ý", newState.ToString(),_curGameBoardState.ToString()));
-        if(_curGameBoardState != newState)
+        if (newState == _curGameBoardState) return;
+        Debug.Log(string.Format("Change to new state:{0}", newState.ToString()));
+        if (_states.ContainsKey(_curGameBoardState))
         {
-            if (_states.ContainsKey(_curGameBoardState))
-            {
-                _states[_curGameBoardState].Exit();
-            }
-            _curGameBoardState = newState;
-            if (_states.ContainsKey(_curGameBoardState))
-            {
-                _states[_curGameBoardState].Enter();
-            }
+            _states[_curGameBoardState].Exit();
+        }
+        _curGameBoardState = newState;
+        if (_states.ContainsKey(_curGameBoardState))
+        {
+            _states[_curGameBoardState].Enter();
         }
     }
 
@@ -534,10 +532,10 @@ public class GameController : MonoBehaviour
 
         ChangeToState(GameBoardState.Fall);
 
-        if (CalculateSwappedBlocks())
-        {
-            ChangeToState(GameBoardState.Blank);
-        }
+        //if (CalculateSwappedBlocks())
+        //{
+        //    ChangeToState(GameBoardState.Blank);
+        //}
         foreach (var item in _blockMatrix)
         {
             if (item != null)
