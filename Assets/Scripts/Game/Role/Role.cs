@@ -56,7 +56,7 @@ public class Role
     {
         get
         {
-            return sid > 3 ? "idle" : "Idle";
+            return sid > 3 ? "idle" : "idle";
         }
     }
 

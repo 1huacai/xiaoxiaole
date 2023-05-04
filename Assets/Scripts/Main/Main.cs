@@ -64,7 +64,7 @@ public class Main : MonoBehaviour
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
 
         _singleBtn = GameObject.Find(Config.singleStartPath).GetComponent<Button>();
-        _singleBtn.onClick.AddListener(OnSingleBtnClick);
+        //_singleBtn.onClick.AddListener(OnSingleBtnClick);
 
         _multiBtn = GameObject.Find(Config.multiStartPath).GetComponent<Button>();
         _multiBtn.onClick.AddListener(OnMultiBtnClick);

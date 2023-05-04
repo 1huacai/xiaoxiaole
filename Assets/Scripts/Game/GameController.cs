@@ -92,6 +92,8 @@ public class GameController : MonoBehaviour
     {
         _blockBoardObj = transform.Find("BlockBoard").gameObject;
         _blockAreaObj = _blockBoardObj.transform.Find("AreaBottom").gameObject;
+
+        upCount = 0;
         //if (_type == CheckerboardType.mine)
         //{
         //    _blockBoardObj = transform.Find("BlockBoard").gameObject;
@@ -191,7 +193,7 @@ public class GameController : MonoBehaviour
                 for (int row = 0; row < _curRowCnt; row++)
                 {
                     var item = _blockMatrix[row, col];
-                    if (item.IsTrembled)
+                    if (item != null && item.IsTrembled)
                         item.TrembleChange(false);
                 }
             }
@@ -446,11 +448,12 @@ public class GameController : MonoBehaviour
             item.Row_y++;
         }
     }
-
+    public int upCount;
     public void AddNewRow(List<BlockData> newRow, CheckerboardType _type = CheckerboardType.mine)
     {
         //已有方块整体上移一行
         BringForward();
+        upCount += 1;
 
         // 多人模式同步数据
         if (IsMultiPlayer())
@@ -509,12 +512,14 @@ public class GameController : MonoBehaviour
             if (item != null && item.Type !=  BlockType.None && item.Row > _curRowCnt)
                 _curRowCnt = item.Row;
         }
+        _curMaxRowCnt = _curRowCnt;
         foreach (var item in _PressureMatrixList)
         {
             if (item.Row_y > _curRowCnt)
-                _curRowCnt = item.Row_y;
+                _curMaxRowCnt = item.Row_y;
         }
         _curRowCnt += 1;
+        _curMaxRowCnt += 1;
     }
     private void CheckMaxRowCnt()
     {
@@ -542,6 +547,8 @@ public class GameController : MonoBehaviour
 
         ChangeToState(GameBoardState.Fall);
 
+        UpdateMaxCnt();
+
         //if (CalculateSwappedBlocks())
         //{
         //    ChangeToState(GameBoardState.Blank);
@@ -556,7 +563,7 @@ public class GameController : MonoBehaviour
     public bool CalculateSwappedBlocks()
     {
         var minRowIndex = 0;
-        var maxRowIndex = _curRowCnt;
+        var maxRowIndex = _curRowCnt - 1;
         var minColumnIndex = 0;
         var maxColumnIndex = Config.columns;
 
@@ -592,7 +599,7 @@ public class GameController : MonoBehaviour
             {
                 var rightBlock = _controller._blockMatrix[block.Row, col];
                 var currentBlock = _controller._blockMatrix[block.Row, rightMostColumnIndex];
-                if (rightBlock.IsMatched(currentBlock))
+                if (rightBlock != null && currentBlock != null && rightBlock.IsMatched(currentBlock))
                 {
                     rightMostColumnIndex = col;
                 }

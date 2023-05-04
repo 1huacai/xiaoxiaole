@@ -21,9 +21,11 @@ class FallState : ControllerStateBase
         int fallCnt = 0;
         int fallStep = 0;
         var raiseBlock = new Dictionary<int, Block>();
-        for (int i = blankBlock.Row + 1; i < _controller._curRowCnt; i++)
+        for (int i = blankBlock.Row; i < _controller._curRowCnt; i++)
         {
             var fallBlock = _controller._blockMatrix[i, col];
+            if (fallBlock == null)
+                continue;
             if (fallBlock.Type != BlockType.None)
             {
                 if (fallStep == 0)
@@ -83,14 +85,15 @@ class FallState : ControllerStateBase
         fallStep =-( block.Row_y - maxY);
         block.Row_y = maxY;// fallStep;
         float fallDis = (block.Row_y) * Config.blockHeight + Config.StartPosY;
-        block.transform.localPosition = new Vector3(block.transform.localPosition.x, block.transform.localPosition.y + fallStep * Config.blockHeight, block.transform.localPosition.z);
+        //Debug.LogError(block.transform.localPosition.y + "_____________++"+ fallStep + "+++_____________" + (block.transform.localPosition.y + fallStep * Config.blockHeight));
+        block.transform.localPosition = new Vector3(block.transform.localPosition.x, fallDis - (_controller.upCount + 1) * Config.blockHeight + 20, block.transform.localPosition.z);//block.transform.localPosition.y + fallStep * Config.blockHeight
         //block.transform.DOLocalMoveY(fallDis, 0).OnComplete(() =>
         //{
-            _controller._isPressureFallingDone = true;
+        //    _controller._isPressureFallingDone = true;
         //});
 
 
-        CheckMaxRowCnt();
+        //CheckMaxRowCnt();
 
         _controller.CheckAlarm();
     }
@@ -196,9 +199,7 @@ class FallState : ControllerStateBase
                 }
             }
         }
-        if (index == pressureBlock.Row_y)
-            return pressureBlock.Row_y + 1;
-        return index;
+        return index + 1;
     }
     public override void Enter()
     {

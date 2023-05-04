@@ -47,6 +47,9 @@ public class MainController : GameController
 
     private Text _skill1Cd;
     private Text _skill2Cd;
+
+    private Image _skill_Mask;
+    private Image _skill2_Slider;
     void Awake()
     {
         _controller = this;
@@ -102,6 +105,9 @@ public class MainController : GameController
 
         _skill1Cd = _skill1Btn.transform.Find("Text").GetComponent<Text>();
         _skill2Cd = _skill2Btn.transform.Find("Text").GetComponent<Text>();
+
+        _skill_Mask = _skill1Btn.transform.Find("CD").GetComponent<Image>();
+        _skill2_Slider = _skill2Btn.transform.Find("CDmask").GetComponent<Image>();
 
         InitRoleData(MainManager.Ins.players);
 
@@ -376,7 +382,7 @@ public class MainController : GameController
 
     public void SyncNewpreBlock(SprotoType.eliminate_broadcast.request data)
     {
-        PlayAnima(data.count == 3 ? "atk" : "atk2", false);
+        PlayAnima(data.count == 3 ? "atk" : data.count == 4 ?  "atk2" : "atk3", false);
         PlayAnima("hurt");
 
         if (data.count > 3)
@@ -500,21 +506,29 @@ public class MainController : GameController
     {
         if (_minroleData.Skill_1_CD)
         {
+            _skill_Mask.gameObject.SetActive(true);
             _skill1Cd.gameObject.SetActive(true);
-            _skill1Cd.text = string.Format("{0}/{1}", _minroleData.Cd - MainManager.Ins.Timer, 15);
+            _skill1Cd.text = string.Format("{0}", _minroleData.Cd - MainManager.Ins.Timer);
         }
         else
+        {
             _skill1Cd.gameObject.SetActive(false);
+            _skill_Mask.gameObject.SetActive(false);
+        }
     }
     public void UpdateSkill2Cd()
     {
         if (!_minroleData.Skill_2_CD)
         {
-            _skill2Cd.gameObject.SetActive(true);
-            _skill2Cd.text = string.Format("{0}/{1}", _minroleData.Skill_2_Value >= 30 ? 30 : _minroleData.Skill_2_Value, 30);
+            _skill2Cd.gameObject.SetActive(false);
+            //_skill2Cd.text = string.Format("{0}/{1}", _minroleData.Skill_2_Value >= 30 ? 30 : _minroleData.Skill_2_Value, 30);
+            _skill2_Slider.fillAmount = _minroleData.Skill_2_Value >= 30 ? 1 : (float)_minroleData.Skill_2_Value / 30;
         }
         else
+        {
+            _skill2_Slider.fillAmount = 0;
             _skill2Cd.gameObject.SetActive(false);
+        }
     }
 
     private void StartTimer()

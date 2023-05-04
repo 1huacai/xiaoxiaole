@@ -88,17 +88,15 @@ class BlankState : ControllerStateBase
                 MainManager.Ins._rivalController.GreatPressureBlock(_blankCnt);
                 MainManager.Ins._mainController._emmyroleData.ChangeHpValue(_blankCnt - 1);
                 MainManager.Ins._mainController.UpdateEmmySlider();
+                MainManager.Ins._mainController.PlayAnima(_blankCnt == 4 ? "atk2" : "atk3", true);
                 //var main = _controller as MainController;
                 //main.PlayAnima(main._minroleData.specialAtkAnimaName);
             }
         }
         else
         {
-            //if (_controller is MainController)
-            //{
-            //    var main = _controller as MainController;
-            //    main.PlayAnima(main._minroleData.atkAnimaName);
-            //}
+            if (_controller is MainController)
+                MainManager.Ins._mainController.PlayAnima("atk", true);
         }
         if (_controller is MainController)
         {
