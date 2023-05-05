@@ -24,7 +24,7 @@ public class Role
     {
         get
         {
-            return sid > 3 ? "spineArt/role1/BunnyMaster_SkeletonData" : "spineArt/role2/Phoenix_SkeletonData";
+            return sid > 1 ? "spineArt/role1/BunnyMaster_SkeletonData" : "spineArt/role2/Phoenix_SkeletonData";
         }
     }
 
@@ -32,7 +32,7 @@ public class Role
     {
         get
         {
-            return sid > 3 ? "Spine/SkeletonGraphic" : "Spine/SkeletonGraphic";
+            return sid > 1 ? "Spine/SkeletonGraphic" : "Spine/SkeletonGraphic";
         }
     }
     public int MaxHp;
@@ -56,7 +56,7 @@ public class Role
     {
         get
         {
-            return sid > 3 ? "idle" : "idle";
+            return sid > 1 ? "idle" : "idle";
         }
     }
 
@@ -82,7 +82,7 @@ public class Role
 
     public Role()
     {
-        sid = Random.Range(1, 6);
+        sid = Random.Range(1, 3);
         MaxHp = 100;
         MaxShield = 50;
         Hp = MaxHp;
@@ -95,7 +95,7 @@ public class Role
     {
         Cd = MainManager.Ins.Timer + 15;
 
-        if (sid < 4)
+        if (sid < 2)
         {
             //ÑÌÎíµ¯
         }
@@ -108,7 +108,7 @@ public class Role
     {
         get
         {
-            return sid > 3;
+            return sid > 1;
         }
     }
     public int UseRecoverSkillTime;

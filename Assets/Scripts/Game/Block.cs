@@ -295,6 +295,6 @@ public class Block : MonoBehaviour
 
     public void DoDestroy()
     {
-        Destroy(gameObject);
+        DestroyImmediate(gameObject);
     }
 }

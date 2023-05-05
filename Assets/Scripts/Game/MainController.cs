@@ -50,6 +50,8 @@ public class MainController : GameController
 
     private Image _skill_Mask;
     private Image _skill2_Slider;
+
+    public GameObject _DragBlock;
     void Awake()
     {
         _controller = this;
@@ -109,6 +111,8 @@ public class MainController : GameController
         _skill_Mask = _skill1Btn.transform.Find("CD").GetComponent<Image>();
         _skill2_Slider = _skill2Btn.transform.Find("CDmask").GetComponent<Image>();
 
+        _DragBlock = transform.Find("DragBlock").gameObject;
+
         InitRoleData(MainManager.Ins.players);
 
         // state handler init        
@@ -132,11 +136,13 @@ public class MainController : GameController
             {
                 _minroleData = new Role();
                 _minroleData.sid = (int)infos[i].render;
+                Debug.LogError("minrole sid ++++ " + _minroleData.sid);
             }
             else
             {
                 _emmyroleData = new Role();
                 _emmyroleData.sid = (int)infos[i].render;
+                Debug.LogError("minrole sid ++++ " + _emmyroleData.sid);
             }
         }
 
@@ -387,6 +393,7 @@ public class MainController : GameController
 
         if (data.count > 3)
         {
+            Debug.LogError("_____________" + data.count);
             GreatPressureBlock((int)data.count);
             _minroleData.ChangeHpValue((int)(data.count) - 1);
             UpdateMinSlider();
@@ -401,16 +408,16 @@ public class MainController : GameController
         PlayAnima("hurt");
 
         var value = data.skill_id % 1000;
-        if (value < 4)
+        if (value == 2)
         {
             MainManager.Ins.DragBlock = false;
             MainManager.Ins.DragTime = MainManager.Ins.Timer + 5;
         }
-        else if (value > 3 && value < 10)
+        else if (value > 1 && value < 10)
         {
             _minroleData.ChangeShieldTime = MainManager.Ins.Timer + 5;
         }
-        else if (data.skill_id % 10000 < 4)
+        else if (data.skill_id % 10000 < 2)
         {
             _minroleData.ChangeHpValue(30);
             UpdateMinSlider();
@@ -570,7 +577,16 @@ public class MainController : GameController
     void CheckDrag()
     {
         if (MainManager.Ins.Timer >= MainManager.Ins.DragTime)
+        {
             MainManager.Ins.DragBlock = true;
+            if (_DragBlock.activeSelf)
+                _DragBlock.SetActive(false);
+        }
+        else if(MainManager.Ins.Timer < MainManager.Ins.DragTime)
+        {
+            if (!_DragBlock.activeSelf)
+                _DragBlock.SetActive(true);
+        }
     }
     void CheckReCoverHp()
     {

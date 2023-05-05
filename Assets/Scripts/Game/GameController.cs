@@ -435,9 +435,17 @@ public class GameController : MonoBehaviour
                 var block = _blockMatrix[opRow - 1, col];
                 if (block != null)
                 {
-                    _blockMatrix[opRow, col] = block;
-                    _blockMatrix[opRow, col].Row += 1;
-                    _blockMatrix[opRow - 1, col] = null;
+                    try
+                    {
+                        _blockMatrix[opRow, col] = block;
+                        _blockMatrix[opRow, col].Row += 1;
+                        _blockMatrix[opRow - 1, col] = null;
+                    }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
+
                 }
             }
             opRow -= 1;
@@ -585,7 +593,7 @@ public class GameController : MonoBehaviour
             {
                 var leftBlock = _controller._blockMatrix[block.Row, col];
                 var currentBlock = _controller._blockMatrix[block.Row, leftMostColumnIndex];
-                if (leftBlock.IsMatched(currentBlock))
+                if (leftBlock != null && currentBlock != null && leftBlock.IsMatched(currentBlock))
                 {
                     leftMostColumnIndex = col;
                 }
@@ -617,7 +625,7 @@ public class GameController : MonoBehaviour
             {
                 var upperBlock = _controller._blockMatrix[row, block.Column];
                 var currentBlock = _controller._blockMatrix[upperMostRowIndex, block.Column];
-                if (upperBlock.IsMatched(currentBlock))
+                if (upperBlock != null && currentBlock != null && upperBlock.IsMatched(currentBlock))
                 {
                     upperMostRowIndex = row;
                 }
@@ -631,7 +639,7 @@ public class GameController : MonoBehaviour
             {
                 var lowerBlock = _controller._blockMatrix[row, block.Column];
                 var currentBlock = _controller._blockMatrix[lowestRowIndex, block.Column];
-                if (lowerBlock.IsMatched(currentBlock))
+                if (lowerBlock != null && currentBlock != null && lowerBlock.IsMatched(currentBlock))
                 {
                     lowestRowIndex = row;
                 }
@@ -653,7 +661,9 @@ public class GameController : MonoBehaviour
                     {
                         var item = current;
                         if (item.Row + 1 == _PressureMatrixList[j].Row_y && _PressureMatrixList[j].Column_x <= item.Column && item.Column <= _PressureMatrixList[j].Column_x + _PressureMatrixList[j].xNum - 1)
+                        {
                             _PressureMatrixList[j].IsTagged = true;
+                        }
                     }
                 }
             }
@@ -668,7 +678,9 @@ public class GameController : MonoBehaviour
                     for (int j = 0; j < _PressureMatrixList.Count; j++)
                     {
                         if (current.Row + 1 == _PressureMatrixList[j].Row_y && _PressureMatrixList[j].Column_x <= current.Column && current.Column <= _PressureMatrixList[j].Column_x + _PressureMatrixList[j].xNum - 1)
+                        {
                             _PressureMatrixList[j].IsTagged = true;
+                        }
                     }
                 }
             }
