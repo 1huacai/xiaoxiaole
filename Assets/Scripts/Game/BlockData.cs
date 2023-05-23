@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BlockData 
+public class BlockData
 {
     private int _row;
     private int _col;

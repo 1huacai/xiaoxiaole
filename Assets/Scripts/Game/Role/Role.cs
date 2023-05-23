@@ -5,18 +5,19 @@ using UnityEngine.SceneManagement;
 
 public class Role
 {
-    public int sid;
+    public int side;
     public int skillId_1
     {
-        get {
-            return 1000 + sid;
+        get
+        {
+            return 1000 + side;
         }
     }
     public int skillId_2
     {
         get
         {
-            return 10000 + sid;
+            return 10000 + side;
         }
     }
 
@@ -24,7 +25,7 @@ public class Role
     {
         get
         {
-            return sid > 1 ? "spineArt/role1/BunnyMaster_SkeletonData" : "spineArt/role2/Phoenix_SkeletonData";
+            return side > 1 ? "spineArt/role1/BunnyMaster_SkeletonData" : "spineArt/role2/Phoenix_SkeletonData";
         }
     }
 
@@ -32,7 +33,7 @@ public class Role
     {
         get
         {
-            return sid > 1 ? "Spine/SkeletonGraphic" : "Spine/SkeletonGraphic";
+            return side > 1 ? "Spine/SkeletonGraphic" : "Spine/SkeletonGraphic";
         }
     }
     public int MaxHp;
@@ -56,13 +57,14 @@ public class Role
     {
         get
         {
-            return sid > 1 ? "idle" : "idle";
+            return side > 1 ? "idle" : "idle";
         }
     }
 
     public bool Skill_1_CD
     {
-        get {
+        get
+        {
             return Cd > MainManager.Ins.Timer;
         }
     }
@@ -82,7 +84,7 @@ public class Role
 
     public Role()
     {
-        sid = Random.Range(1, 3);
+        side = Random.Range(1, 3);
         MaxHp = 100;
         MaxShield = 50;
         Hp = MaxHp;
@@ -95,20 +97,20 @@ public class Role
     {
         Cd = MainManager.Ins.Timer + 15;
 
-        if (sid < 2)
+        if (side < 2)
         {
-            //ÑÌÎíµ¯
+            //çƒŸé›¾å¼¹
         }
         else
-        { 
-            //¿ìËÙ³äÄÜ
+        {
+            //å¿«é€Ÿå……èƒ½
         }
     }
     public bool IsRecoverHpSKill
     {
         get
         {
-            return sid > 1;
+            return side > 1;
         }
     }
     public int UseRecoverSkillTime;
@@ -124,10 +126,10 @@ public class Role
     {
         Skill_2_Value += value;
     }
-    public void UpdateSkill2(int  count)
+    public void UpdateSkill2(int count)
     {
         ChangeSkill2Cd(1);
-        if (count > 3 && count - 3 <=8 && MainManager.Ins.Timer < UseRecoverSkillTime)
+        if (count > 3 && count - 3 <= 8 && MainManager.Ins.Timer < UseRecoverSkillTime)
         {
             addHpValue(count - 1);
         }
@@ -139,11 +141,12 @@ public class Role
         else
             Hp += changeValue;
 
-        if(changeValue < 0)
+        if (changeValue < 0)
             hurtTimer = MainManager.Ins.Timer;
     }
     public void ChangeHpValue(int changeValue)
     {
+        Debug.Log(" -------- side:" + side + " -- change hp:" + changeValue);
         if (changeValue >= Shield)
         {
             Hp = Hp - (changeValue - Shield);
@@ -156,6 +159,7 @@ public class Role
         if (Hp <= 0) Hp = 0;
 
         hurtTimer = MainManager.Ins.Timer;
+        Debug.Log(" -------- side:" + side + " -- Hp:" + Hp);
     }
     public void ChangeHpValue2(int changeValue)
     {
@@ -170,7 +174,7 @@ public class Role
 
         hurtTimer = MainManager.Ins.Timer;
     }
-    public void ChangeShildValue(int changeValue)
+    public void ChangeShieldValue(int changeValue)
     {
         if (Shield + changeValue >= MaxShield)
             Shield = MaxShield;

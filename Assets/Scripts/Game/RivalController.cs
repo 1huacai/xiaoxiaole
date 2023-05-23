@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class RivalController : GameController
 {
-    public CheckerboardType type;
     void Awake()
     {
         _controller = this;
@@ -18,29 +17,45 @@ public class RivalController : GameController
         InitStateHandlers();
 
         // variable init     
-        InitMembers( );//CheckerboardType.emmy
+        InitMembers();
 
-        // initial block init
-        InitBlocks();// CheckerboardType.emmy
+        _gameInit = true;
+    }
 
-        // 删除初始生成的空行
-        DestroyBlankRow();
+    int cntInit = 0;
+    void FixedUpdate()
+    {
+        if (_gameInit)
+        {
+            if (cntInit % 5 == 0)
+            {
+                InitBlocks();
+            }
+            cntInit++;
+            return;
+        }
     }
 
     void Update()
     {
-        if (_gameOver)
+        _delta += Time.deltaTime;
+        if (_gameInit || _gameOver)
             return;
 
-        if (_gameReady)
-            return;
+        // if (_gameReady)
+        //     return;
 
         if (!_gameStart)
             return;
-        if (_curRowCnt > Config.rows)
+
+        UpdateState();
+
+        if (_curRowCnt > Config.rows || _curMaxRowCnt > Config.rows)
+        {
+            // TouchTop();
             return;
-        if (_curMaxRowCnt > Config.rows)
-            return;
+        }
+
         if (_raiseOneRow)
         {
             RaiseOneRow();
@@ -52,13 +67,10 @@ public class RivalController : GameController
             SoundAlarm();
         }
 
-        UpdateState();
-
-        if (!_suspendRaise && _delta * 1000 >= _curRaiseTime)
+        if (_suspendRaise <= 0 && _delta * 1000 >= _curRaiseTime)
         {
             RaiseOneStep();
         }
-        _delta += Time.deltaTime;
     }
 
     void OnDestroy()
@@ -72,19 +84,26 @@ public class RivalController : GameController
 
     public override bool IsMultiPlayer()
     {
-        return false;
-    }
-
-    public override void ChangeScore(int score, int combo_cnt)
-    {
-        base.ChangeScore(score, combo_cnt);
+        return _multiPlayer;
     }
 
     public void SyncSwapBlock(SprotoType.game_swap_broadcast.request data)
     {
-        Debug.LogFormat("-------- SyncSwapBlock block1[{0},{1}], block2[{2},{3}]", data.block1.row, data.block1.col, data.block2.row, data.block2.col);
-        OnBlockOperation((int)data.block1.row, (int)data.block1.col, BlockOperation.TouchDown);
-        OnBlockOperation((int)data.block2.row, (int)data.block2.col, BlockOperation.TouchDown);
+        Debug.LogFormat("{0} -- SyncSwapBlock block1[{1},{2}], block2[{3},{4}]", _boardType, data.block1.row, data.block1.col, data.block2.row, data.block2.col);
+        int row1 = (int)data.block1.row;
+        int col1 = (int)data.block1.col;
+        int row2 = (int)data.block2.row;
+        int col2 = (int)data.block2.col;
+        Block first = _controller._blockMatrix[row1, col1];
+        Block second = _controller._blockMatrix[row2, col2];
+        if (second == null)
+        {
+            Block block = Block.CreateBlockObject(row2, col2, (int)data.block2.type, _controller._blockBoardObj.transform, _controller);
+            block.transform.localPosition = new Vector3(0, 0, -1);
+            _controller._blockMatrix[row2, col2] = block;
+            second = block;
+        }
+        DoSwap(first, second);
     }
 
     public void SyncUpRow(SprotoType.game_up_row_broadcast.request data)
@@ -95,23 +114,6 @@ public class RivalController : GameController
     public void SyncNewRow(SprotoType.game_new_row_broadcast.request data)
     {
         List<BlockData> newRow = new List<BlockData>();
-        foreach(SprotoType.block_info info in data.matrix)
-        {
-            newRow.Add(new BlockData
-            {
-               row = (int)info.row,
-               col = (int)info.col,
-               type = (BlockType)info.type,
-            });
-            Debug.LogFormat("--- syncNewRow, [{0},{1},{2}]", info.row, info.col, info.type);
-        }
-        AddNewRow(newRow);// CheckerboardType.emmy
-        //_curRowCnt = (int)data.cur_row_cnt;
-        //_totalRowCnt = (int)data.total_row_cnt;
-    }
-    public void SyncNewRow(SprotoType.createBlock_broadcast.request data)
-    {
-        List<BlockData> newRow = new List<BlockData>();
         foreach (SprotoType.block_info info in data.matrix)
         {
             newRow.Add(new BlockData
@@ -120,9 +122,34 @@ public class RivalController : GameController
                 col = (int)info.col,
                 type = (BlockType)info.type,
             });
-            Debug.LogFormat("--- createBlock_broadcast, [{0},{1},{2}]", info.row, info.col, info.type);
+            Debug.LogFormat("{0} -- syncNewRow, [{1},{2} - {3}]", _boardType, info.row, info.col, info.type);
         }
-        AddNewBlock(newRow);
+        DoAddNewRow(newRow);
+    }
 
+    public void CreateBlock(SprotoType.createBlock_broadcast.request data)
+    {
+        int row = -1;
+        List<BlockData> newRow = new List<BlockData>();
+        foreach (SprotoType.block_info info in data.matrix)
+        {
+            row = (int)info.row;
+            newRow.Add(new BlockData
+            {
+                row = (int)info.row,
+                col = (int)info.col,
+                type = (BlockType)info.type,
+            });
+            Debug.LogFormat("{0} -- createBlock_broadcast, [{1},{2},{3}]", _boardType, info.row, info.col, info.type);
+        }
+        foreach (PressureBlock pressure in _PressureMatrix)
+        {
+            if (pressure.Row_y == row)
+            {
+                pressure.PlayUnlockAnim();
+                AddNewBlock(newRow, pressure);
+                break;
+            }
+        }
     }
 }

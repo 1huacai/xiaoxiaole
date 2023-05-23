@@ -1,21 +1,26 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using DG.Tweening;
 
 // swap state class
-class SwapState : ControllerStateBase
+class SwapState : StateBase
 {
     public SwapState(GameController controller) : base(controller)
     {
         // Do nothing
     }
 
+    public override void Enter()
+    {
+        base.Enter();
+        SwapBlock();
+    }
+
     void SwapBlock()
     {
         var first = _controller._firstSelected;
         var second = _controller._secondSelected;
-        // ∂‡»Àƒ£ Ω–Ë“™Õ¨≤ΩΩªªª≤Ÿ◊˜
+        // Â§ö‰∫∫Ê®°ÂºèÈúÄË¶ÅÂêåÊ≠•‰∫§Êç¢Êìç‰Ωú
         if (_controller.IsMultiPlayer())
         {
             var req = new SprotoType.game_swap.request();
@@ -31,51 +36,21 @@ class SwapState : ControllerStateBase
                 col = second.Column,
                 type = (int)second.Type
             };
+            Debug.Log(_controller._boardType + "-- do swap first[" + first.Row + "," + first.Column + "] - second[" + second.Row + "," + second.Column + "]");
             NetSender.Send<Protocol.game_swap>(req, (data) =>
             {
                 var resp = data as SprotoType.game_swap.response;
-                Debug.LogFormat(" swap_block response : {0}", resp.e);
-                if (resp.e == 0) { }
+                Debug.LogFormat("{0} -- swap_block response : {1}", _controller._boardType, resp.e);
+                if (resp.e == 0)
+                {
+                    _controller.DoSwap(first, second);
+                }
+                else
+                {
+                    Debug.LogError(_controller._boardType +  " -- swap response err");
+                    _controller.ChangeToState(GameBoardState.Idle);
+                }
             });
-        }
-
-        var mySequence = DOTween.Sequence();
-        float moveDuration = 0.08f;
-        mySequence.Append(first.transform.DOLocalMove(second.transform.localPosition, moveDuration));
-        mySequence.Join(second.transform.DOLocalMove(first.transform.localPosition, moveDuration));
-        mySequence.AppendCallback(() =>
-        {
-            _controller._blockMatrix[first.Row, first.Column] = second;
-            _controller._blockMatrix[second.Row, second.Column] = first;
-            var row = first.Row;
-            var column = first.Column;
-            first.Row = second.Row;
-            first.Column = second.Column;
-            second.Row = row;
-            second.Column = column;
-
-        });
-        mySequence.OnComplete(() =>
-        {
-            _controller._isSwappingDone = true;
-            _controller.CheckAlarm();
-        });
-    }
-
-    public override void Enter()
-    {
-        base.Enter();
-
-        _controller._isSwappingDone = false;
-        SwapBlock();
-    }
-
-    public override void Update()
-    {
-        base.Update();
-        if (_controller._isSwappingDone)
-        {
-            _controller.ChangeToState(GameBoardState.Fall);
         }
     }
 }

@@ -69,7 +69,7 @@ public class MsgHandler : MonoBehaviour
         });
 
 
-        //¶ÔÊÖ
+        //å¯¹æ‰‹
 
 
         NetReceiver.AddHandler<Protocol.game_use_skill_broadcast>((data) =>
@@ -108,7 +108,7 @@ public class MsgHandler : MonoBehaviour
         NetReceiver.AddHandler<Protocol.createBlock_broadcast>((data) =>
         {
             Debug.Log("========= createBlock_broadcast");
-            _rivalControllerInst.SyncNewRow(data as SprotoType.createBlock_broadcast.request);
+            _rivalControllerInst.CreateBlock(data as SprotoType.createBlock_broadcast.request);
             return null;
         });
     }

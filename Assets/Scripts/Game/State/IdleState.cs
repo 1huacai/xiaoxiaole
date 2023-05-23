@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // idle state class
-class IdleState : ControllerStateBase
+class IdleState : StateBase
 {
     public IdleState(GameController controller) : base(controller)
     {
@@ -20,7 +20,6 @@ class IdleState : ControllerStateBase
         }
         if (_controller._secondSelected != null)
         {
-            _controller._secondSelected.IsSelected = false;
             _controller._secondSelected = null;
         }
     }
@@ -31,10 +30,10 @@ class IdleState : ControllerStateBase
         if (operation == BlockOperation.TouchDown)
         {
             var selectedBlock = _controller._blockMatrix[row, column];
-            if (selectedBlock.Type != BlockType.None)
+            if (selectedBlock.Type != BlockType.None && selectedBlock.IsLocked == false)
             {
                 _controller._firstSelected = selectedBlock;
-                _controller.ChangeToState(GameBoardState.FirstSelection);               
+                _controller.ChangeToState(GameBoardState.Selection);
             }
         }
     }

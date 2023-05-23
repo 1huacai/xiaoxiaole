@@ -4,15 +4,16 @@ using UnityEngine;
 
 public enum BlockType { None, B1, B2, B3, B4, B5, Count };
 public enum PressureBlockType { None, D1 };
-public enum BlockState { None, Selected, Tagged, Blanked, Trembled, Locked };
+public enum BlockState { None, Selected, Swaped, Moved, Tagged, Blanked, Trembled, Locked };
 public enum BlockOperation { TouchEnter, TouchDown, TouchUp, TouchExit, DragHalf };
-public enum GameBoardState { Idle, Spawn, FirstSelection, SecondSelection, Swap, ReverseSwap, Fall, Blank, Destroy, StateCount };
+public enum GameBoardState { Idle, Selection, Swap, StateCount };
 public enum GameStatus { Ready, Start, Alarm, Over };
 
 public class Config : ScriptableObject
 {
     //
     public const string serverIP = "124.221.89.86";
+    // public const string serverIP = "192.168.153.129";
     public const int serverPort = 23001;
 
     //Root
@@ -108,6 +109,7 @@ public class Config : ScriptableObject
 
     public const string animDestroyPath = "Animation/Destroy/Block";
     public const string animTremblePath = "Animation/Tremble/Block";
+    public const string animPressurePath = "Animation/Pressure/Pressure";
 
     private static List<Texture2D> _texture = new List<Texture2D>{
         Resources.Load(Config.textureBlockPath+"01") as Texture2D,
@@ -176,6 +178,15 @@ public class Config : ScriptableObject
         Resources.Load<RuntimeAnimatorController>(animTremblePath+7),
     };
 
+    // å‹åŠ›å—è§£é”åŠ¨ç”»
+    public static List<RuntimeAnimatorController> _animPressure = new List<RuntimeAnimatorController>
+    {
+        Resources.Load<RuntimeAnimatorController>(animPressurePath+3),
+        Resources.Load<RuntimeAnimatorController>(animPressurePath+4),
+        Resources.Load<RuntimeAnimatorController>(animPressurePath+5),
+        Resources.Load<RuntimeAnimatorController>(animPressurePath+6),
+    };
+
     // Coming soon
     public const string comingSoonPath = uiRoot + "/ComingSoon";
 
@@ -184,28 +195,28 @@ public class Config : ScriptableObject
 
 
     // Game Configuration
-    public const string matchFailureMsgBoxTitle = "Æ¥ÅäÊ§°Ü";
-    public const string matchErrorMsgBoxTitle = "Æ¥ÅäÒì³£";
-    public const string matchMsgBoxSure = "ÖØÊÔ";
-    public const string matchMsgBoxCancel = "È¡Ïû";
+    public const string matchFailureMsgBoxTitle = "åŒ¹é…å¤±è´¥";
+    public const string matchErrorMsgBoxTitle = "åŒ¹é…å¼‚å¸¸";
+    public const string matchMsgBoxSure = "é‡è¯•";
+    public const string matchMsgBoxCancel = "å–æ¶ˆ";
 
-    public const int rows = 11; // ×ÜĞĞÊı
-    public const int matrixRows = rows + 1; // ·½¿é¾ØÕóĞĞÊı
-    public const int alarmRow = rows - 1; // ±¨¾¯ĞĞÊı
-    public const int columns = 6; // ×ÜÁĞÊı
-    public const int initRows = 7; // ³õÊ¼ĞĞÊı
-    public const int initCols = 6; // ³õÊ¼ÁĞÊı
+    public const int rows = 11; // æ€»è¡Œæ•°
+    public const int matrixRows = rows + 1; // æ–¹å—çŸ©é˜µè¡Œæ•°
+    public const int alarmRow = rows - 1; // æŠ¥è­¦è¡Œæ•°
+    public const int columns = 6; // æ€»åˆ—æ•°
+    public const int initRows = 7; // åˆå§‹è¡Œæ•°
+    public const int initCols = 6; // åˆå§‹åˆ—æ•°
 
-    public const float blockWidth = 140.0f; // ·½¿é¿í¶È
-    public const float blockHeight = 140.0f; // ·½¿é¸ß¶È
+    public const float blockWidth = 140.0f; // æ–¹å—å®½åº¦
+    public const float blockHeight = 140.0f; // æ–¹å—é«˜åº¦
 
-    public const float emmyblockWidth = 12.0f; // ·½¿é¿í¶È
-    public const float emmyblockHeight = 12.0f; // ·½¿é¸ß¶È
+    public const float emmyblockWidth = 12.0f; // æ–¹å—å®½åº¦
+    public const float emmyblockHeight = 12.0f; // æ–¹å—é«˜åº¦
 
-    public const float blockXPosShit = -359.0f; // ·½¿éÎ»ÖÃx×ø±êÆ«ÒÆÖµ
-    public const int raiseSteps = 11; // ÉÏÉıÒ»ĞĞĞèÒªµÄ²½Êı
-    public const float raiseDis = blockHeight / raiseSteps; // Ã¿´ÎÉÏÉıµÄ¾àÀë
-    public const float emmyraiseDis = emmyblockHeight / raiseSteps; // Ã¿´ÎÉÏÉıµÄ¾àÀë
+    public const float blockXPosShit = -359.0f; // æ–¹å—ä½ç½®xåæ ‡åç§»å€¼
+    public const int raiseSteps = 11; // ä¸Šå‡ä¸€è¡Œéœ€è¦çš„æ­¥æ•°
+    public const float raiseDis = blockHeight / raiseSteps; // æ¯æ¬¡ä¸Šå‡çš„è·ç¦»
+    public const float emmyraiseDis = emmyblockHeight / raiseSteps; // æ¯æ¬¡ä¸Šå‡çš„è·ç¦»
 
     public const float StartPosY = -720;
 

@@ -188,7 +188,6 @@ MonoBehaviour:
   _PressureMatrixList: []
   _multiPlayer: 0
   isExMode: 0
-  _isSwappingDone: 0
   _isFallingDone: 0
   _isPressureFallingDone: 0
   _curRowCnt: 0
@@ -206,9 +205,10 @@ MonoBehaviour:
   _addNewPressureRow: 0
   _score: 0
   _delta: 0
+  swapedBlocks: []
   minContr: {fileID: 0}
   emmyContr: {fileID: 0}
-  upCount: 0
+  initCnt: 0
   type: 0
   _DragBlock: {fileID: 0}
 --- !u!1 &612554336233027412

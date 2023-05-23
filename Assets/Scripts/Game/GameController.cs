@@ -8,58 +8,42 @@ using DG.Tweening;
 public class GameController : MonoBehaviour
 {
     public GameController _controller;
+    public CheckerboardType _boardType;
 
-    public GameObject _blockBoardObj; // ·½¿éÃæ°åÇø
-    public GameObject _blockAreaObj; // ·½¿éÃæ°åÇøµ×Í¼
+    public GameObject _blockBoardObj; // æ–¹å—é¢æ¿åŒº
+    public GameObject _blockAreaObj; // æ–¹å—é¢æ¿åŒºåº•å›¾
 
-    public GameObject emmy_blockBoardObj; // ·½¿éÃæ°åÇø
-    public GameObject emmy_blockAreaObj; // ·½¿éÃæ°åÇøµ×Í¼
-
-    public Dictionary<GameBoardState, ControllerStateBase> _states;
+    public Dictionary<GameBoardState, StateBase> _states;
     public GameBoardState _curGameBoardState = GameBoardState.Idle;
+
+    public static bool _gameInit = false;
+    public static bool _gameReady = false;
+    public static bool _gameStart = false;
+    public static bool _gameOver = false;
+    public bool _multiPlayer = false;
+
+    public List<SprotoType.block_info> _initMatrix = new List<SprotoType.block_info>(); // æ–¹å—åˆå§‹æ•°æ®
+    public Block[,] _blockMatrix = new Block[Config.matrixRows, Config.columns]; // æ–¹å—è¡Œåˆ—çŸ©é˜µ
+    public List<PressureBlock> _PressureMatrix = new List<PressureBlock>(); // å‹åŠ›å—åˆ—è¡¨
 
     public Block _firstSelected = null;
     public Block _secondSelected = null;
 
-    public static List<SprotoType.block_info> _initMatrix;
-    public static bool _gameReady = true;
-    public static bool _gameStart = false;
-    public static bool _gameOver = false;
-
-    public Block[,] _blockMatrix; // ·½¿éĞĞÁĞ¾ØÕó
-    public List<PressureBlock> _PressureMatrixList = new List<PressureBlock>();
-    public List<Dictionary<int, Vector3>> _rowY_pos = new List<Dictionary<int, Vector3>>();
-
-    public bool _multiPlayer = false;
-    public bool isExMode = false;
-
-    public bool _isSwappingDone = false;
-    public bool _isFallingDone = false;
-    public bool _isPressureFallingDone = false;
     public int _curRowCnt = 0;
+    public int _curMaxRowCnt = 0;
     public int _totalRowCnt = 0;
 
-    public int _curMaxRowCnt = 0;
-
-    public bool _alarmSet = false; // Î£ÏÕ¾¯±¨
-    public bool _suspendRaise = false;
-
-    public int _totalRemoveCnt = 0;
-    public int _speedRemoveCnt = 0;
     public int _curSpeed = 0;
     public int _curRaiseTime;
-
-    public int _chainCnt = 0; //Á¬Ïû¼ÆÊı
-
     public bool _raiseOneRow = false;
     public bool _addNewRow = false;
-    public bool _addNewPressureRow = false;
-    public int _score = 0;
+    public int _suspendRaise = 0;
+    public bool _alarmSet = false; // å±é™©è­¦æŠ¥
+
+    public int _chainCnt = 0; //è¿æ¶ˆè®¡æ•°
 
     public float _delta = 0;
 
-    public MainController minContr;
-    public MainController emmyContr;
 
     void Awake()
     { }
@@ -73,39 +57,40 @@ public class GameController : MonoBehaviour
     void OnDestroy()
     { }
 
-    public void InitStateHandlers()
+    public void PrintMatrix()
     {
-        _states = new Dictionary<GameBoardState, ControllerStateBase>();
-
-        _states.Add(GameBoardState.Idle, new IdleState(this));
-        //_states.Add(GameBoardState.Spawn, new SpawnState(this));
-        _states.Add(GameBoardState.FirstSelection, new FirstSelectionState(this));
-        _states.Add(GameBoardState.SecondSelection, new SecondSelectionState(this));
-        _states.Add(GameBoardState.Swap, new SwapState(this));
-        //_states.Add(GameBoardState.ReverseSwap, new ReverseSwapState(this));
-        _states.Add(GameBoardState.Fall, new FallState(this));
-        _states.Add(GameBoardState.Blank, new BlankState(this));
-        //_states.Add(GameBoardState.Destroy, new DestroyState(this));
+        string str = _boardType + "\n";
+        for (int i = _curRowCnt - 1; i >= 0; i--)
+        {
+            for (int j = 0; j < Config.columns; j++)
+            {
+                Block block = _blockMatrix[i, j];
+                if (block)
+                    str = str + "\t[" + block.Row + "," + block.Column + " - " + block.Type + "]";
+                else
+                {
+                    str = str + "\t[" + i + "," + j + " - " + BlockType.None + "]";
+                }
+            }
+            str = str + "\n";
+        }
+        Debug.Log(str);
     }
 
-    public void InitMembers(CheckerboardType _type = CheckerboardType.mine)
+    public void InitStateHandlers()
+    {
+        _states = new Dictionary<GameBoardState, StateBase>();
+        _states.Add(GameBoardState.Idle, new IdleState(this));
+        _states.Add(GameBoardState.Selection, new SelectionState(this));
+        _states.Add(GameBoardState.Swap, new SwapState(this));
+    }
+
+    public void InitMembers()
     {
         _blockBoardObj = transform.Find("BlockBoard").gameObject;
         _blockAreaObj = _blockBoardObj.transform.Find("AreaBottom").gameObject;
 
-        upCount = 0;
-        //if (_type == CheckerboardType.mine)
-        //{
-        //    _blockBoardObj = transform.Find("BlockBoard").gameObject;
-        //    _blockAreaObj = _blockBoardObj.transform.Find("AreaBottom").gameObject;
-        //}
-        //else
-        //{
-        //    emmy_blockBoardObj = transform.Find("BlockBoard").gameObject;
-        //    emmy_blockAreaObj = emmy_blockBoardObj.transform.Find("AreaBottom").gameObject;
-        //}
-
-        _gameReady = true;
+        // _gameReady = true;
         _gameStart = false;
         _gameOver = false;
 
@@ -128,7 +113,7 @@ public class GameController : MonoBehaviour
     public void ChangeToState(GameBoardState newState)
     {
         if (newState == _curGameBoardState) return;
-        Debug.Log(string.Format("Change to new state:{0}", newState.ToString()));
+        Debug.Log(string.Format("{0} -- Change to new state:{1}", _boardType, newState.ToString()));
         if (_states.ContainsKey(_curGameBoardState))
         {
             _states[_curGameBoardState].Exit();
@@ -140,30 +125,32 @@ public class GameController : MonoBehaviour
         }
     }
 
+    public void UpdateState()
+    {
+        if (_states != null && _states.ContainsKey(_curGameBoardState))
+        {
+            _states[_curGameBoardState].Update();
+        }
+    }
+
+    public void OnBlockOperation(int row, int column, BlockOperation operation)
+    {
+        if (_states.ContainsKey(_curGameBoardState))
+        {
+            _states[_curGameBoardState].OnBlockOperation(row, column, operation);
+        }
+    }
+
     virtual public bool IsMultiPlayer()
     {
         return false;
     }
 
-    virtual public void ChangeScore(int score, int combo_cnt)
-    {
-        _score += score;
-
-        _totalRemoveCnt++;
-        _speedRemoveCnt++;
-        if (_speedRemoveCnt >= Config.panelsToNextSpeed[_curSpeed])
-        {
-            _speedRemoveCnt = 0;
-            _curSpeed++;
-            _curRaiseTime = Config.speedToRaiseTime[_curSpeed];
-        }
-    }
-
     public void CheckAlarm()
     {
-        for (int i = 0; i < _PressureMatrixList.Count; i++)
+        for (int i = 0; i < _PressureMatrix.Count; i++)
         {
-            if (_PressureMatrixList[i].Row_y >= Config.alarmRow)
+            if (_PressureMatrix[i].Row_y >= Config.alarmRow)
             {
                 _alarmSet = true;
             }
@@ -184,7 +171,7 @@ public class GameController : MonoBehaviour
                 for (int row = 0; row < _curRowCnt; row++)
                 {
                     var block = _blockMatrix[row, col];
-                    if (block.IsTrembled == false)
+                    if (block != null && block.IsTrembled == false)
                         block.TrembleChange(true);
                 }
             }
@@ -201,94 +188,91 @@ public class GameController : MonoBehaviour
         _alarmSet = false;
     }
 
-    // ÌáÉıÒ»ĞĞ
-    public void RaiseOneRow(CheckerboardType _type = CheckerboardType.mine)
+    // æå‡ä¸€è¡Œ
+    public void RaiseOneRow()
     {
-        Transform _tran = _type == CheckerboardType.mine ? _blockBoardObj.transform : emmy_blockBoardObj.transform;
-        Transform _Areatran = _type == CheckerboardType.mine ? _blockAreaObj.transform : emmy_blockAreaObj.transform;
         _raiseOneRow = false;
-        _suspendRaise = true;
+
+        Transform _tran = _blockBoardObj.transform;
+        Transform _areaTran = _blockAreaObj.transform;
+        _suspendRaise = _suspendRaise + 1;
         var moveDis = (_totalRowCnt - Config.initRows + 1) * Config.blockHeight;
         _tran.DOLocalMoveY(moveDis, 0.2f).OnComplete(() =>
         {
-            _Areatran.DOLocalMoveY(_Areatran.localPosition.y - Config.blockHeight, 0);
+            _areaTran.DOLocalMoveY(_areaTran.localPosition.y - Config.blockHeight, 0);
             _addNewRow = true;
-            _suspendRaise = false;
+            _suspendRaise = _suspendRaise - 1;
         });
     }
 
-    public void RaiseOneStep(CheckerboardType _type = CheckerboardType.mine)
+    public void RaiseOneStep()
     {
-        Transform _tran = _type == CheckerboardType.mine ? _blockBoardObj.transform : emmy_blockBoardObj.transform;
-        Transform _Areatran = _type == CheckerboardType.mine ? _blockAreaObj.transform : emmy_blockAreaObj.transform;
+        Transform _tran = _blockBoardObj.transform;
+        Transform _areaTran = _blockAreaObj.transform;
         _tran.DOLocalMoveY(_tran.localPosition.y + Config.raiseDis, 0);
 
         if (_tran.localPosition.y > (_totalRowCnt - Config.initRows + 1) * Config.blockHeight - 15)
         {
-            _Areatran.DOLocalMoveY(_Areatran.localPosition.y - Config.blockHeight, 0);
+            _areaTran.DOLocalMoveY(_areaTran.localPosition.y - Config.blockHeight, 0);
             _addNewRow = true;
         }
         _delta = 0;
     }
 
-    public void UpdateState()
+    //ç”Ÿæˆåˆå§‹çš„æ–¹å—
+    public void InitBlocks()
     {
-        if (_states != null && _states.ContainsKey(_curGameBoardState))
+        if (_initMatrix.Count == 0)
         {
-            _states[_curGameBoardState].Update();
+            _gameInit = false;
+            _gameReady = true;
+            return;
         }
-    }
-    public float BlockWith(CheckerboardType _type)
-    {
-        return Config.msgHandler._mainControllerInst.type == _type ? Config.blockWidth : Config.emmyblockWidth;
-    }
-    public float BlockHeight(CheckerboardType _type)
-    {
-        return Config.msgHandler._mainControllerInst.type == _type ? Config.blockHeight : Config.emmyblockHeight;
-    }
-    //Éú³É³õÊ¼µÄ·½¿é
-    public void InitBlocks(CheckerboardType _type = CheckerboardType.mine)
-    {
-        _blockMatrix = new Block[Config.matrixRows, Config.columns];
-        foreach (SprotoType.block_info data in _initMatrix)
-        {
-            int row = (int)data.row;
-            int col = (int)data.col;
-            var block = Block.CreateBlockObject(row, col, (int)data.type, _type == CheckerboardType.mine ? _blockBoardObj.transform : emmy_blockBoardObj.transform);
-            block.transform.localPosition = new Vector3(Config.blockXPosShit + col * BlockWith(_type), -(Config.initRows - 1 - row) * BlockHeight(_type), 0);
-            block.BlockOperationEvent += OnBlockOperation;
 
-            try
-            {
-                _blockMatrix[row, col] = block;
-            }
-            catch (Exception)
-            {
+        SprotoType.block_info data = _initMatrix[0];
+        int row = (int)data.row;
+        int col = (int)data.col;
+        int type = (int)data.type;
+        _initMatrix.Remove(data);
 
-                throw;
-            }
+        // ç©ºæ–¹å—ä¸ç”Ÿæˆå¯¹è±¡
+        if ((BlockType)type == BlockType.None)
+            return;
 
-        }
-        _curRowCnt = Config.initRows;
-        _totalRowCnt = Config.initRows;
+        // Debug.Log(_boardType + " -- init block["+row+","+col=+" - "+type+"] - count:"+_initMatrix.Count);
+        var block = Block.CreateBlockObject(row, col, type, _blockBoardObj.transform, this);
+        var initY = 840;
+        block.transform.localPosition = new Vector3(Config.blockXPosShit + col * Config.blockWidth, initY, 0);
+        block.BlockOperationEvent += OnBlockOperation;
+        block.initing = true;
+        block.NeedFall = true;
+        block.fallCnt = row - 12;
+
+        _blockMatrix[row, col] = block;
+
+        _curRowCnt = row + 1; //Config.initRows;
+        _totalRowCnt = row + 1; //Config.initRows;
     }
-    public void GreatPressureBlock(int count, CheckerboardType _type = CheckerboardType.mine)
+
+    public void GreatPressureBlock(int count)
     {
         SetPressureInfo(count);
         for (int i = 0; i < _pressureInfo.Count; i++)
         {
-            var block = PressureBlock.CreateBlockObject(Config.rows, 0, (int)PressureBlockType.D1, _type == CheckerboardType.mine ? _blockBoardObj.transform : emmy_blockBoardObj.transform);
-            block.GetComponent<RectTransform>().sizeDelta = new Vector2(_pressureInfo[i].Key * BlockWith(_type), _pressureInfo[i].Value * BlockHeight(_type) - 1);
-            block.transform.localPosition = new Vector3((Config.blockXPosShit - BlockWith(_type) / 2 + block.xNum * BlockWith(_type)), (block.Row_y - 1) * BlockHeight(_type) + Config.StartPosY + 20, 0);//   + _blockAreaObj.transform.localPosition.y   ==> y
-            //block.BlockOperationEvent += OnBlockOperation;
-            block.gameObject.name = "1111";
-            block.xNum = _pressureInfo[i].Key;
-            int _row = 0;
-            _PressureMatrixList.Add(block);
+            var pressure = PressureBlock.CreatePressureObject(Config.matrixRows, _pressureInfo[i].Key, _blockBoardObj.transform, this);
+            pressure.GetComponent<RectTransform>().sizeDelta = new Vector2(_pressureInfo[i].Key * Config.blockWidth, _pressureInfo[i].Value * Config.blockHeight - 15);
+            float posx = Config.blockXPosShit - Config.blockWidth / 2;
+            float posy = 840 - (_totalRowCnt - Config.initRows) * Config.blockHeight;
+            pressure.transform.localPosition = new Vector3(posx, posy, 0);
+            pressure.gameObject.name = "pressure + " + pressure.Row_y;
+            pressure.NeedFall = true;
+            pressure.fallCnt = -1;
+            _PressureMatrix.Add(pressure);
         }
-        _PressureMatrixList.Sort((a, b) => a.Row_y - b.Row_y);
-        _controller.ChangeToState(GameBoardState.Fall);
+        // _PressureMatrix.Sort((a, b) => a.Row_y - b.Row_y);
+        // _controller.ChangeToState(GameBoardState.Fall);
     }
+
     List<KeyValuePair<int, int>> _pressureInfo = new List<KeyValuePair<int, int>>();
     int PressureWith, PressureHeight;
     private void SetPressureInfo(int count)
@@ -365,7 +349,7 @@ public class GameController : MonoBehaviour
         }
     }
 
-    //¼ì²éµÚ1ĞĞĞÂµÄ·½¿éÀàĞÍÊÇ·ñ»áÓëÒÑÉú³ÉµÄ·½¿éÈıÁ¬
+    //æ£€æŸ¥ç¬¬1è¡Œæ–°çš„æ–¹å—ç±»å‹æ˜¯å¦ä¼šä¸å·²ç”Ÿæˆçš„æ–¹å—ä¸‰è¿
     public bool CheckRowType(List<BlockData> data, int col, BlockType type)
     {
         if (col < 2)
@@ -377,7 +361,7 @@ public class GameController : MonoBehaviour
         return true;
     }
 
-    //Éú²úÒ»ĞĞ·½¿é
+    //ç”Ÿäº§ä¸€è¡Œæ–¹å—
     public List<BlockData> SpawnBlock()
     {
         List<BlockData> newRow = new List<BlockData>();
@@ -385,7 +369,8 @@ public class GameController : MonoBehaviour
         for (int col = 0; col < Config.columns; col++)
         {
             BlockType newType = (BlockType)rand.Next((int)BlockType.B1, (int)BlockType.Count);
-            BlockType aboveType = _blockMatrix[1, col].Type;
+            Block aboveBlock = _blockMatrix[1, col];
+            BlockType aboveType = aboveBlock != null ? aboveBlock.Type : BlockType.None;
             while (aboveType == newType || !CheckRowType(newRow, col, newType))
             {
                 newType = (BlockType)rand.Next((int)BlockType.B1, (int)BlockType.Count);
@@ -408,8 +393,7 @@ public class GameController : MonoBehaviour
         for (int col = index; col < blockCount + index; col++)
         {
             BlockType newType = (BlockType)rand.Next((int)BlockType.B1, (int)BlockType.Count);
-            BlockType aboveType = _blockMatrix[1, col].Type;
-            while (aboveType == newType || !CheckRowType(newRow, col, newType))
+            while (!CheckRowType(newRow, col, newType))
             {
                 newType = (BlockType)rand.Next((int)BlockType.B1, (int)BlockType.Count);
             }
@@ -424,7 +408,7 @@ public class GameController : MonoBehaviour
         return newRow;
     }
 
-    //ËùÓĞ·½¿éÉÏÒÆÒ»ĞĞ
+    //æ‰€æœ‰æ–¹å—ä¸Šç§»ä¸€è¡Œ
     public void BringForward()
     {
         int opRow = _curRowCnt;
@@ -435,36 +419,31 @@ public class GameController : MonoBehaviour
                 var block = _blockMatrix[opRow - 1, col];
                 if (block != null)
                 {
-                    try
-                    {
-                        _blockMatrix[opRow, col] = block;
-                        _blockMatrix[opRow, col].Row += 1;
-                        _blockMatrix[opRow - 1, col] = null;
-                    }
-                    catch (Exception)
-                    {
-                        continue;
-                    }
+                    _blockMatrix[opRow, col] = block;
+                    _blockMatrix[opRow, col].Row += 1;
+                    _blockMatrix[opRow - 1, col] = null;
 
+                    if (_blockMatrix[opRow, col].Row == 1)
+                    {
+                        _blockMatrix[opRow, col].IsMoved = true;
+                        _blockMatrix[opRow, col].moveStay = 3;
+                    }
                 }
             }
             opRow -= 1;
         }
-        for (int i = 0; i < _PressureMatrixList.Count; i++)
+        for (int i = 0; i < _PressureMatrix.Count; i++)
         {
-            var item = _PressureMatrixList[i];
+            var item = _PressureMatrix[i];
             item.Row_y++;
+            item.gameObject.name = "pressure + " + item.Row_y;
         }
     }
-    public int upCount;
-    public void AddNewRow(List<BlockData> newRow, CheckerboardType _type = CheckerboardType.mine)
-    {
-        //ÒÑÓĞ·½¿éÕûÌåÉÏÒÆÒ»ĞĞ
-        BringForward();
-        upCount += 1;
 
-        // ¶àÈËÄ£Ê½Í¬²½Êı¾İ
-        if (IsMultiPlayer())
+    public void AddNewRow(List<BlockData> newRow)
+    {
+        // å¤šäººæ¨¡å¼åŒæ­¥æ•°æ®
+        if (_boardType == CheckerboardType.mine && IsMultiPlayer())
         {
             var req = new SprotoType.game_new_row.request();
             req.matrix = new List<SprotoType.block_info>();
@@ -477,39 +456,20 @@ public class GameController : MonoBehaviour
                     type = (int)data.type,
                 });
             }
-            //req.cur_row_cnt = _curRowCnt;
-            //req.total_row_cnt = _totalRowCnt;
             NetSender.Send<Protocol.game_new_row>(req, (data) =>
             {
                 var resp = data as SprotoType.game_new_row.response;
-                Debug.LogFormat(" new_row response : {0}", resp.e);
+                Debug.LogFormat("{0} -- new_row response : {1}", _boardType, resp.e);
                 if (resp.e == 0)
                 {
-
+                    DoAddNewRow(newRow);
                 }
             });
         }
-        foreach (BlockData data in newRow)
-        {
-            var block = Block.CreateBlockObject(0, data.col, (int)data.type, _type == CheckerboardType.mine ? _blockBoardObj.transform : emmy_blockBoardObj.transform);
-            block.transform.localPosition = new Vector3(Config.blockXPosShit + data.col * BlockWith(_type), -_totalRowCnt * BlockHeight(_type), 0);
-            block.BlockOperationEvent += OnBlockOperation;
-
-            _blockMatrix[0, data.col] = block;
-        }
-        _totalRowCnt += 1;
-
-        CheckMaxRowCnt();
-
-        ChangeToState(GameBoardState.Fall);
-
-        CheckAlarm();
-
-        UpdateMaxCnt();
-
         _addNewRow = false;
         _delta = 0;
     }
+
     public void UpdateMaxCnt()
     {
         _curRowCnt = 0;
@@ -517,230 +477,378 @@ public class GameController : MonoBehaviour
         {
             if (item != null)
                 item.gameObject.name = item.Row + "+ " + item.Column;
-            if (item != null && item.Type !=  BlockType.None && item.Row > _curRowCnt)
+            if (item != null && item.Type != BlockType.None && item.Row > _curRowCnt)
                 _curRowCnt = item.Row;
         }
         _curMaxRowCnt = _curRowCnt;
-        foreach (var item in _PressureMatrixList)
+        foreach (var item in _PressureMatrix)
         {
-            if (item.Row_y > _curRowCnt)
+            if (item.Row_y > _curRowCnt && item.fallCnt == 0)
                 _curMaxRowCnt = item.Row_y;
         }
         _curRowCnt += 1;
+        Debug.Log(_boardType + " -- _curRowCnt:" + _curRowCnt);
         _curMaxRowCnt += 1;
     }
+
     private void CheckMaxRowCnt()
     {
-        foreach (var item in _controller._PressureMatrixList)
+        foreach (var item in _controller._PressureMatrix)
         {
             if (item.Row_y > _curRowCnt)
                 _controller._curMaxRowCnt += 1;
         }
     }
-    public void AddNewBlock(List<BlockData> newRow, CheckerboardType _type = CheckerboardType.mine)
+
+    public void AddNewBlock(List<BlockData> newRow, PressureBlock pressure)
     {
         foreach (BlockData data in newRow)
         {
-            var block = Block.CreateBlockObject(data.row, data.col, (int)data.type, _type == CheckerboardType.mine ? _blockBoardObj.transform : emmy_blockBoardObj.transform);
-            block.transform.localPosition = new Vector3(Config.blockXPosShit + data.col * BlockWith(_type),  (-_totalRowCnt + data.row + 1) * BlockHeight(_type), 0);
+            var block = Block.CreateBlockObject(data.row, data.col, (int)data.type, _blockBoardObj.transform, this);
+            block.transform.localPosition = new Vector3(Config.blockXPosShit + data.col * Config.blockWidth, (-_totalRowCnt + data.row + 1) * Config.blockHeight, 0);
             block.BlockOperationEvent += OnBlockOperation;
+            block.IsLocked = true;
+            pressure._genBlocks.Add(block);
 
             _blockMatrix[data.row, data.col] = block;
         }
-        //_curRowCnt += 1;
-        //_totalRowCnt += 1;
-
 
         CheckAlarm();
 
-        ChangeToState(GameBoardState.Fall);
+        UpdateMaxCnt();
+    }
+
+    // äº¤æ¢æ–¹å—å¤„ç†
+    public void DoSwap(Block first, Block second)
+    {
+        Debug.Log(_boardType + " -- swap first[" + first.Row + "," + first.Column + " - " + first.Type + "] - second[" + second.Row + "," + second.Column + " - " + second.Type + "]");
+        if (first.Row == second.Row)
+        {
+            if (first.moveCnt != 0 || second.moveCnt != 0)
+            {
+                Debug.LogError(_boardType + " -- swap run error! first.moveCnt=" + first.moveCnt + " - second.moveCnt=" + second.moveCnt);
+                _controller.ChangeToState(GameBoardState.Idle);
+                return;
+            }
+            first.NeedMove = true;
+            first.moveCnt = second.Column - first.Column;
+            second.NeedMove = true;
+            second.moveCnt = first.Column - second.Column;
+        }
+        if (first.Column == second.Column)
+        {
+            if (first.fallCnt != 0 || second.fallCnt != 0)
+            {
+                Debug.LogError(_boardType + " -- swap run error! first.fallCnt=" + first.fallCnt + " - second.fallCnt=" + second.fallCnt);
+                _controller.ChangeToState(GameBoardState.Idle);
+                return;
+            }
+            first.NeedFall = true;
+            first.fallCnt = second.Row - first.Row;
+            second.NeedFall = true;
+            second.fallCnt = first.Row - second.Row;
+        }
+    }
+
+    // åœ¨åº•éƒ¨æ–°åŠ ä¸€è¡Œæ–¹å—
+    public void DoAddNewRow(List<BlockData> newRow)
+    {
+        // å·²æœ‰æ–¹å—æ•´ä½“ä¸Šç§»ä¸€è¡Œ
+        BringForward();
+
+        foreach (BlockData item in newRow)
+        {
+            var block = Block.CreateBlockObject(0, item.col, (int)item.type, _blockBoardObj.transform, this);
+            block.transform.localPosition = new Vector3(Config.blockXPosShit + item.col * Config.blockWidth, -_totalRowCnt * Config.blockHeight, 0);
+            block.BlockOperationEvent += OnBlockOperation;
+
+            _blockMatrix[0, item.col] = block;
+        }
+        _totalRowCnt += 1;
+
+        CheckMaxRowCnt();
+
+        CheckAlarm();
 
         UpdateMaxCnt();
-
-        //if (CalculateSwappedBlocks())
-        //{
-        //    ChangeToState(GameBoardState.Blank);
-        //}
-        foreach (var item in _blockMatrix)
-        {
-            if (item != null)
-                item.gameObject.name = item.Row + "+ " + item.Column;
-        }
     }
 
-    public bool CalculateSwappedBlocks()
+    // æ–¹å—ç§»åŠ¨ç»“æŸå¤„ç†é€»è¾‘
+    public void BlockMoved(Block block)
     {
-        var minRowIndex = 0;
-        var maxRowIndex = _curRowCnt - 1;
-        var minColumnIndex = 0;
-        var maxColumnIndex = Config.columns;
+        UpdateMaxCnt();
 
-        var blockToCheckList = new List<Block>();
-        blockToCheckList.Add(_firstSelected);
-        blockToCheckList.Add(_secondSelected);
+        int row = block.Row;
+        int col = block.Column;
+        BlockType type = block.Type;
+        Debug.Log(_boardType + " -- block[" + row + "," + col + " - " + block.Type + "] move proc");
 
-        var hasMatchedBlocks = false;
-        foreach (var block in _blockMatrix)
+        // ç©ºæ–¹å—ï¼Œä¸Šæ–¹æ–¹å—ä¸‹è½
+        if (type == BlockType.None)
         {
-            if (block == null)
-                continue;
-
-            // Horizontal
-            var leftMostColumnIndex = block.Column;
-            var rightMostColumnIndex = block.Column;
-            // Left
-            for (int col = block.Column; col >= minColumnIndex; col--)
+            block.IsBlanked = true;
+            row = row + 1;
+            if (row > Config.rows)
+                return;
+            Block above = _blockMatrix[row, col];
+            while (above != null && above.IsTagged == false && above.moveCnt == 0 && above.fallCnt == 0 && above.IsLocked == false)
             {
-                var leftBlock = _controller._blockMatrix[block.Row, col];
-                var currentBlock = _controller._blockMatrix[block.Row, leftMostColumnIndex];
-                if (leftBlock != null && currentBlock != null && leftBlock.IsMatched(currentBlock))
-                {
-                    leftMostColumnIndex = col;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            // Right
-            for (int col = block.Column; col < maxColumnIndex; col++)
-            {
-                var rightBlock = _controller._blockMatrix[block.Row, col];
-                var currentBlock = _controller._blockMatrix[block.Row, rightMostColumnIndex];
-                if (rightBlock != null && currentBlock != null && rightBlock.IsMatched(currentBlock))
-                {
-                    rightMostColumnIndex = col;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            // Vertical
-            var upperMostRowIndex = block.Row;
-            var lowestRowIndex = block.Row;
-            // Up
-            for (int row = block.Row; row >= minRowIndex; row--)
-            {
-                var upperBlock = _controller._blockMatrix[row, block.Column];
-                var currentBlock = _controller._blockMatrix[upperMostRowIndex, block.Column];
-                if (upperBlock != null && currentBlock != null && upperBlock.IsMatched(currentBlock))
-                {
-                    upperMostRowIndex = row;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            // Low
-            for (int row = block.Row; row < maxRowIndex; row++)
-            {
-                var lowerBlock = _controller._blockMatrix[row, block.Column];
-                var currentBlock = _controller._blockMatrix[lowestRowIndex, block.Column];
-                if (lowerBlock != null && currentBlock != null && lowerBlock.IsMatched(currentBlock))
-                {
-                    lowestRowIndex = row;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            if (rightMostColumnIndex - leftMostColumnIndex >= 2)
-            {
-                hasMatchedBlocks = true;
-                for (int i = leftMostColumnIndex; i <= rightMostColumnIndex; i++)
-                {
-                    var current = _controller._blockMatrix[block.Row, i];
-                    current.IsTagged = true;
-
-                    for (int j = 0; j < _PressureMatrixList.Count; j++)
-                    {
-                        var item = current;
-                        if (item.Row + 1 == _PressureMatrixList[j].Row_y && _PressureMatrixList[j].Column_x <= item.Column && item.Column <= _PressureMatrixList[j].Column_x + _PressureMatrixList[j].xNum - 1)
-                        {
-                            _PressureMatrixList[j].IsTagged = true;
-                        }
-                    }
-                }
-            }
-            if (lowestRowIndex - upperMostRowIndex >= 2)
-            {
-                hasMatchedBlocks = true;
-                for (int i = upperMostRowIndex; i <= lowestRowIndex; i++)
-                {
-                    var current = _controller._blockMatrix[i, block.Column];
-                    current.IsTagged = true;
-
-                    for (int j = 0; j < _PressureMatrixList.Count; j++)
-                    {
-                        if (current.Row + 1 == _PressureMatrixList[j].Row_y && _PressureMatrixList[j].Column_x <= current.Column && current.Column <= _PressureMatrixList[j].Column_x + _PressureMatrixList[j].xNum - 1)
-                        {
-                            _PressureMatrixList[j].IsTagged = true;
-                        }
-                    }
-                }
-            }
-        }
-        return hasMatchedBlocks;
-    }
-
-    public void DestroyBlock(int row, int column)
-    {
-        var item = _controller._blockMatrix[row, column];
-        if (item != null)
-        {
-            item.BlockOperationEvent -= OnBlockOperation;
-            item.DoDestroy();
-            item = null;
-        }
-    }
-
-    public void DestroyBlankRow()
-    {
-        for (int row = _curRowCnt - 1; row > 0; row--)
-        {
-            for (int col = 0; col < Config.columns; col++)
-            {
-                var item = _controller._blockMatrix[row, col];
-                if (item != null && _controller._blockMatrix[row, col].Type != BlockType.None)
-                {
+                Debug.Log(_boardType + " -- above block[" + above.Row + "," + above.Column + " - " + above.Type + "] fall");
+                above.fallCnt = -1;
+                above.NeedFall = true;
+                row = row + 1;
+                if (row > Config.rows)
                     return;
+                above = _blockMatrix[row, col];
+            }
+
+            bool logFlag = false;
+            // å¤„ç†å‹åŠ›å—
+            for (int i = 0; i < _PressureMatrix.Count; i++)
+            {
+                var pressure = _PressureMatrix[i];
+                if (pressure.Row_y != row + i)
+                {
+                    if (logFlag)
+                        Debug.Log(_boardType + " -- row:" + row + " -- Row_y:" + pressure.Row_y + " -- i:" + i);
+                    break;
+                }
+                bool underFall = true;
+                for (int j = 0; j < pressure.xNum; j++)
+                {
+                    var item = _blockMatrix[pressure.Row_y - 1, j];
+                    if (item != null && item.Type != BlockType.None && item.fallCnt == 0)
+                    {
+                        underFall = false;
+                        break;
+                    }
+                }
+                if (underFall == false)
+                    break;
+                if (pressure.fallCnt == 0 && pressure.IsLocked == false)
+                {
+                    Debug.Log(_boardType + " -- above pressure[" + pressure.Row_y + " - " + pressure.xNum + "] fall");
+                    pressure.NeedFall = true;
+                    pressure.fallCnt = -1;
+                    logFlag = true;
                 }
             }
-            for (int col = 0; col < Config.columns; col++)
-            {
-                DestroyBlock(row, col);
-            }
-            CheckAlarm();
-            UpdateMaxCnt();
+
+            return;
         }
-    }
-    public void DestroyPBlockRow()
-    {
-        for (int i = 0; i < _controller._PressureMatrixList.Count; i++)
+
+        // æ–¹å—ä¸‹è½
+        Block under = _blockMatrix[row - 1, col];
+        if (row > 1 && (under == null || under.fallCnt != 0))
         {
-            if (_controller._PressureMatrixList[i].IsTagged)
+            Debug.Log(_boardType + " -- self block[" + row + "," + col + " - " + type + "] fall");
+            block.fallCnt = -1;
+            block.NeedFall = true;
+            if (_firstSelected == block)
+                ChangeToState(GameBoardState.Idle);
+
+            row = row + 1;
+            if (row > Config.rows)
+                return;
+            Block above = _blockMatrix[row, col];
+            while (above != null && above.IsTagged == false && above.moveCnt == 0 && above.fallCnt == 0 && above.IsLocked == false)
             {
-                var newBlock = SpawnBlock(_controller._PressureMatrixList[i].xNum, _controller._PressureMatrixList[i].Row_y, _controller._PressureMatrixList[i].Column_x);
-
-                var pblok = _controller._PressureMatrixList[i];
-                _controller._PressureMatrixList.Remove(pblok);
-                pblok.DoDestroy();
-                Debug.LogError("destroy pblok");
-
-
-                AddNewBlock(newBlock);
-                SendNet(newBlock);
-                //_controller._curMaxRowCnt -= 1;
+                Debug.Log(_boardType + " -- above block[" + above.Row + "," + above.Column + " - " + above.Type + "] fall");
+                above.fallCnt = -1;
+                above.NeedFall = true;
+                row = row + 1;
+                if (row > Config.rows)
+                    return;
+                above = _blockMatrix[row, col];
             }
+
+            // å¤„ç†å‹åŠ›å—
+            for (int i = 0; i < _PressureMatrix.Count; i++)
+            {
+                var pressure = _PressureMatrix[i];
+                if (pressure.Row_y != row + i)
+                    break;
+                bool underFall = true;
+                for (int j = 0; j < pressure.xNum; j++)
+                {
+                    var item = _blockMatrix[pressure.Row_y - 1, j];
+                    if (item != null && item.Type != BlockType.None && item.fallCnt == 0)
+                    {
+                        underFall = false;
+                        break;
+                    }
+                }
+                if (underFall == false)
+                    break;
+                if (pressure.fallCnt == 0 && pressure.IsLocked == false)
+                {
+                    Debug.Log(_boardType + " -- above pressure[" + pressure.Row_y + " - " + pressure.xNum + "] fall");
+                    pressure.NeedFall = true;
+                    pressure.fallCnt = -1;
+                }
+            }
+
+            return;
         }
 
+        if (block.IsTagged)
+            return;
+
+        // åŒ¹é…æ¶ˆé™¤
+        // å·¦ä¾§
+        List<Block> h_matchList = new List<Block>();
+        List<Block> v_matchList = new List<Block>();
+        for (int i = col - 1; i >= 0; i--)
+        {
+            var checkBlock = _blockMatrix[row, i];
+            if (checkBlock != null && checkBlock.Type == type && checkBlock != block && checkBlock.fallCnt == 0)
+                h_matchList.Add(checkBlock);
+            else
+                break;
+        }
+        // å³ä¾§
+        for (int i = col + 1; i < Config.columns; i++)
+        {
+            var checkBlock = _blockMatrix[row, i];
+            if (checkBlock != null && checkBlock.Type == type && checkBlock != block && checkBlock.fallCnt == 0)
+                h_matchList.Add(checkBlock);
+            else
+                break;
+        }
+        if (h_matchList.Count >= 2)
+        {
+            foreach (var matchedBlock in h_matchList)
+            {
+                matchedBlock.IsTagged = true;
+            }
+            block.IsTagged = true;
+        }
+        else
+        {
+            h_matchList.Clear();
+        }
+        // ä¸Šæ–¹
+        for (int i = row + 1; i <= _curRowCnt; i++)
+        {
+            if (i > Config.matrixRows)
+                break;
+            var checkBlock = _blockMatrix[i, col];
+            if (checkBlock != null && checkBlock.Type == type && checkBlock != block && checkBlock.fallCnt == 0)
+                v_matchList.Add(checkBlock);
+            else
+                break;
+        }
+        // ä¸‹æ–¹
+        for (int i = row - 1; i > 0; i--)
+        {
+            var checkBlock = _blockMatrix[i, col];
+            if (checkBlock != null && checkBlock.Type == type && checkBlock != block && checkBlock.fallCnt == 0)
+                v_matchList.Add(checkBlock);
+            else
+                break;
+        }
+        if (v_matchList.Count >= 2)
+        {
+            foreach (var matchedBlock in v_matchList)
+            {
+                matchedBlock.IsTagged = true;
+            }
+            if (h_matchList.Count < 2)
+                block.IsTagged = true;
+        }
+        else
+        {
+            v_matchList.Clear();
+        }
+
+        // åŒæ­¥æ¶ˆé™¤çš„æ–¹å—ä¸ªæ•°ï¼Œç”¨äºç”Ÿæˆå‹åŠ›å—
+        int eliminateCnt = h_matchList.Count + v_matchList.Count + 1;
+        if (eliminateCnt > 3 && _boardType == CheckerboardType.mine && IsMultiPlayer())
+        {
+            var req = new SprotoType.eliminate.request();
+            req.count = eliminateCnt;
+            Debug.Log(_boardType + " -- send eliminate block[" + block.Row + "," + block.Column + " - " + block.Type + "]");
+            NetSender.Send<Protocol.eliminate>(req, (data) =>
+            {
+                var resp = data as SprotoType.eliminate.response;
+                Debug.LogFormat("{0} -- eliminate response : {1}", _boardType, resp.e);
+                if (resp.e == 0)
+                {
+                    MainManager.Ins._rivalController.GreatPressureBlock(eliminateCnt);
+                }
+                else
+                {
+                    Debug.LogError(_boardType + " -- eliminate response failed!");
+                }
+            });
+        }
     }
-    private void SendNet(List<BlockData> _list)
+
+    // å‹åŠ›å—ç§»åŠ¨ç»“æŸå¤„ç†é€»è¾‘
+    public void PressureMoved(PressureBlock pressure)
+    {
+        Debug.Log(_boardType + " -- pressure[" + pressure.Row_y + " - " + pressure.xNum + "] move proc");
+        bool underFall = true;
+        // åˆ¤æ–­ä¸‹æ–¹çš„å‹åŠ›å—
+        foreach (var item in _PressureMatrix)
+        {
+            if ((pressure.Row_y == item.Row_y + 1) && (item.fallCnt == 0))
+            {
+                Debug.Log(_boardType + " -- pressure.Row_y:" + pressure.Row_y + " - item.Row_y:" + item.Row_y + " - item.fallCnt:" + item.fallCnt);
+                underFall = false;
+                break;
+            }
+        }
+        if (underFall == false)
+            return;
+
+        // åˆ¤æ–­ä¸‹æ–¹çš„æ–¹å—
+        for (int j = 0; j < pressure.xNum; j++)
+        {
+            var item = _blockMatrix[pressure.Row_y - 1, j];
+            if (item != null && item.Type != BlockType.None && item.fallCnt == 0)
+            {
+                underFall = false;
+                break;
+            }
+        }
+        if (underFall == false)
+            return;
+        Debug.Log(_boardType + " -- self pressure[" + pressure.Row_y + " - " + pressure.xNum + "] fall");
+        if (pressure.fallCnt == 0 && pressure.IsLocked == false)
+        {
+            pressure.NeedFall = true;
+            pressure.fallCnt = -1;
+        }
+    }
+
+    // æ–¹å—è¢«æ¶ˆé™¤æ—¶å¤„ç†å‹åŠ›å—
+    public void BlockTagged(Block block)
+    {
+        int row = block.Row;
+        int col = block.Column;
+        foreach (var pressure in _PressureMatrix)
+        {
+            if ((pressure.Row_y == row + 1) && (pressure.xNum > col) && (pressure.IsTagged == false))
+            {
+                pressure.IsTagged = true;
+                break;
+            }
+        }
+    }
+
+    // è§£é”å‹åŠ›å—é€»è¾‘
+    public void PressureTagged(PressureBlock pressure)
+    {
+        Debug.Log(_boardType + " -- pressure[" + pressure.Row_y + " - " + pressure.xNum + "] tag proc");
+        if (_boardType == CheckerboardType.mine && IsMultiPlayer())
+        {
+            var newBlocks = SpawnBlock(pressure.xNum, pressure.Row_y, 0);
+            SendNet(newBlocks, pressure);
+        }
+    }
+
+    private void SendNet(List<BlockData> _list, PressureBlock pressure)
     {
         var req = new SprotoType.createBlock.request();
         req.matrix = new List<SprotoType.block_info>();
@@ -753,33 +861,17 @@ public class GameController : MonoBehaviour
                 type = (int)data.type,
             });
         }
+        Debug.Log(_boardType + " -- send createBlock pressure[" + pressure.Row_y + " - " + pressure.xNum +"]");
         NetSender.Send<Protocol.createBlock>(req, (data) =>
         {
             var resp = data as SprotoType.createBlock.response;
-            Debug.LogFormat(" new_row response : {0}", resp.e);
+            Debug.LogFormat("{0} -- new_row response : {1}", _boardType, resp.e);
             if (resp.e == 0)
             {
-
+                pressure.PlayUnlockAnim();
+                Debug.Log(_boardType + " -- createBlock response pressure[" + pressure.Row_y + " - " + pressure.xNum + "]");
+                AddNewBlock(_list, pressure);
             }
         });
     }
-    public void OnBlockOperation(int row, int column, BlockOperation operation)
-    {
-        if (_states.ContainsKey(_curGameBoardState))
-        {
-            _states[_curGameBoardState].OnBlockOperation(row, column, operation);
-        }
-    }
-
-    public Block GetBlockByX_Y(int row, int col)
-    {
-        foreach (var item in _blockMatrix)
-        {
-            if (item != null)
-                if (item.Row == row && item.Column == col)
-                    return item;
-        }
-        return null;
-    }
-
 }

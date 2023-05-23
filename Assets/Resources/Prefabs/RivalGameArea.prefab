@@ -183,13 +183,13 @@ MonoBehaviour:
   _blockAreaObj: {fileID: 0}
   emmy_blockBoardObj: {fileID: 0}
   emmy_blockAreaObj: {fileID: 0}
+  _noneBlock: {fileID: 0}
   _curGameBoardState: 0
   _firstSelected: {fileID: 0}
   _secondSelected: {fileID: 0}
   _PressureMatrixList: []
   _multiPlayer: 0
   isExMode: 0
-  _isSwappingDone: 0
   _isFallingDone: 0
   _isPressureFallingDone: 0
   _curRowCnt: 0
@@ -207,9 +207,10 @@ MonoBehaviour:
   _addNewPressureRow: 0
   _score: 0
   _delta: 0
+  swapedBlocks: []
   minContr: {fileID: 0}
   emmyContr: {fileID: 0}
-  upCount: 0
+  initCnt: 0
   type: 0
 --- !u!1 &150807833435168020
 GameObject:

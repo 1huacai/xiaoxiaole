@@ -45,13 +45,12 @@ public class Main : MonoBehaviour
     public Button _unmatchBtn;
 
 
-    private bool _enterGame = false; // ½øÈëÓÎÏ·¿ª¹Ø
-    private bool _multiPlayer = false; // ¶àÈËÄ£Ê½¿ª¹Ø
-    private bool _isExMode = false; // ¶àÈËEXÄ£Ê½¿ª¹Ø
+    private bool _enterGame = false; // è¿›å…¥æ¸¸æˆå¼€å…³
+    private bool _multiPlayer = false; // å¤šäººæ¨¡å¼å¼€å…³
     private bool _server_logind = false;
     private float _delta = 0;
 
-    private List<SprotoType.block_info> _initMatrix; // ÓÎÏ·³õÊ¼·½¿éÊı¾İ
+    private List<SprotoType.block_info> _initMatrix; // æ¸¸æˆåˆå§‹æ–¹å—æ•°æ®
 
     public static bool _reset = false;
 
@@ -151,43 +150,46 @@ public class Main : MonoBehaviour
             _matchSuccessUI.SetActive(false);
 
             var parent = Config.gameObj.transform.Find("GameArea");
-            GameController._initMatrix = _initMatrix;
             _mainGamerObj = Instantiate(Config._mainGamerObj, parent) as GameObject;
             _mainGamerObj.name = "MainGameArea";
             var mainController = _mainGamerObj.GetComponent<MainController>();
-            mainController.type = CheckerboardType.mine;
+            foreach (var item in _initMatrix)
+            {
+                var newItem = new SprotoType.block_info();
+                newItem.row = item.row;
+                newItem.col = item.col;
+                newItem.type = item.type;
+                mainController._initMatrix.Add(newItem);
+            }
+            mainController._boardType = CheckerboardType.mine;
             mainController._multiPlayer = _multiPlayer;
-            mainController.isExMode = _isExMode;
 
             MainManager.Ins._mainController = mainController;
             if (_multiPlayer)
             {
                 _rivalGamerObj = Instantiate(Config._rivalGamerObj, parent) as GameObject;
                 var rivalController = _rivalGamerObj.GetComponent<RivalController>();
-                rivalController.isExMode = _isExMode;
+                foreach (var item in _initMatrix)
+                {
+                    var newItem = new SprotoType.block_info();
+                    newItem.row = item.row;
+                    newItem.col = item.col;
+                    newItem.type = item.type;
+                    rivalController._initMatrix.Add(newItem);
+                }
+                rivalController._boardType = CheckerboardType.emmy;
+                rivalController._multiPlayer = _multiPlayer;
 
                 MainManager.Ins._rivalController = rivalController;
-
-                //var emmyparent = Config.gameObj.transform.Find("emmybg");
-                //_emmyGamerObj = Instantiate(Config.emmyGameAreaObj, emmyparent) as GameObject;
-                //var emmymainController = _emmyGamerObj.GetComponent<RivalController>();
-                //emmymainController.name = "emmyGameArea";
-                //emmymainController.type = CheckerboardType.emmy;
-                ////emmymainController._multiPlayer = _multiPlayer;
-                //emmymainController.isExMode = _isExMode;
             }
 
             var timerParent = Config.gameObj.transform.Find("Timer");
             _timerObj = Instantiate(Config._timerObj, timerParent) as GameObject;
             _timerObj.GetComponent<CountDown>()._countDown = _multiPlayer;
-            
-            _multiPlayer = false;
-
-
         }
     }
 
-    // µ¥ÈËÄ£Ê½¿ªÊ¼
+    // å•äººæ¨¡å¼å¼€å§‹
     void OnSingleBtnClick()
     {
         Util.PlayClickSound(_singleBtn.gameObject);
@@ -195,29 +197,27 @@ public class Main : MonoBehaviour
         _enterGame = true;
     }
 
-    // ¶àÈËÄ£Ê½¿ªÊ¼
+    // å¤šäººæ¨¡å¼å¼€å§‹
     void OnMultiBtnClick()
     {
         Util.PlayClickSound(_multiBtn.gameObject);
-        _isExMode = false;
         GameBattle();
     }
 
     void OnMultiExBtnClick()
     {
         Util.PlayClickSound(_multiBtn.gameObject);
-        _isExMode = true;
         GameBattle();
     }
 
-    // Æ¥ÅäÊ§°ÜÈ·ÈÏ¿òÈ¡Ïû
+    // åŒ¹é…å¤±è´¥ç¡®è®¤æ¡†å–æ¶ˆ
     void OnMatchCancelClick()
     {
         _matchingUI.SetActive(false);
         _loginBtn.gameObject.SetActive(true);
     }
 
-    // Æ¥ÅäÊ§°ÜÈ·ÈÏ¿òÖØÊÔ
+    // åŒ¹é…å¤±è´¥ç¡®è®¤æ¡†é‡è¯•
     void OnMatchRetryClick()
     {
         SwitchMatchingText(true);
@@ -252,6 +252,7 @@ public class Main : MonoBehaviour
                 var req = new SprotoType.game_auth.request()
                 {
                     imei = SystemInfo.deviceUniqueIdentifier,
+                    // imei = "myComputer",
                     version = "2023040512",
                 };
                 NetSender.Send<Protocol.game_auth>(req, (data) =>
@@ -431,13 +432,13 @@ public class Main : MonoBehaviour
         MessageBox msgBox = new MessageBox(dialog);
     }
 
-    // Æ¥Åä³¬Ê±´¦Àí
+    // åŒ¹é…è¶…æ—¶å¤„ç†
     public void MatchTimeout(SprotoType.match_timeout.request data)
     {
         ShowMatchMsgBox(Config.matchFailureMsgBoxTitle);
     }
 
-    // Æ¥Åä³É¹¦´¦Àí
+    // åŒ¹é…æˆåŠŸå¤„ç†
     public void MatchSuccess(SprotoType.match_success.request data)
     {
         _multiPlayer = true;
@@ -450,13 +451,13 @@ public class Main : MonoBehaviour
         colorTW.OnComplete(MatchSuccessTexTWFinish);
     }
 
-    // Æ¥ÅäÒì³£´¦Àí
+    // åŒ¹é…å¼‚å¸¸å¤„ç†
     public void MatchWrong(SprotoType.match_error.request data)
     {
         ShowMatchMsgBox(Config.matchErrorMsgBoxTitle);
     }
 
-    // ±ÈÈü×¼±¸½×¶Î
+    // æ¯”èµ›å‡†å¤‡é˜¶æ®µ
     public void GameReady(SprotoType.game_ready.request data)
     {
         foreach (var item in data.matrix)
@@ -529,7 +530,7 @@ public class Main : MonoBehaviour
             for (int col = 0; col < Config.initCols; col++)
             {
                 int newType = (int)BlockType.None;
-                if (initSymb[row] == null || initSymb[row][col] == 0) // Ã»ÓĞÖ¸¶¨»òÕß0±êÊ¶ÔòÉú³É·½¿é£¬·Ç0²»Éú³É·½¿é
+                if (initSymb[row] == null || initSymb[row][col] == 0) // æ²¡æœ‰æŒ‡å®šæˆ–è€…0æ ‡è¯†åˆ™ç”Ÿæˆæ–¹å—ï¼Œé0ä¸ç”Ÿæˆæ–¹å—
                 {
                     newType = rand.Next((int)BlockType.B1, (int)BlockType.Count);
                     var aboveType = BlockType.None;

@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 4155684072186692893}
   - component: {fileID: 261476708384336268}
   - component: {fileID: 2366128787777844597}
+  - component: {fileID: 4439550511964564226}
   m_Layer: 5
   m_Name: PressureBlock
   m_TagString: Untagged
@@ -88,11 +89,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 730022511da646d4497ac3e2f7a90b18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  comboNum: 4
-  Type: 0
-  _type: 1
   Row_y: 0
-  Column_x: 0
   xNum: 0
-  localPos: 0
   _state: 0
+  NeedFall: 0
+  fallCnt: 0
+  _genBlocks: []
+  _controller: {fileID: 0}
+--- !u!95 &4439550511964564226
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5785677772587559455}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

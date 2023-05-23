@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
+using DG.Tweening;
 
 public class Block : MonoBehaviour
 {
@@ -16,9 +16,20 @@ public class Block : MonoBehaviour
 
     private Image _image;
     private Animator _anim;
-
-    private Vector3 _dragOffset;
     private Vector3 _dragBeginPos;
+    private GameObject _selectImage;
+
+    public bool NeedFall = false;
+    // 下落距离
+    public int fallCnt = 0;
+
+    public bool NeedMove = false;
+    // 水平移动距离（包括左移和右移）
+    public int moveCnt = 0;
+    public int moveStay = 0;
+
+    public bool initing = false;
+    public GameController _controller;
 
     public delegate void BlockOperationHandler(int row, int column, BlockOperation operation);
     public event BlockOperationHandler BlockOperationEvent;
@@ -27,97 +38,142 @@ public class Block : MonoBehaviour
     void Awake() { }
 
     // Use this for initialization
-    void Start() {
-        heightOffset = Config.blockHeight / 3;
-    }
+    void Start() { }
 
     void OnDestroy() { }
 
-    private void OnMouseEnter1()
+    private void OnMouseEnter()
     {
-        if (BlockOperationEvent != null)
+        if (IsTagged == false && BlockOperationEvent != null)
         {
-            BlockOperationEvent(_row, _column, BlockOperation.TouchEnter);
+            // BlockOperationEvent(_row, _column, BlockOperation.TouchEnter);
         }
     }
 
-    private void OnMouseExit2()
+    private void OnMouseExit()
     {
-        if (BlockOperationEvent != null)
+        if (IsTagged == false && BlockOperationEvent != null)
         {
-            BlockOperationEvent(_row, _column, BlockOperation.TouchExit);
+            // BlockOperationEvent(_row, _column, BlockOperation.TouchExit);
         }
     }
 
     private void OnMouseDown()
     {
-        mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        swapDirection = Vector3.zero;
-        drag = true;
-
-        if (BlockOperationEvent != null)
+        if (IsTagged == false && BlockOperationEvent != null)
         {
             BlockOperationEvent(_row, _column, BlockOperation.TouchDown);
+            _dragBeginPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         }
     }
 
     private void OnMouseUp()
     {
-        drag = false;
-        swapDirection = Vector3.zero;
-        if (BlockOperationEvent != null)
+        if (IsTagged == false && BlockOperationEvent != null)
         {
             BlockOperationEvent(_row, _column, BlockOperation.TouchUp);
         }
     }
 
-    private float heightOffset;
-    private Vector3 mousePosition;
-    private bool drag;
-    public Vector3 swapDirection = Vector3.zero;
-
-    // Update is called once per frame
-    void Update() {
-        if (drag && MainManager.Ins.DragBlock)
-        {
-            _dragOffset = mousePosition - Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            moveEvent(_dragOffset);
-        }
-    }
-    private void moveEvent(Vector3 _Offset)
+    private void OnMouseDrag()
     {
-        if (BlockOperationEvent != null)
+        if (IsTagged == false && BlockOperationEvent != null)
         {
-            if (Vector3.Magnitude(_Offset) > 0.1f)
+            Vector3 curPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            float xOffset = Mathf.Abs(curPosition.x - _dragBeginPos.x);
+            float yOffset = Mathf.Abs(curPosition.y - _dragBeginPos.y);
+            if (xOffset > Config.blockWidth / 2)
             {
-                if (Mathf.Abs(_Offset.x) > Mathf.Abs(_Offset.y) && _Offset.x > 0)
-                    swapDirection.x = 1;
-                else if (Mathf.Abs(_Offset.x) > Mathf.Abs(_Offset.y) && _Offset.x < 0)
-                    swapDirection.x = -1;
-                else if (Mathf.Abs(_Offset.x) < Mathf.Abs(_Offset.y) && _Offset.y > 0)
-                    swapDirection.y = 1;
-                else if (Mathf.Abs(_Offset.x) < Mathf.Abs(_Offset.y) && _Offset.y < 0)
-                    swapDirection.y = -1;
-
-
-                if (swapDirection.x > 0)
-                {
-                    BlockOperationEvent(_row, _column - 1, BlockOperation.DragHalf);
-                }
-                else if (swapDirection.x < 0)
-                {
+                if (xOffset > Config.blockWidth)
+                    return;
+                if (curPosition.x > _dragBeginPos.x && _column < Config.columns - 1)
                     BlockOperationEvent(_row, _column + 1, BlockOperation.DragHalf);
-                }
-                else if (swapDirection.y > 0)
-                {
-                    BlockOperationEvent(_row - 1, _column, BlockOperation.DragHalf);
-                }
-                else if (swapDirection.y < 0)
-                {
+                if (curPosition.x < _dragBeginPos.x && _column > 0)
+                    BlockOperationEvent(_row, _column - 1, BlockOperation.DragHalf);
+            }
+            else if (yOffset > Config.blockHeight / 2)
+            {
+                if (yOffset > Config.blockHeight)
+                    return;
+                if (curPosition.y > _dragBeginPos.y && _row < Config.rows - 1)
                     BlockOperationEvent(_row + 1, _column, BlockOperation.DragHalf);
-                }
+                if (curPosition.y < _dragBeginPos.y && _row > 1)
+                    BlockOperationEvent(_row - 1, _column, BlockOperation.DragHalf);
             }
         }
+    }
+
+    public void ResetDragPos()
+    {
+        _dragBeginPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+    }
+
+    // Update is called once per frame
+    void FixedUpdate()
+    {
+        if (IsMoved)
+        {
+            IsMoved = false;
+            _controller.BlockMoved(this);
+        }
+        if (IsTagged)
+        {
+            IsTagged = false;
+            PlayBlankAnim();
+            _controller.BlockTagged(this);
+        }
+        if (NeedFall)
+        {
+            if (initing)
+            {
+                float moveDuration = Mathf.Abs(fallCnt) * 0.08f;
+                float yDis = transform.localPosition.y + fallCnt * (Config.blockHeight);
+                transform.DOLocalMoveY(yDis, moveDuration).OnComplete(() =>
+                {
+                    initing = false;
+                    fallCnt = 0;
+                });
+            }
+            else
+            {
+                float moveDuration = Mathf.Abs(fallCnt) * 0.08f;
+                float yDis = transform.localPosition.y + fallCnt * (Config.blockHeight);
+                Debug.Log(_controller._boardType + " -- before fall block[" + Row + "," + Column + " - " + Type + "] - fallCnt:" + fallCnt + " - y:" + transform.localPosition.y);
+                transform.DOLocalMoveY(yDis, moveDuration).OnComplete(() =>
+                {
+                    if (_controller._blockMatrix[Row, Column] == this)
+                        _controller._blockMatrix[Row, Column] = null;
+                    Row = Row + fallCnt;
+                    gameObject.name = Row + " + " + Column;
+                    _controller._blockMatrix[Row, Column] = this;
+                    Debug.Log(_controller._boardType + " -- after fall block[" + Row + "," + Column + " - " + Type + "] - fallCnt:" + fallCnt + " - y:" + transform.localPosition.y);
+                    fallCnt = 0;
+                    IsMoved = true;
+                    moveStay = 3;
+                });
+            }
+            NeedFall = false;
+        }
+        if (NeedMove)
+        {
+            float moveDuration = 0.08f;
+            float xDis = transform.localPosition.x + moveCnt * Config.blockWidth;
+            Debug.Log(_controller._boardType + " -- before move block[" + Row + "," + Column + " - " + Type + "] - moveCnt:" + moveCnt + " - x:" + transform.localPosition.x);
+            transform.DOLocalMoveX(xDis, moveDuration).OnComplete(() =>
+            {
+                Column = Column + moveCnt;
+                gameObject.name = Row + " + " + Column;
+                if (_type != BlockType.None)
+                    _controller._blockMatrix[Row, Column] = this;
+                Debug.Log(_controller._boardType + " -- after move block[" + Row + "," + Column + " - " + Type + "] - moveCnt:" + moveCnt + " - x:" + transform.localPosition.x);
+                moveCnt = 0;
+                IsMoved = true;
+                moveStay = 3;
+            });
+            NeedMove = false;
+        }
+        if (moveStay > 0)
+            moveStay--;
     }
 
     public int Row
@@ -157,9 +213,32 @@ public class Block : MonoBehaviour
         set
         {
             if (value)
+            {
                 _state |= 1 << (int)BlockState.Selected;
+                _selectImage.SetActive(true);
+            }
             else
+            {
                 _state &= ~(1 << (int)BlockState.Selected);
+                _selectImage.SetActive(false);
+            }
+        }
+    }
+
+    public bool IsMoved // 移动
+    {
+        get { return (_state & 1 << (int)BlockState.Moved) != 0; }
+        set
+        {
+            if (value)
+            {
+                Debug.Log(_controller._boardType + " -- block[" + Row + "," + Column + " - " + Type + "] Moved");
+                _state |= 1 << (int)BlockState.Moved;
+                if (_controller._firstSelected)
+                    _controller.ChangeToState(GameBoardState.Selection);
+            }
+            else
+                _state &= ~(1 << (int)BlockState.Moved);
         }
     }
 
@@ -169,7 +248,19 @@ public class Block : MonoBehaviour
         set
         {
             if (value)
+            {
+                if (IsTagged)
+                {
+                    Debug.LogError(_controller._boardType + " -- block[" + Row + "," + Column + " - " + Type + "] already tagged");
+                    return;
+                }
+                Debug.Log(_controller._boardType + " -- block[" + Row + "," + Column + " - " + Type + "] Tagged");
                 _state |= 1 << (int)BlockState.Tagged;
+                IsLocked = true;
+                _controller._suspendRaise = _controller._suspendRaise + 1;
+                if (_controller._firstSelected == this)
+                    _controller.ChangeToState(GameBoardState.Idle);
+            }
             else
                 _state &= ~(1 << (int)BlockState.Tagged);
         }
@@ -181,7 +272,11 @@ public class Block : MonoBehaviour
         set
         {
             if (value)
+            {
+                Debug.Log(_controller._boardType + " -- block[" + Row + "," + Column + " - " + Type + "] destroyed");
                 _state |= 1 << (int)BlockState.Blanked;
+                DoDestroy();
+            }
             else
                 _state &= ~(1 << (int)BlockState.Blanked);
         }
@@ -212,27 +307,14 @@ public class Block : MonoBehaviour
     }
 
     // 判断两个方块是否相邻
-    public bool IsAdjacent(Block other)
+    public bool CheckAdjacent(Block other)
     {
-        return other == null ? false : IsLocked || other.IsLocked ? false : ((Row == other.Row && System.Math.Abs(Column - other.Column) == 1) || (Column == other.Column && System.Math.Abs(Row - other.Row) == 1));
-        //Row != other.Row ? 
-        //true : System.Math.Abs(Column - other.Column) > 1 ?
-        //false : true;
-    }
-
-    // 判断两个方块类型是否相同
-    public bool IsMatched(Block other)
-    {
-        bool ret = false;
-        do
-        {
-            if (IsLocked || other.IsLocked)
-                break;
-            if (Type == BlockType.None || Type != other.Type)
-                break;
-            ret = true;
-        } while (false);
-        return ret;
+        if (IsLocked || other.IsLocked)
+            return false;
+        if ((Row == other.Row && System.Math.Abs(Column - other.Column) == 1)
+            || (Column == other.Column && System.Math.Abs(Row - other.Row) == 1))
+            return true;
+        return false;
     }
 
     // 播放置空动画
@@ -249,7 +331,8 @@ public class Block : MonoBehaviour
     {
         _type = BlockType.None;
         _image.sprite = Config._sprites[(int)_type];
-        IsBlanked = true;
+        _controller._suspendRaise = _controller._suspendRaise - 1;
+        _controller.BlockMoved(this);
     }
 
     // 警报颤抖状态切换
@@ -271,7 +354,7 @@ public class Block : MonoBehaviour
         }
     }
 
-    public static Block CreateBlockObject(int row, int col, int type, Transform parent)
+    public static Block CreateBlockObject(int row, int col, int type, Transform parent, GameController ctrl)
     {
         GameObject obj = Instantiate(Config._blockObj, parent) as GameObject;
         if (obj == null)
@@ -283,18 +366,22 @@ public class Block : MonoBehaviour
         Block block = obj.GetComponent<Block>();
         block._image = obj.GetComponent<Image>();
         block._anim = obj.GetComponent<Animator>();
+        block._selectImage = obj.transform.Find("Select").gameObject;
         block.Type = (BlockType)type;
         block.Row = row;
         block.Column = col;
         block._image.sprite = Config._sprites[(int)block._type];
-        block.gameObject.name = row + "+ " + col;
+        block.gameObject.name = row + " + " + col;
         block.transform.localScale = new Vector3(0.8f, 0.8f, 0.8f);
+        block._controller = ctrl;
+        // Debug.Log(ctrl._boardType + " -- new block["+Row+","+Column+" - "+Type+"]");
 
         return block;
     }
 
     public void DoDestroy()
     {
-        DestroyImmediate(gameObject);
+        _controller._blockMatrix[Row, Column] = null;
+        Destroy(gameObject);
     }
 }

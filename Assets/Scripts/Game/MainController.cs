@@ -9,21 +9,19 @@ using System.Collections;
 
 public class MainController : GameController
 {
-    public CheckerboardType type;
-
-    private Animator _prePareAnim; // ◊º±∏ø™ º∂Øª≠
-    private Text _timer; // µπº∆ ±
-    private Button _upBtn; // ∑ΩøÈ…œ…˝“ª––∞¥≈•
-    private Button _setupBtn; // …Ë÷√∞¥≈•
-    private GameObject _resultObj; // Ω·π˚UI
-    private Text _resultInfoText; // Ω·π˚–≈œ¢
-    private GameObject _mainScoreObj; // µ•»Àƒ£ Ωµ√∑÷∞Â
-    private Text _scoreText; // µ√∑÷œ‘ æŒƒ±æ
-    private GameObject _rivalObj; // ∂‘ ÷’π æ«¯
+    private Animator _prepareAnim; // ÂáÜÂ§áÂºÄÂßãÂä®Áîª
+    private Text _timer; // ÂÄíËÆ°Êó∂
+    private Button _upBtn; // ÊñπÂùó‰∏äÂçá‰∏ÄË°åÊåâÈíÆ
+    private Button _setupBtn; // ËÆæÁΩÆÊåâÈíÆ
+    private GameObject _resultObj; // ÁªìÊûúUI
+    private Text _resultInfoText; // ÁªìÊûú‰ø°ÊÅØ
+    private GameObject _mainScoreObj; // Âçï‰∫∫Ê®°ÂºèÂæóÂàÜÊùø
+    private Text _scoreText; // ÂæóÂàÜÊòæÁ§∫ÊñáÊú¨
+    private GameObject _rivalObj; // ÂØπÊâãÂ±ïÁ§∫Âå∫
     private GameObject _comingSoonObj;
     private Tweener _comingSoonTw;
-    private Button _skill1Btn; // …Ë÷√∞¥≈•
-    private Button _skill2Btn; // …Ë÷√∞¥≈•
+    private Button _skill1Btn; // ÊäÄËÉΩ1ÈáäÊîæÊåâÈíÆ
+    private Button _skill2Btn; // ÊäÄËÉΩ2ÈáäÊîæÊåâÈíÆ
 
     private Transform _minRoleTF;
     private Transform _emmyRoleTF;
@@ -31,8 +29,8 @@ public class MainController : GameController
     private SkeletonGraphic _minRole;
     private SkeletonGraphic _emmyRole;
 
-    public Role _minroleData;
-    public Role _emmyroleData;
+    public Role _minRoleData;
+    public Role _emmyRoleData;
 
     private Slider _minHp;
     private Slider _minShield;
@@ -62,12 +60,12 @@ public class MainController : GameController
     void Start()
     {
         // unity component init
-        _prePareAnim = GameObject.Find(Config.preparePath).GetComponent<Animator>();
-        _prePareAnim.gameObject.SetActive(true);
+        _prepareAnim = GameObject.Find(Config.preparePath).GetComponent<Animator>();
+        _prepareAnim.gameObject.SetActive(true);
 
         _timer = GameObject.Find(Config.timerTextPath).GetComponent<Text>();
         _timer.gameObject.SetActive(false);
-        
+
         _upBtn = GameObject.Find(Config.upButtonPath).GetComponent<Button>();
         _upBtn.onClick.AddListener(OnUpBtnClick);
 
@@ -84,12 +82,12 @@ public class MainController : GameController
         _resultInfoText = GameObject.Find(Config.resultInfoPath).GetComponent<Text>();
 
         _mainScoreObj = GameObject.Find(Config.mainScorePath);
-        _mainScoreObj.SetActive(!_multiPlayer);
+        _mainScoreObj.SetActive(!IsMultiPlayer());
 
         _scoreText = GameObject.Find(Config.mainScoreTextPath).GetComponent<Text>();
 
         _rivalObj = GameObject.Find(Config.rivalShowPath);
-        _rivalObj.SetActive(_multiPlayer);
+        _rivalObj.SetActive(IsMultiPlayer());
 
         _minRoleTF = GameObject.Find(Config.uiGameRoot + "/Player1/role").transform;
         _emmyRoleTF = GameObject.Find(Config.uiGameRoot + "/Player2/role").transform;
@@ -122,10 +120,8 @@ public class MainController : GameController
         InitMembers();
 
         // initial block init
-        InitBlocks();
-
-        // …æ≥˝≥ı º…˙≥…µƒø’––
-        DestroyBlankRow();
+        // InitBlocks();
+        _gameInit = true;
     }
 
     public void InitRoleData(List<SprotoType.player_info> infos)
@@ -134,45 +130,64 @@ public class MainController : GameController
         {
             if (infos[i].rid == MainManager.Ins.Uid)
             {
-                _minroleData = new Role();
-                _minroleData.sid = (int)infos[i].render;
-                Debug.LogError("minrole sid ++++ " + _minroleData.sid);
+                _minRoleData = new Role();
+                _minRoleData.side = (int)infos[i].render;
             }
             else
             {
-                _emmyroleData = new Role();
-                _emmyroleData.sid = (int)infos[i].render;
-                Debug.LogError("minrole sid ++++ " + _emmyroleData.sid);
+                _emmyRoleData = new Role();
+                _emmyRoleData.side = (int)infos[i].render;
             }
         }
 
-        _minHp.maxValue = _minroleData.MaxHp;
-        _minShield.maxValue = _minroleData.MaxShield;
+        _minHp.maxValue = _minRoleData.MaxHp;
+        _minShield.maxValue = _minRoleData.MaxShield;
         UpdateMinSlider();
 
-        _emmyHp.maxValue = _emmyroleData.MaxHp;
-        _emmyShield.maxValue = _emmyroleData.MaxShield;
+        _emmyHp.maxValue = _emmyRoleData.MaxHp;
+        _emmyShield.maxValue = _emmyRoleData.MaxShield;
         UpdateEmmySlider();
-        ShowRolrModel();
+
+        ShowRoleModel();
 
         ShowInitAnima();
 
         UpdateSkill2Cd();
     }
+
+    int cntInit = 0;
+    void FixedUpdate()
+    {
+        cntInit++;
+        if (_gameInit)
+        {
+            if (cntInit % 5 == 0)
+            {
+                InitBlocks();
+            }
+            return;
+        }
+        if (cntInit % 50 == 0)
+        {
+            PrintMatrix();
+        }
+    }
+
     void Update()
     {
-        if (_gameOver)
+        _delta += Time.deltaTime;
+        if (_gameInit || _gameOver)
             return;
 
         if (_gameReady)
         {
-            var stateInfo = _prePareAnim.GetCurrentAnimatorStateInfo(0);
+            var stateInfo = _prepareAnim.GetCurrentAnimatorStateInfo(0);
             if (stateInfo.normalizedTime >= 1.0f)
             {
-                _prePareAnim.gameObject.SetActive(false);
+                _prepareAnim.gameObject.SetActive(false);
                 _timer.gameObject.SetActive(true);
                 _gameReady = false;
-                if (!_multiPlayer)
+                if (!IsMultiPlayer())
                     _gameStart = true;
             }
             return;
@@ -183,12 +198,7 @@ public class MainController : GameController
 
         UpdateState();
 
-        if (_curRowCnt > Config.rows)
-        {
-            TouchTop();
-            return;
-        }
-        if(_curMaxRowCnt > Config.rows)
+        if (_curRowCnt > Config.rows || _curMaxRowCnt > Config.rows)
         {
             TouchTop();
             return;
@@ -203,7 +213,7 @@ public class MainController : GameController
         if (_addNewRow)
         {
             var newRow = SpawnBlock();
-            AddNewRow(newRow, CheckerboardType.mine);
+            AddNewRow(newRow);
             return;
         }
 
@@ -212,12 +222,10 @@ public class MainController : GameController
             SoundAlarm();
         }
 
-        if (!_suspendRaise && _delta * 1000 >= _curRaiseTime)
+        if (_suspendRaise <= 0 && _delta * 1000 >= _curRaiseTime)
         {
             RaiseOneStep();
         }
-
-        _delta += Time.deltaTime;
     }
 
     void OnDestroy()
@@ -233,22 +241,23 @@ public class MainController : GameController
     {
         Util.PlayClickSound(_upBtn.gameObject);
 
-        _raiseOneRow = true;
-        if (_multiPlayer)
+        if (IsMultiPlayer())
         {
             var req = new SprotoType.game_up_row.request();
             NetSender.Send<Protocol.game_up_row>(req, (data) =>
             {
                 var resp = data as SprotoType.game_up_row.response;
-                Debug.LogFormat(" up_row response : {0}", resp.e);
-                if (resp.e == 0) { }
+                Debug.LogFormat("{0} -- up_row response: {1}", _boardType, resp.e);
+                if (resp.e == 0)
+                {
+                    _raiseOneRow = true;
+                }
             });
         }
     }
 
     void OnOtherBtnClick()
     {
-        Debug.Log("OnOtherBtnClick");
         Util.PlayClickSound(_setupBtn.gameObject);
         if (_comingSoonObj == null)
         {
@@ -264,53 +273,51 @@ public class MainController : GameController
 
     void OnSkill1BtnClick()
     {
-        if (_minroleData.Skill_1_CD)
+        if (_minRoleData.Skill_1_CD)
         {
             Debug.LogError("skill _ cd");
             return;
         }
-            Debug.Log("OnSkill1BtnClick");
         Util.PlayClickSound(_setupBtn.gameObject);
 
         var req = new SprotoType.game_use_skill.request();
-        req.skill_id = _minroleData.skillId_1;
+        req.skill_id = _minRoleData.skillId_1;
         NetSender.Send<Protocol.game_use_skill>(req, (data) =>
         {
             var resp = data as SprotoType.game_use_skill.response;
-            Debug.LogFormat(" game_use_skill response : {0}", resp.e);
+            Debug.LogFormat("{0} -- game_use_skill response: {1}", _boardType, resp.e);
             if (resp.e == 0) { }
-            PlayAnima(_minroleData.skillAnimaName_1);
-            PlayAnima("hurt",false);
-            _minroleData.UseSkill1();
+            PlayAnima(_minRoleData.skillAnimaName_1);
+            PlayAnima("hurt", false);
+            _minRoleData.UseSkill1();
             UpdateSkill1Cd();
         });
     }
+
     void OnSkill2BtnClick()
     {
-        if (!_minroleData.Skill_2_CD)
+        if (!_minRoleData.Skill_2_CD)
         {
             Debug.LogError("skill_2_cd");
             return;
         }
-        Debug.Log("OnSkill2BtnClick");
         Util.PlayClickSound(_setupBtn.gameObject);
 
         var req = new SprotoType.game_use_skill.request();
-        req.skill_id = _minroleData.skillId_2;
+        req.skill_id = _minRoleData.skillId_2;
         NetSender.Send<Protocol.game_use_skill>(req, (data) =>
         {
             var resp = data as SprotoType.game_use_skill.response;
-            Debug.LogFormat(" game_use_skill response : {0}", resp.e);
+            Debug.LogFormat("{0} -- game_use_skill response: {1}", _boardType, resp.e);
             if (resp.e == 0) { }
-            PlayAnima(_minroleData.skillAnimaName_2);
+            PlayAnima(_minRoleData.skillAnimaName_2);
             PlayAnima("hurt", false);
-            _minroleData.UseSkill2();
-            _emmyroleData.ChangeHpValue(30);
+            _minRoleData.UseSkill2();
+            _emmyRoleData.ChangeHpValue(30);
             UpdateEmmySlider();
             UpdateSkill2Cd();
         });
     }
-
 
     void DestroyComingSoonObj()
     {
@@ -325,14 +332,6 @@ public class MainController : GameController
     {
         return _multiPlayer;
     }
-
-    public override void ChangeScore(int score, int combo_cnt)
-    {
-        base.ChangeScore(score, combo_cnt);
-        _scoreText.text = _score.ToString();
-        SyncScore(score, combo_cnt);
-    }
-
     void SyncScore(int score, int combo_cnt)
     {
         //var req = new SprotoType.score.request();
@@ -341,7 +340,7 @@ public class MainController : GameController
         //NetSender.Send<Protocol.score>(req, (data) =>
         //{
         //    var resp = data as SprotoType.score.response;
-        //    Debug.LogFormat(" score response : {0}", resp.e);
+        //    Debug.LogFormat("{0} -- score response: {1}", _boardType, resp.e);
         //    if (resp.e == 0) { }
         //});
     }
@@ -354,17 +353,18 @@ public class MainController : GameController
 
     void TouchTop()
     {
-        if (_minroleData.Hp > 0)
+        // Debug.Log(_boardType + " -- touch top hp:" + _minRoleData.Hp);
+        if (_minRoleData.Hp > 0)
             return;
 
         _gameOver = true;
-        if (_multiPlayer)
+        if (IsMultiPlayer())
         {
             var req = new SprotoType.game_over.request();
             NetSender.Send<Protocol.game_over>(req, (data) =>
             {
                 var resp = data as SprotoType.game_over.response;
-                Debug.LogFormat("game_over : {0}", resp.e);
+                Debug.LogFormat("{0} -- game_over : {1}", _boardType, resp.e);
                 if (resp.e == 0) { }
             });
             ShowResult();
@@ -388,18 +388,16 @@ public class MainController : GameController
 
     public void SyncNewpreBlock(SprotoType.eliminate_broadcast.request data)
     {
-        PlayAnima(data.count == 3 ? "atk" : data.count == 4 ?  "atk2" : "atk3", false);
+        Debug.Log(_boardType+" -- data.count:" + data.count);
+        PlayAnima(data.count == 3 ? "atk" : data.count == 4 ? "atk2" : "atk3", false);
         PlayAnima("hurt");
 
-        if (data.count > 3)
+        if (data.count > 3 && _curRowCnt < Config.rows)
         {
-            Debug.LogError("_____________" + data.count);
             GreatPressureBlock((int)data.count);
-            _minroleData.ChangeHpValue((int)(data.count) - 1);
+            _minRoleData.ChangeHpValue((int)(data.count) - 1);
             UpdateMinSlider();
         }
-        //_curRowCnt = (int)data.cur_row_cnt;
-        //_totalRowCnt = (int)data.total_row_cnt;
     }
 
     public void Usekill(SprotoType.game_use_skill_broadcast.request data)
@@ -415,16 +413,16 @@ public class MainController : GameController
         }
         else if (value > 1 && value < 10)
         {
-            _minroleData.ChangeShieldTime = MainManager.Ins.Timer + 5;
+            _minRoleData.ChangeShieldTime = MainManager.Ins.Timer + 5;
         }
         else if (data.skill_id % 10000 < 2)
         {
-            _minroleData.ChangeHpValue(30);
+            _minRoleData.ChangeHpValue(30);
             UpdateMinSlider();
         }
     }
 
-    public void PlayAnima(string animaname,bool ismin = true)
+    public void PlayAnima(string animaname, bool ismin = true)
     {
         if (ismin)
         {
@@ -435,11 +433,11 @@ public class MainController : GameController
             _emmyRole.AnimationState.SetAnimation(0, animaname, false);
         }
     }
-    private void ShowRolrModel()
+    private void ShowRoleModel()
     {
         if (_minRoleTF.childCount == 0)
         {
-            var min = Resources.Load<SkeletonDataAsset>(_minroleData.pathName);
+            var min = Resources.Load<SkeletonDataAsset>(_minRoleData.pathName);
             Material minmaterial = new Material(Shader.Find("Spine/SkeletonGraphic"));
             _minRole = SkeletonGraphic.NewSkeletonGraphicGameObject(min, _minRoleTF, minmaterial);
 
@@ -453,7 +451,7 @@ public class MainController : GameController
 
             _minRole.AnimationState.Complete += (a) =>
             {
-                PlayAnima(_minroleData.idleAnimaName);
+                PlayAnima(_minRoleData.idleAnimaName);
             };
         }
         else
@@ -461,7 +459,7 @@ public class MainController : GameController
 
         if (_emmyRoleTF.childCount == 0)
         {
-            var emmy = Resources.Load<SkeletonDataAsset>(_emmyroleData.pathName);
+            var emmy = Resources.Load<SkeletonDataAsset>(_emmyRoleData.pathName);
             Material emmymaterial = new Material(Shader.Find("Spine/SkeletonGraphic"));
             _emmyRole = SkeletonGraphic.NewSkeletonGraphicGameObject(emmy, _emmyRoleTF, emmymaterial);
 
@@ -475,7 +473,7 @@ public class MainController : GameController
 
             _emmyRole.AnimationState.Complete += (a) =>
             {
-                PlayAnima(_emmyroleData.idleAnimaName, false);
+                PlayAnima(_emmyRoleData.idleAnimaName, false);
             };
         }
         else
@@ -490,32 +488,32 @@ public class MainController : GameController
 
     public void UpdateMinSlider()
     {
-        float hpValue = (float)_minroleData.Hp;
-        float shieldValue = (float)_minroleData.Shield;
+        float hpValue = (float)_minRoleData.Hp;
+        float shieldValue = (float)_minRoleData.Shield;
         _minHp.value = hpValue;
         _minShield.value = shieldValue;
 
-        _minHpLable.text = string.Format("{0}/{1}", _minroleData.Hp, _minroleData.MaxHp);
-        _minShieldLable.text = string.Format("{0}/{1}", _minroleData.Shield, _minroleData.MaxShield);
+        _minHpLable.text = string.Format("{0}/{1}", _minRoleData.Hp, _minRoleData.MaxHp);
+        _minShieldLable.text = string.Format("{0}/{1}", _minRoleData.Shield, _minRoleData.MaxShield);
     }
     public void UpdateEmmySlider()
     {
-        float hpValue = (float)_emmyroleData.Hp;
-        float shieldValue = (float)_emmyroleData.Shield;
+        float hpValue = (float)_emmyRoleData.Hp;
+        float shieldValue = (float)_emmyRoleData.Shield;
         _emmyHp.value = hpValue;
         _emmyShield.value = shieldValue;
 
-        _emmyHpLable.text = string.Format("{0}/{1}", _emmyroleData.Hp, _emmyroleData.MaxHp);
-        _emmyShieldLable.text = string.Format("{0}/{1}", _emmyroleData.Shield, _emmyroleData.MaxShield);
+        _emmyHpLable.text = string.Format("{0}/{1}", _emmyRoleData.Hp, _emmyRoleData.MaxHp);
+        _emmyShieldLable.text = string.Format("{0}/{1}", _emmyRoleData.Shield, _emmyRoleData.MaxShield);
     }
 
     public void UpdateSkill1Cd()
     {
-        if (_minroleData.Skill_1_CD)
+        if (_minRoleData.Skill_1_CD)
         {
             _skill_Mask.gameObject.SetActive(true);
             _skill1Cd.gameObject.SetActive(true);
-            _skill1Cd.text = string.Format("{0}", _minroleData.Cd - MainManager.Ins.Timer);
+            _skill1Cd.text = string.Format("{0}", _minRoleData.Cd - MainManager.Ins.Timer);
         }
         else
         {
@@ -525,11 +523,11 @@ public class MainController : GameController
     }
     public void UpdateSkill2Cd()
     {
-        if (!_minroleData.Skill_2_CD)
+        if (!_minRoleData.Skill_2_CD)
         {
             _skill2Cd.gameObject.SetActive(false);
-            //_skill2Cd.text = string.Format("{0}/{1}", _minroleData.Skill_2_Value >= 30 ? 30 : _minroleData.Skill_2_Value, 30);
-            _skill2_Slider.fillAmount = _minroleData.Skill_2_Value >= 30 ? 1 : (float)_minroleData.Skill_2_Value / 30;
+            //_skill2Cd.text = string.Format("{0}/{1}", _minRoleData.Skill_2_Value >= 30 ? 30 : _minRoleData.Skill_2_Value, 30);
+            _skill2_Slider.fillAmount = _minRoleData.Skill_2_Value >= 30 ? 1 : (float)_minRoleData.Skill_2_Value / 30;
         }
         else
         {
@@ -543,6 +541,7 @@ public class MainController : GameController
         StopAllCoroutines();
         StartCoroutine(Timer());
     }
+
     IEnumerator Timer()
     {
         while (true)
@@ -551,7 +550,7 @@ public class MainController : GameController
             MainManager.Ins.Timer++;
             CheckGameOver();
             CheckDrag();
-            CheckReCoverHp();
+            CheckRecoverShield();
             UpdateSkill1Cd();
         }
     }
@@ -559,17 +558,17 @@ public class MainController : GameController
     {
         if (_curRowCnt > Config.rows || _curMaxRowCnt > Config.rows)
         {
-            if (_minroleData.Hp > 0)
+            if (_minRoleData.Hp > 0)
             {
-                _minroleData.ChangeHpValue2(3);
+                _minRoleData.ChangeHpValue2(3);
                 UpdateMinSlider();
             }
         }
         if (MainManager.Ins._rivalController._curRowCnt > Config.rows || MainManager.Ins._rivalController._curMaxRowCnt > Config.rows)
         {
-            if (_emmyroleData.Hp > 0)
+            if (_emmyRoleData.Hp > 0)
             {
-                _emmyroleData.ChangeHpValue2(3);
+                _emmyRoleData.ChangeHpValue2(3);
                 UpdateEmmySlider();
             }
         }
@@ -582,21 +581,21 @@ public class MainController : GameController
             if (_DragBlock.activeSelf)
                 _DragBlock.SetActive(false);
         }
-        else if(MainManager.Ins.Timer < MainManager.Ins.DragTime)
+        else if (MainManager.Ins.Timer < MainManager.Ins.DragTime)
         {
             if (!_DragBlock.activeSelf)
                 _DragBlock.SetActive(true);
         }
     }
-    void CheckReCoverHp()
+    void CheckRecoverShield()
     {
-        if (MainManager.Ins.Timer - 3 > _minroleData.hurtTimer)
+        if (MainManager.Ins.Timer - 3 > _minRoleData.hurtTimer)
         {
-            _minroleData.ChangeShildValue(MainManager.Ins.Timer < _minroleData.ChangeShieldTime ? 5 : 2);
+            _minRoleData.ChangeShieldValue(MainManager.Ins.Timer < _minRoleData.ChangeShieldTime ? 5 : 2);
         }
-        if (MainManager.Ins.Timer - 3 > _emmyroleData.hurtTimer)
+        if (MainManager.Ins.Timer - 3 > _emmyRoleData.hurtTimer)
         {
-            _emmyroleData.ChangeShildValue(2);
+            _emmyRoleData.ChangeShieldValue(2);
         }
     }
 }

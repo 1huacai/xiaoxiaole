@@ -13,8 +13,8 @@ public enum OpenMessageType
 public class DialogInfo
 {
     public string warnInfo;
-    public string sureBtnInfo = "确定";
-    public string cancleBtnInfo = "取消";
+    public string sureBtnInfo = "纭畾";
+    public string cancleBtnInfo = "鍙栨秷";
     public OnCancel onCancel;
     public OnSure onSure;
     public OpenMessageType openType;

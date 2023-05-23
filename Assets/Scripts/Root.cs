@@ -6,20 +6,20 @@ public class Root : MonoBehaviour
 {
     void Awake()
     {
-        //ÊúÆÁÏÔÊ¾
+        //ç«–å±æ˜¾ç¤º
         Screen.orientation = ScreenOrientation.Portrait;
         Screen.autorotateToLandscapeLeft = false;
         Screen.autorotateToLandscapeRight = false;
         Screen.autorotateToPortrait = true;
         Screen.autorotateToPortraitUpsideDown = true;
 
-        //ÍøÂç³õÊ¼»¯
+        //ç½‘ç»œåˆå§‹åŒ–
         NetCore.Init();
         NetSender.Init();
         NetReceiver.Init();
         NetCore.enabled = true;
 
-        //¶ÔÏó³õÊ¼»¯
+        //å¯¹è±¡åˆå§‹åŒ–
         Config.rootObj = this.gameObject;
         Config.mainObj = this.transform.Find("Main").gameObject;
         Config.gameObj = this.transform.Find("Game").gameObject;
