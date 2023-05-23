@@ -106,17 +106,25 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Spine\version.txt" />
+    <None Include="Assets\Resources\spineArt\block\yellow\yellow.atlas.txt" />
     <None Include="Assets\Resources\spineArt\role1\BunnyMaster.atlas.txt" />
+    <None Include="Assets\Resources\spineArt\effect\dun\shandian.atlas.txt" />
     <None Include="Assets\Demigiant\DOTween\DOTween50.xml" />
     <None Include="Assets\Demigiant\DOTween\DOTween43.xml" />
+    <None Include="Assets\Resources\spineArt\block\blue\blue.atlas.txt" />
+    <None Include="Assets\Resources\spineArt\block\red\red.atlas.txt" />
     <None Include="Assets\Demigiant\DOTween\DOTween50.dll" />
+    <None Include="Assets\Resources\spineArt\effect\huoqiu\skeleton.atlas.txt" />
     <None Include="Assets\Demigiant\DOTween\DOTween46.dll" />
     <None Include="Assets\Demigiant\DOTween\DOTween43.dll" />
+    <None Include="Assets\Resources\spineArt\block\purple\purple.atlas.txt" />
     <None Include="Assets\Demigiant\DOTween\DOTween46.xml" />
     <None Include="Assets\Demigiant\DOTween\readme.txt" />
+    <None Include="Assets\Resources\spineArt\effect\huixue\huixue.atlas.txt" />
     <None Include="Assets\Resources\spineArt\role2\Phoenix.atlas.txt" />
     <None Include="Assets\Demigiant\DOTween\DOTween.XML" />
     <None Include="Assets\Demigiant\DOTween\DOTween.dll" />
+    <None Include="Assets\Resources\spineArt\block\green\green.atlas.txt" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
