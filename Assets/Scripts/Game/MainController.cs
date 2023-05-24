@@ -460,7 +460,7 @@ public class MainController : GameController
             _minRole.skeletonDataAsset = min;
             _minRole.initialSkinName = "default";
             _minRole.startingAnimation = "idle";
-            _minRole.startingLoop = true;
+            _minRole.startingLoop = false;
             _minRole.MatchRectTransformWithBounds();
             _minRole.material = minmaterial;
             _minRole.Initialize(true);
@@ -482,7 +482,7 @@ public class MainController : GameController
             _emmyRole.skeletonDataAsset = emmy;
             _emmyRole.initialSkinName = "default";
             _emmyRole.startingAnimation = "idle";
-            _emmyRole.startingLoop = true;
+            _emmyRole.startingLoop = false;
             _emmyRole.MatchRectTransformWithBounds();
             _emmyRole.material = emmymaterial;
             _emmyRole.Initialize(true);
