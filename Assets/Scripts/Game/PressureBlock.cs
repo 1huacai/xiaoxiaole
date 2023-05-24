@@ -23,14 +23,12 @@ public class PressureBlock : MonoBehaviour
     public GameController _controller;
 
 
-    // Start is called before the first frame update
     void Start()
     {
         _image = GetComponent<Image>();
     }
 
-    //
-    void FixedUpdate()
+    public void LogicUpdate()
     {
         if (IsMoved)
         {
@@ -40,7 +38,6 @@ public class PressureBlock : MonoBehaviour
         if (IsTagged)
         {
             IsTagged = false;
-            // PlayUnlockAnim();
             _controller.PressureTagged(this);
         }
         if (NeedFall)

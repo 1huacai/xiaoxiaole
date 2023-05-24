@@ -28,8 +28,10 @@ public class Block : MonoBehaviour
     public int moveCnt = 0;
     public int moveStay = 0;
 
-    public bool initing = false;
+    public bool IsIniting = false;
     public GameController _controller;
+    public ComboHold _combo;
+    public int ComboLayer = 0;
 
     public delegate void BlockOperationHandler(int row, int column, BlockOperation operation);
     public event BlockOperationHandler BlockOperationEvent;
@@ -37,7 +39,6 @@ public class Block : MonoBehaviour
 
     void Awake() { }
 
-    // Use this for initialization
     void Start() { }
 
     void OnDestroy() { }
@@ -108,8 +109,7 @@ public class Block : MonoBehaviour
         _dragBeginPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
     }
 
-    // Update is called once per frame
-    void FixedUpdate()
+    public void LogicUpdate()
     {
         if (IsMoved)
         {
@@ -124,13 +124,13 @@ public class Block : MonoBehaviour
         }
         if (NeedFall)
         {
-            if (initing)
+            if (IsIniting)
             {
                 float moveDuration = Mathf.Abs(fallCnt) * 0.08f;
                 float yDis = transform.localPosition.y + fallCnt * (Config.blockHeight);
                 transform.DOLocalMoveY(yDis, moveDuration).OnComplete(() =>
                 {
-                    initing = false;
+                    IsIniting = false;
                     fallCnt = 0;
                 });
             }
@@ -163,7 +163,7 @@ public class Block : MonoBehaviour
             {
                 Column = Column + moveCnt;
                 gameObject.name = Row + " + " + Column;
-                if (_type != BlockType.None)
+                // if (_type != BlockType.None)
                     _controller._blockMatrix[Row, Column] = this;
                 Debug.Log(_controller._boardType + " -- after move block[" + Row + "," + Column + " - " + Type + "] - moveCnt:" + moveCnt + " - x:" + transform.localPosition.x);
                 moveCnt = 0;
@@ -189,7 +189,6 @@ public class Block : MonoBehaviour
             }
             else
             {
-                IsLocked = false;
                 _image.sprite = Config._sprites[(int)_type];
             }
         }
@@ -234,7 +233,7 @@ public class Block : MonoBehaviour
             {
                 Debug.Log(_controller._boardType + " -- block[" + Row + "," + Column + " - " + Type + "] Moved");
                 _state |= 1 << (int)BlockState.Moved;
-                if (_controller._firstSelected)
+                if (_controller._firstSelected == this)
                     _controller.ChangeToState(GameBoardState.Selection);
             }
             else

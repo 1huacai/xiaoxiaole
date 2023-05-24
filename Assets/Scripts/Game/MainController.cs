@@ -176,6 +176,8 @@ public class MainController : GameController
     void Update()
     {
         _delta += Time.deltaTime;
+        
+        UpdateBlocks();
         if (_gameInit || _gameOver)
             return;
 

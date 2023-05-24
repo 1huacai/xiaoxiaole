@@ -50,7 +50,7 @@ class SelectionState : StateBase
                 }
                 else
                 {
-                    if (selectedBlock.fallCnt != 0 || selectedBlock.moveStay > 0)
+                    if (selectedBlock.moveCnt != 0 || selectedBlock.fallCnt != 0 || selectedBlock.moveStay > 0)
                         return; // 不能和正在下落的方块交换
 
                     // check if the two selected block is adjacent

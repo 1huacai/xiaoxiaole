@@ -30,7 +30,10 @@ class IdleState : StateBase
         if (operation == BlockOperation.TouchDown)
         {
             var selectedBlock = _controller._blockMatrix[row, column];
-            if (selectedBlock.Type != BlockType.None && selectedBlock.IsLocked == false)
+            if (selectedBlock.Type != BlockType.None
+                && selectedBlock.moveCnt == 0
+                && selectedBlock.fallCnt == 0
+                && selectedBlock.IsLocked == false)
             {
                 _controller._firstSelected = selectedBlock;
                 _controller.ChangeToState(GameBoardState.Selection);

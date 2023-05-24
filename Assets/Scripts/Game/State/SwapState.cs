@@ -43,6 +43,16 @@ class SwapState : StateBase
                 Debug.LogFormat("{0} -- swap_block response : {1}", _controller._boardType, resp.e);
                 if (resp.e == 0)
                 {
+                    /*
+                    GameObject obj = GameObject.Instantiate(Config._comboObj, first.transform) as GameObject;
+                    obj.transform.localPosition = new Vector3(0, 0, -1);
+                    Combo combo = obj.gameObject.GetComponent<Combo>();
+                    */
+                    ComboHold combo = new ComboHold();
+                    first._combo = combo;
+                    first.ComboLayer = 1;
+                    second._combo = combo;
+                    second.ComboLayer = 1;
                     _controller.DoSwap(first, second);
                 }
                 else

@@ -25,13 +25,13 @@ public class RivalController : GameController
     int cntInit = 0;
     void FixedUpdate()
     {
+        cntInit++;
         if (_gameInit)
         {
             if (cntInit % 5 == 0)
             {
                 InitBlocks();
             }
-            cntInit++;
             return;
         }
     }
@@ -39,6 +39,8 @@ public class RivalController : GameController
     void Update()
     {
         _delta += Time.deltaTime;
+        
+        UpdateBlocks();
         if (_gameInit || _gameOver)
             return;
 
