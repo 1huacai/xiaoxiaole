@@ -927,28 +927,28 @@ public class GameController : MonoBehaviour
             pressure.LogicUpdate();
         }
         // Combo
-        List<ComboHold> showCombo = new List<ComboHold>();
-        foreach (var block in _blockMatrix)
-        {
-            if (block != null)
-            {
-                var combo = block._combo;
-                if (combo != null && !showCombo.Contains(combo))
-                {
-                    showCombo.Add(combo);
-                }
-            }
-        }
-        foreach (var combo in showCombo)
-        {
-            if (combo.Cnt > 3)
-            {
-                GameObject obj = GameObject.Instantiate(Config._comboObj, first.transform) as GameObject;
-                obj.transform.localPosition = new Vector3(0, 0, -1);
-                Combo item = obj.gameObject.GetComponent<Combo>();
-                item.Show();
-            }
-        }
+        // List<ComboHold> showCombo = new List<ComboHold>();
+        // foreach (var block in _blockMatrix)
+        // {
+        //     if (block != null)
+        //     {
+        //         var combo = block._combo;
+        //         if (combo != null && !showCombo.Contains(combo))
+        //         {
+        //             showCombo.Add(combo);
+        //         }
+        //     }
+        // }
+        // foreach (var combo in showCombo)
+        // {
+        //     if (combo.Cnt > 3)
+        //     {
+        //         GameObject obj = GameObject.Instantiate(Config._comboObj, first.transform) as GameObject;
+        //         obj.transform.localPosition = new Vector3(0, 0, -1);
+        //         Combo item = obj.gameObject.GetComponent<Combo>();
+        //         item.Show();
+        //     }
+        // }
 
         //Chain
     }
