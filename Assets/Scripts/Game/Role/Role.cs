@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 
 public class Role
 {
+    public bool isMin;
     public int side;
     public int skillId_1
     {
@@ -143,17 +144,22 @@ public class Role
 
         if (changeValue < 0)
             hurtTimer = MainManager.Ins.Timer;
+
+        HudManager.Ins.ShowHud(changeValue, HudType.huixue, isMin ? RoleType.min : RoleType.emmey);
     }
     public void ChangeHpValue(int changeValue)
     {
         Debug.Log(" -------- side:" + side + " -- change hp:" + changeValue);
         if (changeValue >= Shield)
         {
+            HudManager.Ins.ShowHud(Shield, HudType.dun, isMin ? RoleType.min : RoleType.emmey);
+            HudManager.Ins.ShowHud((changeValue - Shield), HudType.shanghai, isMin ? RoleType.min : RoleType.emmey);
             Hp = Hp - (changeValue - Shield);
             Shield = 0;
         }
         else
         {
+            HudManager.Ins.ShowHud(Shield - changeValue, HudType.dun, isMin ? RoleType.min : RoleType.emmey);
             Shield = Shield - changeValue;
         }
         if (Hp <= 0) Hp = 0;
@@ -165,10 +171,12 @@ public class Role
     {
         if (changeValue >= Hp)
         {
+            HudManager.Ins.ShowHud(Hp, HudType.shanghai, isMin ? RoleType.min : RoleType.emmey);
             Hp = 0;
         }
         else
         {
+            HudManager.Ins.ShowHud(changeValue, HudType.shanghai, isMin ? RoleType.min : RoleType.emmey);
             Hp = Hp - changeValue;
         }
 
@@ -176,6 +184,8 @@ public class Role
     }
     public void ChangeShieldValue(int changeValue)
     {
+        if(Shield < MaxShield)
+            HudManager.Ins.ShowHud(Shield + changeValue >= MaxShield ? MaxShield - changeValue : changeValue, HudType.jiadun, isMin ? RoleType.min : RoleType.emmey);
         if (Shield + changeValue >= MaxShield)
             Shield = MaxShield;
         else

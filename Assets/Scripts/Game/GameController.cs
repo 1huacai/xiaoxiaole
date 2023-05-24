@@ -113,6 +113,7 @@ public class GameController : MonoBehaviour
 
     public void ChangeToState(GameBoardState newState)
     {
+        if (!MainManager.Ins.DragBlock) return;
         if (newState == _curGameBoardState) return;
         Debug.Log(string.Format("{0} -- Change to new state:{1}", _boardType, newState.ToString()));
         if (_states.ContainsKey(_curGameBoardState))

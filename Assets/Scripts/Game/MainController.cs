@@ -26,8 +26,11 @@ public class MainController : GameController
     private Transform _minRoleTF;
     private Transform _emmyRoleTF;
 
-    private SkeletonGraphic _minRole;
-    private SkeletonGraphic _emmyRole;
+    private Transform _minRoleeffect;
+    private Transform _emmyRoleeffect;
+
+    public SkeletonGraphic _minRole;
+    public SkeletonGraphic _emmyRole;
 
     public Role _minRoleData;
     public Role _emmyRoleData;
@@ -92,6 +95,9 @@ public class MainController : GameController
         _minRoleTF = GameObject.Find(Config.uiGameRoot + "/Player1/role").transform;
         _emmyRoleTF = GameObject.Find(Config.uiGameRoot + "/Player2/role").transform;
 
+        _minRoleeffect = GameObject.Find(Config.uiGameRoot + "/Player1/effect").transform;
+        _emmyRoleeffect = GameObject.Find(Config.uiGameRoot + "/Player2/effect").transform;
+
         _minHp = GameObject.Find(Config.uiGameRoot + "/Player1/HpBar/Hp").GetComponent<Slider>();
         _minShield = GameObject.Find(Config.uiGameRoot + "/Player1/HpBar/Shield").GetComponent<Slider>();
         _minHpLable = GameObject.Find(Config.uiGameRoot + "/Player1/HpBar/Hp/Text").GetComponent<Text>();
@@ -132,11 +138,13 @@ public class MainController : GameController
             {
                 _minRoleData = new Role();
                 _minRoleData.side = (int)infos[i].render;
+                _minRoleData.isMin = true;
             }
             else
             {
                 _emmyRoleData = new Role();
                 _emmyRoleData.side = (int)infos[i].render;
+                _emmyRoleData.isMin = false;
             }
         }
 
@@ -315,9 +323,14 @@ public class MainController : GameController
             PlayAnima(_minRoleData.skillAnimaName_2);
             PlayAnima("hurt", false);
             _minRoleData.UseSkill2();
-            _emmyRoleData.ChangeHpValue(30);
-            UpdateEmmySlider();
+            if (_minRoleData.side == 1)
+            {
+                _emmyRoleData.ChangeHpValue(30);
+                UpdateEmmySlider();
+            }
             UpdateSkill2Cd();
+            if (_minRoleData.side == 1)
+                ShowEmmeyEffect(SKillType.toushiche);
         });
     }
 
@@ -421,6 +434,7 @@ public class MainController : GameController
         {
             _minRoleData.ChangeHpValue(30);
             UpdateMinSlider();
+            ShowMinEffect(SKillType.toushiche);
         }
     }
 
@@ -594,10 +608,69 @@ public class MainController : GameController
         if (MainManager.Ins.Timer - 3 > _minRoleData.hurtTimer)
         {
             _minRoleData.ChangeShieldValue(MainManager.Ins.Timer < _minRoleData.ChangeShieldTime ? 5 : 2);
+            UpdateMinSlider();
         }
         if (MainManager.Ins.Timer - 3 > _emmyRoleData.hurtTimer)
         {
             _emmyRoleData.ChangeShieldValue(2);
+            UpdateEmmySlider();
         }
     }
+    public void ShowMinEffect(SKillType type)
+    {
+        string path = type == SKillType.toushiche ? "spineArt/effect/huoqiu/skeleton_SkeletonData" :
+            type == SKillType.dun ? "spineArt/effect/dun/shandian_SkeletonData" :
+            "spineArt/effect/huixue/huixue_SkeletonData";
+
+
+        var effectData = Resources.Load<SkeletonDataAsset>(path);
+        Material minmaterial = new Material(Shader.Find("Spine/SkeletonGraphic"));
+        Minffect = SkeletonGraphic.NewSkeletonGraphicGameObject(effectData, _minRoleeffect, minmaterial);
+
+        Minffect.skeletonDataAsset = effectData;
+        Minffect.initialSkinName = "default";
+        Minffect.startingAnimation = "animation";
+        Minffect.startingLoop = true;
+        Minffect.MatchRectTransformWithBounds();
+        Minffect.material = minmaterial;
+        Minffect.Initialize(true);
+
+        Minffect.AnimationState.Complete += (a) =>
+        {
+            Destroy(Minffect.gameObject);
+        };
+    }
+    SkeletonGraphic Minffect;
+    SkeletonGraphic Emmeyeffect;
+
+    public void ShowEmmeyEffect(SKillType type)
+    {
+        string path = type == SKillType.toushiche ? "spineArt/effect/huoqiu/skeleton_SkeletonData" :
+            type == SKillType.dun ? "spineArt/effect/dun/shandian_SkeletonData" :
+            "spineArt/effect/huixue/huixue_SkeletonData";
+
+
+        var effectData = Resources.Load<SkeletonDataAsset>(path);
+        Material minmaterial = new Material(Shader.Find("Spine/SkeletonGraphic"));
+        Minffect = SkeletonGraphic.NewSkeletonGraphicGameObject(effectData, _minRoleeffect, minmaterial);
+
+        Minffect.skeletonDataAsset = effectData;
+        Minffect.initialSkinName = "default";
+        Minffect.startingAnimation = "animation";
+        Minffect.startingLoop = true;
+        Minffect.MatchRectTransformWithBounds();
+        Minffect.material = minmaterial;
+        Minffect.Initialize(true);
+
+        Minffect.AnimationState.Complete += (a) =>
+        {
+            Destroy(Minffect.gameObject);
+        };
+    }
+}
+public enum SKillType
+{
+    toushiche,
+    dun,
+    huixue,
 }
