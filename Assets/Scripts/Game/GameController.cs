@@ -40,7 +40,8 @@ public class GameController : MonoBehaviour
     public int _suspendRaise = 0;
     public bool _alarmSet = false; // 危险警报
 
-    public int _chainCnt = 0; //连消计数
+    Garbage[] _garbagePool = new Garbage[50];
+    int _poolIdx = 0;
 
     public float _delta = 0;
 
@@ -263,8 +264,8 @@ public class GameController : MonoBehaviour
             int yOffset = 0;
             if (_curMaxRowCnt > Config.matrixRows)
             {
-                initRow = _curMaxRowCnt+1;
-                yOffset = _curMaxRowCnt - Config.matrixRows;
+                initRow = _curMaxRowCnt + 1 + i;
+                yOffset = _curMaxRowCnt - Config.matrixRows + i;
             }
             var pressure = PressureBlock.CreatePressureObject(initRow, _pressureInfo[i].Key, _blockBoardObj.transform, this);
             pressure.GetComponent<RectTransform>().sizeDelta = new Vector2(_pressureInfo[i].Key * Config.blockWidth, _pressureInfo[i].Value * Config.blockHeight - 15);
@@ -276,6 +277,22 @@ public class GameController : MonoBehaviour
             pressure.fallCnt = -1;
             _PressureMatrix.Add(pressure);
         }
+    }
+
+    public Garbage GetGarbageInst()
+    {
+        Debug.LogError("---- get garbage inst idx:" + _poolIdx);
+        if (_poolIdx >= 50)
+            _poolIdx = 0;
+        var garbage = _garbagePool[_poolIdx];
+        if (garbage == null)
+        {
+            garbage = new Garbage();
+            garbage.ID = _poolIdx;
+            _garbagePool[_poolIdx] = garbage;
+        }
+        _poolIdx++;
+        return garbage;
     }
 
     List<KeyValuePair<int, int>> _pressureInfo = new List<KeyValuePair<int, int>>();
@@ -432,7 +449,7 @@ public class GameController : MonoBehaviour
                     {
                         _blockMatrix[opRow, col].IsLocked = false;
                         _blockMatrix[opRow, col].IsMoved = true;
-                        _blockMatrix[opRow, col].moveStay = 3;
+                        _blockMatrix[opRow, col].MoveStay = 3;
                     }
                 }
             }
@@ -474,6 +491,16 @@ public class GameController : MonoBehaviour
         }
         _addNewRow = false;
         _delta = 0;
+    }
+
+    public PressureBlock GetPressureByRow(int row)
+    {
+        foreach (var pressure in _PressureMatrix)
+        {
+            if (pressure.Row_y == row)
+                return pressure;
+        }
+        return null;
     }
 
     public void UpdateMaxCnt()
@@ -575,6 +602,8 @@ public class GameController : MonoBehaviour
         int row = block.Row;
         int col = block.Column;
         BlockType type = block.Type;
+        Garbage garbage = block._garbage;
+        int trans = block.ComboTrans;
         Debug.Log(_boardType + " -- block[" + row + "," + col + " - " + block.Type + "] move proc");
 
         // 空方块，上方方块下落
@@ -590,11 +619,11 @@ public class GameController : MonoBehaviour
                 Debug.Log(_boardType + " -- above block[" + above.Row + "," + above.Column + " - " + above.Type + "] fall");
                 above.fallCnt = -1;
                 above.NeedFall = true;
-                // combo
-                if (block._combo != null && block.ComboLayer == 1)
+                // garbage
+                if (garbage != null)
                 {
-                    above._combo = block._combo;
-                    above.ComboLayer = block.ComboLayer + 1;
+                    above._garbage = garbage;
+                    above.ComboTrans = block.ComboTrans;
                 }
                 row = row + 1;
                 if (row > Config.rows)
@@ -638,9 +667,19 @@ public class GameController : MonoBehaviour
         }
 
         // 方块下落
-        Block under = _blockMatrix[row - 1, col];
-        if (row > 1 && (under == null || under.fallCnt != 0) && block.fallCnt == 0)
+        while (row > 1)
         {
+            if (block.fallCnt != 0)
+                return;
+
+            PressureBlock underPressure = GetPressureByRow(row);
+            if (underPressure != null && underPressure.xNum >= col+1 && underPressure.fallCnt == 0)
+                break;
+
+            Block under = _blockMatrix[row - 1, col];
+            if (under != null && under.fallCnt == 0)
+                break;
+            
             Debug.Log(_boardType + " -- self block[" + row + "," + col + " - " + type + "] fall");
             block.fallCnt = -1;
             block.NeedFall = true;
@@ -656,6 +695,12 @@ public class GameController : MonoBehaviour
                 Debug.Log(_boardType + " -- above block[" + above.Row + "," + above.Column + " - " + above.Type + "] fall");
                 above.fallCnt = -1;
                 above.NeedFall = true;
+                // garbage
+                if (garbage != null)
+                {
+                    above._garbage = garbage;
+                    above.ComboTrans = block.ComboTrans;
+                }
                 row = row + 1;
                 if (row > Config.rows)
                     return;
@@ -701,7 +746,7 @@ public class GameController : MonoBehaviour
         for (int i = col - 1; i >= 0; i--)
         {
             var checkBlock = _blockMatrix[row, i];
-            if (checkBlock != null && checkBlock.Type == type && checkBlock != block && checkBlock.fallCnt == 0)
+            if (checkBlock != null && checkBlock.IsLocked == false && checkBlock.Type == type && checkBlock != block && checkBlock.fallCnt == 0)
                 h_matchList.Add(checkBlock);
             else
                 break;
@@ -710,7 +755,7 @@ public class GameController : MonoBehaviour
         for (int i = col + 1; i < Config.columns; i++)
         {
             var checkBlock = _blockMatrix[row, i];
-            if (checkBlock != null && checkBlock.Type == type && checkBlock != block && checkBlock.fallCnt == 0)
+            if (checkBlock != null && checkBlock.IsLocked == false && checkBlock.Type == type && checkBlock != block && checkBlock.fallCnt == 0)
                 h_matchList.Add(checkBlock);
             else
                 break;
@@ -718,28 +763,28 @@ public class GameController : MonoBehaviour
         if (h_matchList.Count >= 2)
         {
             block.IsTagged = true;
-            var combo = block._combo;
-            if (combo != null)
+            if (garbage != null)
             {
-                combo.Cnt += 1;
-                Debug.LogError("----- comboNum:" + combo.Cnt);
+                if (garbage.EliminateCnt.ContainsKey(trans))
+                    garbage.EliminateCnt[trans] += 1;
+                else
+                    garbage.EliminateCnt.Add(trans, 1);
+                // Debug.LogError(" -- garbage.EliminateCnt:" + garbage.EliminateCnt.Count);
+
+                if (garbage.Parent.ContainsKey(trans) == false)
+                    garbage.Parent.Add(trans, block.transform);
             }
             foreach (var matchedBlock in h_matchList)
             {
                 matchedBlock.IsTagged = true;
                 
-                // Combo
-                if (combo != null && block.ComboLayer == 1)
+                // Garbage
+                if (garbage != null)
                 {
-                    matchedBlock._combo = combo;
-                    combo.Cnt += 1;
-                    Debug.LogError("----- comboNum:" + combo.Cnt);
+                    garbage.EliminateCnt[trans] += 1;
+                    // Debug.LogError(" -- garbage.EliminateCnt:" + garbage.EliminateCnt.Count);
                 }
             }
-        }
-        else
-        {
-            h_matchList.Clear();
         }
         // 上方
         for (int i = row + 1; i <= _curRowCnt; i++)
@@ -747,7 +792,7 @@ public class GameController : MonoBehaviour
             if (i > Config.rows)
                 break;
             var checkBlock = _blockMatrix[i, col];
-            if (checkBlock != null && checkBlock.Type == type && checkBlock != block && checkBlock.fallCnt == 0)
+            if (checkBlock != null && checkBlock.IsLocked == false && checkBlock.Type == type && checkBlock != block && checkBlock.fallCnt == 0)
                 v_matchList.Add(checkBlock);
             else
                 break;
@@ -756,62 +801,42 @@ public class GameController : MonoBehaviour
         for (int i = row - 1; i > 0; i--)
         {
             var checkBlock = _blockMatrix[i, col];
-            if (checkBlock != null && checkBlock.Type == type && checkBlock != block && checkBlock.fallCnt == 0)
+            if (checkBlock != null && checkBlock.IsLocked == false && checkBlock.Type == type && checkBlock != block && checkBlock.fallCnt == 0)
                 v_matchList.Add(checkBlock);
             else
                 break;
         }
         if (v_matchList.Count >= 2)
         {
-            var combo = block._combo;
             if (h_matchList.Count < 2)
             {
                 block.IsTagged = true;
-                if (combo != null)
+                if (garbage != null)
                 {
-                    combo.Cnt += 1;
-                    Debug.LogError("----- comboNum:" + combo.Cnt);
+                    if (garbage.EliminateCnt.ContainsKey(trans))
+                        garbage.EliminateCnt[trans] += 1;
+                    else
+                        garbage.EliminateCnt.Add(trans, 1);
+                    // Debug.LogError(" -- garbage.EliminateCnt:" + garbage.EliminateCnt.Count);
+
+                    if (garbage.Parent.ContainsKey(trans) == false)
+                        garbage.Parent.Add(trans, block.transform);
                 }
             }
             foreach (var matchedBlock in v_matchList)
             {
                 matchedBlock.IsTagged = true;
                 
-                // Combo
-                if (combo != null && block.ComboLayer == 1)
+                // Garbage
+                if (garbage != null)
                 {
-                    matchedBlock._combo = combo;
-                    combo.Cnt += 1;
-                    Debug.LogError("----- comboNum:" + combo.Cnt);
+                    garbage.EliminateCnt[trans] += 1;
+                    // Debug.LogError(" -- garbage.EliminateCnt:" + garbage.EliminateCnt.Count);
                 }
             }
         }
-        else
-        {
-            v_matchList.Clear();
-        }
-
-        // 同步消除的方块个数，用于生成压力块
-        int eliminateCnt = h_matchList.Count + v_matchList.Count + 1;
-        if (eliminateCnt > 3 && _boardType == CheckerboardType.mine && IsMultiPlayer())
-        {
-            var req = new SprotoType.eliminate.request();
-            req.count = eliminateCnt;
-            Debug.Log(_boardType + " -- send eliminate block[" + block.Row + "," + block.Column + " - " + block.Type + "]");
-            NetSender.Send<Protocol.eliminate>(req, (data) =>
-            {
-                var resp = data as SprotoType.eliminate.response;
-                Debug.LogFormat("{0} -- eliminate response : {1}", _boardType, resp.e);
-                if (resp.e == 0)
-                {
-                    MainManager.Ins._rivalController.GreatPressureBlock(eliminateCnt);
-                }
-                else
-                {
-                    Debug.LogError(_boardType + " -- eliminate response failed!");
-                }
-            });
-        }
+        if (garbage != null && (!garbage.EliminateCnt.ContainsKey(trans) || garbage.EliminateCnt[trans] < 3))
+            block._garbage = null;
     }
 
     // 压力块移动结束处理逻辑
@@ -861,7 +886,7 @@ public class GameController : MonoBehaviour
         int col = block.Column;
         foreach (var pressure in _PressureMatrix)
         {
-            if ((pressure.Row_y == row + 1) && (pressure.xNum > col) && (pressure.IsTagged == false))
+            if ((pressure.Row_y == row + 1) && (pressure.xNum > col) && (pressure.IsLocked == false))
             {
                 pressure.IsTagged = true;
                 break;
@@ -907,7 +932,7 @@ public class GameController : MonoBehaviour
         });
     }
 
-    public void UpdateBlocks()
+    public void UpdateBlockArea()
     {
         // 方块
         for (int row = 0; row < Config.matrixRows; row++)
@@ -921,35 +946,79 @@ public class GameController : MonoBehaviour
                 }
             }
         }
+
         // 压力块
         foreach (var pressure in _PressureMatrix)
         {
             pressure.LogicUpdate();
         }
-        // Combo
-        // List<ComboHold> showCombo = new List<ComboHold>();
-        // foreach (var block in _blockMatrix)
-        // {
-        //     if (block != null)
-        //     {
-        //         var combo = block._combo;
-        //         if (combo != null && !showCombo.Contains(combo))
-        //         {
-        //             showCombo.Add(combo);
-        //         }
-        //     }
-        // }
-        // foreach (var combo in showCombo)
-        // {
-        //     if (combo.Cnt > 3)
-        //     {
-        //         GameObject obj = GameObject.Instantiate(Config._comboObj, first.transform) as GameObject;
-        //         obj.transform.localPosition = new Vector3(0, 0, -1);
-        //         Combo item = obj.gameObject.GetComponent<Combo>();
-        //         item.Show();
-        //     }
-        // }
+        
+        // Garbage
+        Dictionary<Garbage, int> showGarbage = new Dictionary<Garbage, int>();
+        foreach (var block in _blockMatrix)
+        {
+            if (block != null)
+            {
+                var garbage = block._garbage;
+                if (garbage != null && !showGarbage.ContainsKey(garbage))
+                {
+                    showGarbage.Add(garbage, block.ComboTrans);
+                }
+            }
+        }
+        foreach (var item in showGarbage)
+        {
+            var garbage = item.Key;
+            var trans = item.Value;
+            if (!garbage.EliminateCnt.ContainsKey(trans))
+                continue;
 
-        //Chain
+            int cnt = garbage.EliminateCnt[trans];
+            // Debug.Log(" -- garbage:" + garbage.ID + " - trans:" + trans + " - cnt:" + cnt);
+            // Combo
+            if (cnt > 3 && !garbage.ComboShowed.Contains(trans))
+            {
+                garbage.ComboShowed.Add(trans);
+                if (_boardType == CheckerboardType.mine && IsMultiPlayer())
+                {
+                    var req = new SprotoType.eliminate.request();
+                    req.count = cnt;
+                    Debug.Log(_boardType + " -- send eliminate count: " + cnt);
+                    NetSender.Send<Protocol.eliminate>(req, (data) =>
+                    {
+                        var resp = data as SprotoType.eliminate.response;
+                        Debug.LogFormat("{0} -- eliminate response: {1}", _boardType, resp.e);
+                        if (resp.e == 0)
+                        {
+                            // 己方显示combo
+                            GameObject obj = GameObject.Instantiate(Config._comboObj, garbage.Parent[trans]) as GameObject;
+                            obj.transform.localPosition = new Vector3(0, 0, -1);
+                            Combo comb = obj.gameObject.GetComponent<Combo>();
+                            comb.Show(cnt);
+                            
+                            // 对手生成压力块
+                            MainManager.Ins._rivalController.GreatPressureBlock(cnt);
+                        }
+                        else
+                        {
+                            Debug.LogError(_boardType + " -- eliminate response failed!");
+                        }
+                    });
+                }                
+            }
+            //Chain
+            if (cnt >= 3 && !garbage.ChainShowed.Contains(trans))
+            {
+                garbage.ChainShowed.Add(trans);
+                garbage.ChainCnt += 1;
+                if (garbage.ChainCnt >= 2)
+                {
+                    GameObject obj = GameObject.Instantiate(Config._chainObj, garbage.Parent[trans]) as GameObject;
+                    obj.transform.localPosition = new Vector3(0, 0, -1);
+                    Chain chain = obj.gameObject.GetComponent<Chain>();
+                    chain.chainNum = garbage.ChainCnt;
+                }
+            }
+        }        
     }
 }

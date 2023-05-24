@@ -167,17 +167,17 @@ public class MainController : GameController
             }
             return;
         }
-        if (cntInit % 50 == 0)
-        {
-            PrintMatrix();
-        }
+        // if (cntInit % 50 == 0)
+        // {
+        //     PrintMatrix();
+        // }
     }
 
     void Update()
     {
         _delta += Time.deltaTime;
         
-        UpdateBlocks();
+        UpdateBlockArea();
         if (_gameInit || _gameOver)
             return;
 

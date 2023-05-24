@@ -13,19 +13,21 @@ class SelectionState : StateBase
     public override void Enter()
     {
         base.Enter();
-        _controller._chainCnt = 0;
         _controller._firstSelected.IsSelected = true;
         _controller._firstSelected.ResetDragPos();
-        if (_controller._secondSelected != null)
-        {
-            _controller._secondSelected = null;
-        }
     }
 
     public override void OnBlockOperation(int row, int column, BlockOperation operation)
     {
         base.OnBlockOperation(row, column, operation);
-        Debug.Log(_controller._boardType + " -- operation=" + operation);
+        var first = _controller._firstSelected;
+        if (first.fallCnt != 0 || first.moveCnt != 0)
+        {
+            _controller.ChangeToState(GameBoardState.Idle);
+            return;
+        }
+
+        Debug.Log(_controller._boardType + " -- operation - Block[" + first.Row + "," + first.Column + " - " + first.Type + "] " + operation);
         if (operation == BlockOperation.TouchDown || operation == BlockOperation.DragHalf)
         {
             if (row >= 0 && row < _controller._curRowCnt && column >= 0 && column < Config.columns)
@@ -34,8 +36,11 @@ class SelectionState : StateBase
                 Debug.Log(_controller._boardType + "--- second select block[" + row + "," + column + "] -- " + (selectedBlock == null ? "is null" : "is not null"));
                 if (selectedBlock == null)
                 {
-                    var first = _controller._firstSelected;
-                    if (first.Row != row || column < 0 || column >= Config.columns)
+                    var pressure = _controller.GetPressureByRow(row);
+                    if (pressure != null && pressure.xNum > column) // 不能和压力块交换
+                        return;
+
+                    if (first.Row != row || System.Math.Abs(first.Column - column) != 1 || column < 0 || column >= Config.columns)
                     {
                         _controller.ChangeToState(GameBoardState.Idle);
                     }
@@ -50,11 +55,14 @@ class SelectionState : StateBase
                 }
                 else
                 {
-                    if (selectedBlock.moveCnt != 0 || selectedBlock.fallCnt != 0 || selectedBlock.moveStay > 0)
+                    if (selectedBlock.IsLocked // 锁住的方块
+                    ||selectedBlock.moveCnt != 0  // 正在移动的方块
+                    || selectedBlock.fallCnt != 0 // 正在下落的方块
+                    || selectedBlock.MoveStay > 0) // 可能下落的方块(帧动画计算延时的容错)
                         return; // 不能和正在下落的方块交换
 
                     // check if the two selected block is adjacent
-                    bool isAdjacent = _controller._firstSelected.CheckAdjacent(selectedBlock);
+                    bool isAdjacent = first.CheckAdjacent(selectedBlock);
                     if (isAdjacent)
                     {
                         _controller._secondSelected = selectedBlock;
@@ -65,7 +73,7 @@ class SelectionState : StateBase
                         if (selectedBlock != null && selectedBlock.Type != BlockType.None)
                         {
                             // Debug.Log(_controller._boardType + " -- selected block[" + row + "," + column + "]");
-                            _controller._firstSelected.IsSelected = false;
+                            first.IsSelected = false;
                             _controller._firstSelected = selectedBlock;
                             _controller._firstSelected.IsSelected = true;
                             _controller.ChangeToState(GameBoardState.Selection);

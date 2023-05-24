@@ -26,12 +26,12 @@ public class Block : MonoBehaviour
     public bool NeedMove = false;
     // 水平移动距离（包括左移和右移）
     public int moveCnt = 0;
-    public int moveStay = 0;
+    public int MoveStay = 0;
 
     public bool IsIniting = false;
     public GameController _controller;
-    public ComboHold _combo;
-    public int ComboLayer = 0;
+    public Garbage _garbage;
+    public int ComboTrans = 0;
 
     public delegate void BlockOperationHandler(int row, int column, BlockOperation operation);
     public event BlockOperationHandler BlockOperationEvent;
@@ -149,7 +149,9 @@ public class Block : MonoBehaviour
                     Debug.Log(_controller._boardType + " -- after fall block[" + Row + "," + Column + " - " + Type + "] - fallCnt:" + fallCnt + " - y:" + transform.localPosition.y);
                     fallCnt = 0;
                     IsMoved = true;
-                    moveStay = 3;
+                    if (_garbage != null && this != _controller._firstSelected && this != _controller._secondSelected)
+                        ComboTrans += 1;
+                    MoveStay = 3;
                 });
             }
             NeedFall = false;
@@ -163,17 +165,16 @@ public class Block : MonoBehaviour
             {
                 Column = Column + moveCnt;
                 gameObject.name = Row + " + " + Column;
-                // if (_type != BlockType.None)
-                    _controller._blockMatrix[Row, Column] = this;
+                _controller._blockMatrix[Row, Column] = this;
                 Debug.Log(_controller._boardType + " -- after move block[" + Row + "," + Column + " - " + Type + "] - moveCnt:" + moveCnt + " - x:" + transform.localPosition.x);
                 moveCnt = 0;
                 IsMoved = true;
-                moveStay = 3;
+                MoveStay = 3;
             });
             NeedMove = false;
         }
-        if (moveStay > 0)
-            moveStay--;
+        if (MoveStay > 0)
+            MoveStay--;
     }
 
     public int Row

@@ -40,7 +40,7 @@ public class RivalController : GameController
     {
         _delta += Time.deltaTime;
         
-        UpdateBlocks();
+        UpdateBlockArea();
         if (_gameInit || _gameOver)
             return;
 
