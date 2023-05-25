@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using Spine.Unity;
 
 public class Block : MonoBehaviour
 {
@@ -124,14 +125,16 @@ public class Block : MonoBehaviour
         }
         if (NeedFall)
         {
+            NeedFall = false;
             if (IsIniting)
             {
+                IsIniting = false;
                 float duration = Mathf.Abs(fallCnt) * Config.fallDuration;
                 float yDis = transform.localPosition.y + fallCnt * (Config.blockHeight);
                 transform.DOLocalMoveY(yDis, duration).OnComplete(() =>
                 {
-                    IsIniting = false;
                     fallCnt = 0;
+                    ShowBlockMoveAnima((int)Type);
                 });
             }
             else
@@ -152,12 +155,14 @@ public class Block : MonoBehaviour
                     if (_garbage != null && this != _controller._firstSelected && this != _controller._secondSelected)
                         ComboTrans += 1;
                     MoveStay = 3;
+                    if (this != _controller._firstSelected && this != _controller._secondSelected)
+                        ShowBlockMoveAnima((int)Type);
                 });
             }
-            NeedFall = false;
         }
         if (NeedMove)
         {
+            NeedMove = false;
             float xDis = transform.localPosition.x + moveCnt * Config.blockWidth;
             Debug.Log(_controller._boardType + " -- before move block[" + Row + "," + Column + " - " + Type + "] - moveCnt:" + moveCnt + " - x:" + transform.localPosition.x);
             transform.DOLocalMoveX(xDis, Config.moveDuration).OnComplete(() =>
@@ -169,11 +174,71 @@ public class Block : MonoBehaviour
                 moveCnt = 0;
                 IsMoved = true;
                 MoveStay = 3;
+                //ShowBlockMoveAnima((int)Type);
             });
-            NeedMove = false;
         }
         if (MoveStay > 0)
             MoveStay--;
+    }
+
+    public enum BlockEffectType
+    {
+        red= 1,
+        green =2,
+        blue = 3,
+        yellow = 4,
+        purple = 5,
+    }
+    private void ShowBlockMoveAnima(int _type)
+    {
+        _image.enabled = false;
+
+        BlockEffectType type = (BlockEffectType)_type;
+
+        string path = string.Format("spineArt/block/{0}/{1}_SkeletonData", type.ToString(), type.ToString());
+
+        var effectData = Resources.Load<SkeletonDataAsset>(path);
+        Material minmaterial = new Material(Shader.Find("Spine/SkeletonGraphic"));
+        SkeletonGraphic effect = SkeletonGraphic.NewSkeletonGraphicGameObject(effectData, this.transform, minmaterial);
+        effect.transform.localPosition =new Vector3(effect.transform.localPosition.x, effect.transform.localPosition.y - 70, effect.transform.localPosition.z);
+
+        effect.skeletonDataAsset = effectData;
+        effect.initialSkinName = "default";
+        effect.startingAnimation = "animation";
+        effect.startingLoop = false;
+        effect.MatchRectTransformWithBounds();
+        effect.material = minmaterial;
+        effect.Initialize(true);
+
+        effect.AnimationState.Complete += (a) =>
+        {
+            Destroy(effect.gameObject);
+            _image.enabled = true;
+        };
+    }
+    private void ShowBlockZhikongAnima()
+    {
+        string path = "spineArt/block/boom/qizi_SkeletonData";
+
+        var effectData = Resources.Load<SkeletonDataAsset>(path);
+        Material minmaterial = new Material(Shader.Find("Spine/SkeletonGraphic"));
+        SkeletonGraphic effect = SkeletonGraphic.NewSkeletonGraphicGameObject(effectData, this.transform, minmaterial);
+        //effect.transform.localPosition = new Vector3(effect.transform.localPosition.x, effect.transform.localPosition.y - 70, effect.transform.localPosition.z);
+        effect.transform.localScale = new Vector3(3, 3, 3);
+        
+        effect.skeletonDataAsset = effectData;
+        effect.initialSkinName = "default";
+        effect.startingAnimation = "animation";
+        effect.startingLoop = false;
+        effect.MatchRectTransformWithBounds();
+        effect.material = minmaterial;
+        effect.Initialize(true);
+
+        effect.AnimationState.Complete += (a) =>
+        {
+            Destroy(effect.gameObject);
+            FinishBlankAnim();
+        };
     }
 
     public int Row
@@ -322,7 +387,8 @@ public class Block : MonoBehaviour
         if (_row == 0)
             return;
         IsBlanked = false;
-        _anim.runtimeAnimatorController = Config._animDestroy[(int)_type];
+        //_anim.runtimeAnimatorController = Config._animDestroy[(int)_type];
+        ShowBlockZhikongAnima();
     }
 
     // 置空动画播放完成后回调

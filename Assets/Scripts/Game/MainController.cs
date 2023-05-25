@@ -437,6 +437,10 @@ public class MainController : GameController
             UpdateMinSlider();
             ShowMinEffect(SKillType.toushiche);
         }
+        else if (data.skill_id % 10000 > 1)
+        {
+            _emmyRoleData.UseSkill2();
+        }
     }
 
     public void PlayAnima(string animaname, bool ismin = true)
@@ -631,7 +635,7 @@ public class MainController : GameController
         Minffect.skeletonDataAsset = effectData;
         Minffect.initialSkinName = "default";
         Minffect.startingAnimation = "animation";
-        Minffect.startingLoop = true;
+        Minffect.startingLoop = false;
         Minffect.MatchRectTransformWithBounds();
         Minffect.material = minmaterial;
         Minffect.Initialize(true);
@@ -658,7 +662,7 @@ public class MainController : GameController
         Minffect.skeletonDataAsset = effectData;
         Minffect.initialSkinName = "default";
         Minffect.startingAnimation = "animation";
-        Minffect.startingLoop = true;
+        Minffect.startingLoop = false;
         Minffect.MatchRectTransformWithBounds();
         Minffect.material = minmaterial;
         Minffect.Initialize(true);

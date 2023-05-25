@@ -78,6 +78,7 @@
     <Compile Include="Assets\Demigiant\DOTween\Examples\Sequences.cs" />
     <Compile Include="Assets\Sproto\sproto-Csharp\src\SprotoTypeSize.cs" />
     <Compile Include="Assets\Sproto\sproto-Csharp\src\SprotoRpc.cs" />
+    <Compile Include="Assets\Scripts\Game\Garbage.cs" />
     <Compile Include="Assets\Sproto\sproto-Csharp\src\ProtocolFunctionDictionary.cs" />
     <Compile Include="Assets\Scripts\Game\BlockData.cs" />
     <Compile Include="Assets\Sproto\sproto-Csharp\src\SprotoTypeDeserialize.cs" />
@@ -98,7 +99,6 @@
     <Compile Include="Assets\Scripts\Root.cs" />
     <Compile Include="Assets\Sproto\sproto-Unity\sproto-Unity\NetReceiver.cs" />
     <Compile Include="Assets\Scripts\Misc\CountDown.cs" />
-    <Compile Include="Assets\Scripts\Game\Garbage.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Spine\version.txt" />
@@ -117,6 +117,7 @@
     <None Include="Assets\Demigiant\DOTween\DOTween46.xml" />
     <None Include="Assets\Demigiant\DOTween\readme.txt" />
     <None Include="Assets\Resources\spineArt\effect\huixue\huixue.atlas.txt" />
+    <None Include="Assets\Resources\spineArt\block\boom\qizi.atlas.txt" />
     <None Include="Assets\Resources\spineArt\role2\Phoenix.atlas.txt" />
     <None Include="Assets\Demigiant\DOTween\DOTween.XML" />
     <None Include="Assets\Demigiant\DOTween\DOTween.dll" />

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: purple_SkeletonData
   m_EditorClassIdentifier: 
   atlasAssets:
-  - {fileID: 11400000, guid: 6e7ead42711b6784b8bf861887cab817, type: 2}
+  - {fileID: 11400000, guid: f1570f147c1511b4ca8dcd07a498ea60, type: 2}
   scale: 0.01
   skeletonJSON: {fileID: 4900000, guid: 9c4e73bd46843da41b65be3108d7613a, type: 3}
   isUpgradingBlendModeMaterials: 0
