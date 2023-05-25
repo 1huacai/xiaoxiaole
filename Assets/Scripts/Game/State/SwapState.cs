@@ -54,7 +54,7 @@ class SwapState : StateBase
                 }
                 else
                 {
-                    Debug.LogError(_controller._boardType +  " -- swap response err");
+                    Debug.LogError(_controller._boardType + " -- swap response err");
                     _controller.ChangeToState(GameBoardState.Idle);
                 }
             });

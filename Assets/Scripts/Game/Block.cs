@@ -126,9 +126,9 @@ public class Block : MonoBehaviour
         {
             if (IsIniting)
             {
-                float moveDuration = Mathf.Abs(fallCnt) * 0.08f;
+                float duration = Mathf.Abs(fallCnt) * Config.fallDuration;
                 float yDis = transform.localPosition.y + fallCnt * (Config.blockHeight);
-                transform.DOLocalMoveY(yDis, moveDuration).OnComplete(() =>
+                transform.DOLocalMoveY(yDis, duration).OnComplete(() =>
                 {
                     IsIniting = false;
                     fallCnt = 0;
@@ -136,10 +136,10 @@ public class Block : MonoBehaviour
             }
             else
             {
-                float moveDuration = Mathf.Abs(fallCnt) * 0.08f;
+                float duration = Mathf.Abs(fallCnt) * Config.fallDuration;
                 float yDis = transform.localPosition.y + fallCnt * (Config.blockHeight);
                 Debug.Log(_controller._boardType + " -- before fall block[" + Row + "," + Column + " - " + Type + "] - fallCnt:" + fallCnt + " - y:" + transform.localPosition.y);
-                transform.DOLocalMoveY(yDis, moveDuration).OnComplete(() =>
+                transform.DOLocalMoveY(yDis, duration).OnComplete(() =>
                 {
                     if (_controller._blockMatrix[Row, Column] == this)
                         _controller._blockMatrix[Row, Column] = null;
@@ -158,10 +158,9 @@ public class Block : MonoBehaviour
         }
         if (NeedMove)
         {
-            float moveDuration = 0.08f;
             float xDis = transform.localPosition.x + moveCnt * Config.blockWidth;
             Debug.Log(_controller._boardType + " -- before move block[" + Row + "," + Column + " - " + Type + "] - moveCnt:" + moveCnt + " - x:" + transform.localPosition.x);
-            transform.DOLocalMoveX(xDis, moveDuration).OnComplete(() =>
+            transform.DOLocalMoveX(xDis, Config.moveDuration).OnComplete(() =>
             {
                 Column = Column + moveCnt;
                 gameObject.name = Row + " + " + Column;

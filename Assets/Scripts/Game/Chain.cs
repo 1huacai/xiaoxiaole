@@ -9,7 +9,7 @@ public class Chain : MonoBehaviour
     public int chainNum = 2;
 
     private Image _image;
-    private float _moveDuration = 1.0f;
+    private float _moveDuration = 0.95f;
     private float _moveDis = 80.0f;
 
     // Start is called before the first frame update

@@ -217,6 +217,8 @@ public class Config : ScriptableObject
     public const int raiseSteps = 11; // 上升一行需要的步数
     public const float raiseDis = blockHeight / raiseSteps; // 每次上升的距离
     public const float emmyraiseDis = emmyblockHeight / raiseSteps; // 每次上升的距离
+    public const float moveDuration = 0.075f; // 方块滑动移动时间
+    public const float fallDuration = 0.075f; // 方块下落移动时间
 
     public const float StartPosY = -720;
 

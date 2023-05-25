@@ -290,6 +290,7 @@ public class Main : MonoBehaviour
 
 
     }
+
     void OnUnmatchClick()
     {
         Debug.Log("OnUnmatchClick");
@@ -302,9 +303,9 @@ public class Main : MonoBehaviour
             Debug.LogFormat("match_cancel response : {0}", resp.e);
             if (resp.e == 0)
             {
+                _matchingUI.gameObject.SetActive(false);
+                _loginBtn.gameObject.SetActive(true);
             }
-            _matchingUI.gameObject.SetActive(false);
-            _loginBtn.gameObject.SetActive(true);
         });
     }
 

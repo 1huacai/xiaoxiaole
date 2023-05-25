@@ -42,10 +42,10 @@ public class PressureBlock : MonoBehaviour
         }
         if (NeedFall)
         {
-            float moveDuration = Mathf.Abs(fallCnt) * 0.08f;
+            float duration = Mathf.Abs(fallCnt) * Config.fallDuration;
             float yDis = transform.localPosition.y + fallCnt * (Config.blockHeight);
             Debug.Log(_controller._boardType + " -- before fall Pressure[" + Row_y + " - " + xNum + "] - fallCnt:" + fallCnt + " - y:" + transform.localPosition.y);
-            transform.DOLocalMoveY(yDis, moveDuration).OnComplete(() =>
+            transform.DOLocalMoveY(yDis, duration).OnComplete(() =>
             {
                 Row_y = Row_y + fallCnt;
                 gameObject.name = "pressure + " + Row_y;

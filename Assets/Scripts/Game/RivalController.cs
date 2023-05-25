@@ -26,6 +26,7 @@ public class RivalController : GameController
     void FixedUpdate()
     {
         cntInit++;
+        UpdateBlockArea();
         if (_gameInit)
         {
             if (cntInit % 5 == 0)
@@ -39,8 +40,7 @@ public class RivalController : GameController
     void Update()
     {
         _delta += Time.deltaTime;
-        
-        UpdateBlockArea();
+
         if (_gameInit || _gameOver)
             return;
 

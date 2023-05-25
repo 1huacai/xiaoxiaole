@@ -167,6 +167,7 @@ public class MainController : GameController
     void FixedUpdate()
     {
         cntInit++;
+        UpdateBlockArea();
         if (_gameInit)
         {
             if (cntInit % 5 == 0)
@@ -175,17 +176,16 @@ public class MainController : GameController
             }
             return;
         }
-        // if (cntInit % 50 == 0)
-        // {
-        //     PrintMatrix();
-        // }
+        if (cntInit % 50 == 0)
+        {
+            // PrintMatrix();
+        }
     }
 
     void Update()
     {
         _delta += Time.deltaTime;
         
-        UpdateBlockArea();
         if (_gameInit || _gameOver)
             return;
 
@@ -407,7 +407,8 @@ public class MainController : GameController
         PlayAnima(data.count == 3 ? "atk" : data.count == 4 ? "atk2" : "atk3", false);
         PlayAnima("hurt");
 
-        if (data.count > 3 && _curRowCnt < Config.rows)
+        // if (data.count > 3 && _curRowCnt < Config.rows)
+        if (data.count > 3)
         {
             GreatPressureBlock((int)data.count);
             _minRoleData.ChangeHpValue((int)(data.count) - 1);
