@@ -2,8 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum CheckerboardType { mine, emmy };
 public enum BlockType { None, B1, B2, B3, B4, B5, Count };
-public enum PressureBlockType { None, D1 };
 public enum BlockState { None, Selected, Swaped, Moved, Tagged, Blanked, Trembled, Locked };
 public enum BlockOperation { TouchEnter, TouchDown, TouchUp, TouchExit, DragHalf };
 public enum GameBoardState { Idle, Selection, Swap, StateCount };
@@ -13,7 +13,6 @@ public class Config : ScriptableObject
 {
     //
     public const string serverIP = "124.221.89.86";
-    // public const string serverIP = "192.168.153.129";
     public const int serverPort = 23001;
 
     //Root
@@ -24,31 +23,15 @@ public class Config : ScriptableObject
 
     public const string uiRoot = "UIRoot";
 
-
     //Main
     public const string uiMainRoot = uiRoot + "/Main";
 
-    public const string singleStartPath = uiMainRoot + "/SingleStartBtn";
-    public const string multiStartPath = uiMainRoot + "/MultiStartBtn";
-    public const string multiExStartPath = uiMainRoot + "/MultiExStartBtn";
-
+    public const string singleModePath = uiMainRoot + "/SingleModeBtn";
+    public const string multiModePath = uiMainRoot + "/MultiModeBtn";
     public const string matchingPath = uiMainRoot + "/Matching";
     public const string matchingTextPath = matchingPath + "/MatchText";
     public const string matchingDotTextPath = matchingPath + "/DotText";
-
-    public const string matchSuccessPath = uiMainRoot + "/MatchSuccess";
-    public const string matchSuccessTextPath = matchSuccessPath + "/Text";
-
-    public const string playereInfoBtnPath = uiMainRoot + "/PlayerInfo";
-    public const string signBtnPath = uiMainRoot + "/LeftFunction/Sign";
-    public const string giftBtnPath = uiMainRoot + "/LeftFunction/Gift";
-    public const string fetterBtnPath = uiMainRoot + "/LeftFunction/Fetter";
-    public const string mailBtnPath = uiMainRoot + "/LeftFunction/Mail";
-    public const string friendsBtnPath = uiMainRoot + "/LeftFunction/Friends";
-    public const string chargeBtnPath = uiMainRoot + "/BottomFunction/Charge";
-    public const string mallBtnPath = uiMainRoot + "/BottomFunction/Mall";
-    public const string diaryBtnPath = uiMainRoot + "/BottomFunction/Diary";
-
+    public const string cancelMatchPath = matchingPath + "/CancelMatchBtn";
 
     //Game
     public const string uiGameRoot = uiRoot + "/Game";
@@ -62,10 +45,8 @@ public class Config : ScriptableObject
     public const string timerPath = uiGameRoot + "/Timer/Timer(Clone)";
     public const string timerTextPath = uiGameRoot + "/Timer/Timer(Clone)/Text";
     public const string mainScorePath = uiGameRoot + "/Score";
-    public const string mainScoreTextPath = uiGameRoot + "/Score/Num";
     public const string resultPath = uiGameRoot + "/Result";
-    public const string resultInfoPath = uiGameRoot + "/Result/Text";
-    public const string upButtonPath = uiGameRoot + "/Up/Button";
+    public const string upButtonPath = uiGameRoot + "/UpButton";
     public const string setupButtonPath = uiGameRoot + "/Setup";
     public const string preparePath = uiGameRoot + "/Prepare";
     public const string skill1Path = uiGameRoot + "/skill1";
@@ -79,9 +60,6 @@ public class Config : ScriptableObject
 
     public const string mainGamerPrefabPath = "Prefabs/MainGameArea";
     public static Object _mainGamerObj = Resources.Load(mainGamerPrefabPath);
-
-    public const string emmyGameAreaPath = "Prefabs/emmyGameArea";
-    public static Object emmyGameAreaObj = Resources.Load(emmyGameAreaPath);
 
     public const string rivalGamerPrefabPath = "Prefabs/RivalGameArea";
     public static Object _rivalGamerObj = Resources.Load(rivalGamerPrefabPath);
@@ -118,8 +96,6 @@ public class Config : ScriptableObject
         Resources.Load(Config.textureBlockPath+"31") as Texture2D,
         Resources.Load(Config.textureBlockPath+"41") as Texture2D,
         Resources.Load(Config.textureBlockPath+"51") as Texture2D,
-        Resources.Load(Config.textureBlockPath+"61") as Texture2D,
-        Resources.Load(Config.textureBlockPath+"71") as Texture2D,
     };
     public static Dictionary<int, Sprite> _sprites = new Dictionary<int, Sprite>
     {
@@ -129,8 +105,6 @@ public class Config : ScriptableObject
         {3, Sprite.Create(_texture[3], new Rect(0, 0, _texture[3].width, _texture[3].height), new Vector2(1f, 1f)) },
         {4, Sprite.Create(_texture[4], new Rect(0, 0, _texture[4].width, _texture[4].height), new Vector2(1f, 1f)) },
         {5, Sprite.Create(_texture[5], new Rect(0, 0, _texture[5].width, _texture[5].height), new Vector2(1f, 1f)) },
-        {6, Sprite.Create(_texture[6], new Rect(0, 0, _texture[6].width, _texture[6].height), new Vector2(1f, 1f)) },
-        {7, Sprite.Create(_texture[7], new Rect(0, 0, _texture[7].width, _texture[7].height), new Vector2(1f, 1f)) },
     };
     public static List<Texture2D> _lockTexture = new List<Texture2D>{
         Resources.Load(Config.textureBlockPath+"07") as Texture2D,
@@ -139,8 +113,6 @@ public class Config : ScriptableObject
         Resources.Load(Config.textureBlockPath+"37") as Texture2D,
         Resources.Load(Config.textureBlockPath+"47") as Texture2D,
         Resources.Load(Config.textureBlockPath+"57") as Texture2D,
-        Resources.Load(Config.textureBlockPath+"67") as Texture2D,
-        Resources.Load(Config.textureBlockPath+"77") as Texture2D,
     };
     public static Dictionary<int, Sprite> _lockSprites = new Dictionary<int, Sprite>
     {
@@ -150,8 +122,6 @@ public class Config : ScriptableObject
         {3, Sprite.Create(_lockTexture[3], new Rect(0, 0, _lockTexture[3].width, _lockTexture[3].height), new Vector2(1f, 1f)) },
         {4, Sprite.Create(_lockTexture[4], new Rect(0, 0, _lockTexture[4].width, _lockTexture[4].height), new Vector2(1f, 1f)) },
         {5, Sprite.Create(_lockTexture[5], new Rect(0, 0, _lockTexture[5].width, _lockTexture[5].height), new Vector2(1f, 1f)) },
-        {6, Sprite.Create(_lockTexture[6], new Rect(0, 0, _lockTexture[6].width, _lockTexture[6].height), new Vector2(1f, 1f)) },
-        {7, Sprite.Create(_lockTexture[7], new Rect(0, 0, _lockTexture[7].width, _lockTexture[7].height), new Vector2(1f, 1f)) },
     };
 
     public static List<RuntimeAnimatorController> _animDestroy = new List<RuntimeAnimatorController>
@@ -162,8 +132,6 @@ public class Config : ScriptableObject
         Resources.Load<RuntimeAnimatorController>(animDestroyPath+3),
         Resources.Load<RuntimeAnimatorController>(animDestroyPath+4),
         Resources.Load<RuntimeAnimatorController>(animDestroyPath+5),
-        Resources.Load<RuntimeAnimatorController>(animDestroyPath+6),
-        Resources.Load<RuntimeAnimatorController>(animDestroyPath+7),
     };
 
     public static List<RuntimeAnimatorController> _animTremble = new List<RuntimeAnimatorController>
@@ -174,8 +142,6 @@ public class Config : ScriptableObject
         Resources.Load<RuntimeAnimatorController>(animTremblePath+3),
         Resources.Load<RuntimeAnimatorController>(animTremblePath+4),
         Resources.Load<RuntimeAnimatorController>(animTremblePath+5),
-        Resources.Load<RuntimeAnimatorController>(animTremblePath+6),
-        Resources.Load<RuntimeAnimatorController>(animTremblePath+7),
     };
 
     // 压力块解锁动画
@@ -207,20 +173,15 @@ public class Config : ScriptableObject
     public const int initRows = 7; // 初始行数
     public const int initCols = 6; // 初始列数
 
-    public const float blockWidth = 140.0f; // 方块宽度
-    public const float blockHeight = 140.0f; // 方块高度
+    public const float blockWidth = 124.0f; // 方块宽度
+    public const float blockHeight = 124.0f; // 方块高度
 
-    public const float emmyblockWidth = 12.0f; // 方块宽度
-    public const float emmyblockHeight = 12.0f; // 方块高度
-
-    public const float blockXPosShit = -359.0f; // 方块位置x坐标偏移值
+    public const float XPosShift = -310.0f; // 方块位置x坐标偏移值
+    public const float YPosShift = 745.0f; // 方块位置y坐标偏移值
     public const int raiseSteps = 11; // 上升一行需要的步数
     public const float raiseDis = blockHeight / raiseSteps; // 每次上升的距离
-    public const float emmyraiseDis = emmyblockHeight / raiseSteps; // 每次上升的距离
     public const float moveDuration = 0.075f; // 方块滑动移动时间
     public const float fallDuration = 0.075f; // 方块下落移动时间
-
-    public const float StartPosY = -720;
 
     public const int maxSpeed = 50;
 
@@ -263,19 +224,4 @@ public class Config : ScriptableObject
         400,    500,    700,    900,    1100,
         1300,   1500,   1800,
     };
-
-    public static void InitObstacleObjs()
-    {
-        var obstaclePrefabPath = "Prefabs/Obstacle3";
-        obstacleObjs.Add(Resources.Load(obstaclePrefabPath));
-
-        obstaclePrefabPath = "Prefabs/Obstacle4";
-        obstacleObjs.Add(Resources.Load(obstaclePrefabPath));
-
-        obstaclePrefabPath = "Prefabs/Obstacle5";
-        obstacleObjs.Add(Resources.Load(obstaclePrefabPath));
-
-        obstaclePrefabPath = "Prefabs/Obstacle6";
-        obstacleObjs.Add(Resources.Load(obstaclePrefabPath));
-    }
 }

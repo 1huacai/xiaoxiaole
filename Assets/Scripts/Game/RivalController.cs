@@ -25,8 +25,19 @@ public class RivalController : GameController
     int cntInit = 0;
     void FixedUpdate()
     {
+        if (_gameOver)
+            return;
+
         cntInit++;
+        _delta += Time.deltaTime;
+
+        if (cntInit % 50 == 0)
+        {
+            PrintMatrix();
+        }
+
         UpdateBlockArea();
+
         if (_gameInit)
         {
             if (cntInit % 5 == 0)
@@ -35,14 +46,6 @@ public class RivalController : GameController
             }
             return;
         }
-    }
-
-    void Update()
-    {
-        _delta += Time.deltaTime;
-
-        if (_gameInit || _gameOver)
-            return;
 
         // if (_gameReady)
         //     return;
@@ -63,6 +66,13 @@ public class RivalController : GameController
             RaiseOneRow();
             return;
         }
+
+        /*
+        if (_addNewRow)
+        {
+            return;
+        }
+        */
 
         if (_alarmSet)
         {
@@ -146,7 +156,7 @@ public class RivalController : GameController
         }
         foreach (PressureBlock pressure in _PressureMatrix)
         {
-            if (pressure.Row_y == row)
+            if (pressure.Row == row)
             {
                 pressure.PlayUnlockAnim();
                 AddNewBlock(newRow, pressure);

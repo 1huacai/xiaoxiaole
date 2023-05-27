@@ -16,6 +16,16 @@ class SwapState : StateBase
         SwapBlock();
     }
 
+    public override void OnBlockOperation(int row, int column, BlockOperation operation)
+    {
+        base.OnBlockOperation(row, column, operation);
+        if (operation == BlockOperation.TouchUp)
+        {
+            _controller.ChangeToState(GameBoardState.Idle);
+            return;
+        }
+    }
+
     void SwapBlock()
     {
         var first = _controller._firstSelected;

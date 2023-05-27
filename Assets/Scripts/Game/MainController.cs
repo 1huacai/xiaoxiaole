@@ -14,9 +14,6 @@ public class MainController : GameController
     private Button _upBtn; // 方块上升一行按钮
     private Button _setupBtn; // 设置按钮
     private GameObject _resultObj; // 结果UI
-    private Text _resultInfoText; // 结果信息
-    private GameObject _mainScoreObj; // 单人模式得分板
-    private Text _scoreText; // 得分显示文本
     private GameObject _rivalObj; // 对手展示区
     private GameObject _comingSoonObj;
     private Tweener _comingSoonTw;
@@ -35,12 +32,13 @@ public class MainController : GameController
     public Role _minRoleData;
     public Role _emmyRoleData;
 
+    private Text _minName;
     private Slider _minHp;
     private Slider _minShield;
     private Text _minHpLable;
     private Text _minShieldLable;
 
-
+    private Text _emmyName;
     private Slider _emmyHp;
     private Slider _emmyShield;
     private Text _emmyHpLable;
@@ -52,7 +50,7 @@ public class MainController : GameController
     private Image _skill_Mask;
     private Image _skill2_Slider;
 
-    public GameObject _DragBlock;
+
     void Awake()
     {
         _controller = this;
@@ -82,12 +80,6 @@ public class MainController : GameController
         _skill2Btn.onClick.AddListener(OnSkill2BtnClick);
 
         _resultObj = GameObject.Find(Config.resultPath);
-        _resultInfoText = GameObject.Find(Config.resultInfoPath).GetComponent<Text>();
-
-        _mainScoreObj = GameObject.Find(Config.mainScorePath);
-        _mainScoreObj.SetActive(!IsMultiPlayer());
-
-        _scoreText = GameObject.Find(Config.mainScoreTextPath).GetComponent<Text>();
 
         _rivalObj = GameObject.Find(Config.rivalShowPath);
         _rivalObj.SetActive(IsMultiPlayer());
@@ -98,12 +90,13 @@ public class MainController : GameController
         _minRoleeffect = GameObject.Find(Config.uiGameRoot + "/Player1/effect").transform;
         _emmyRoleeffect = GameObject.Find(Config.uiGameRoot + "/Player2/effect").transform;
 
+        _minName = GameObject.Find(Config.uiGameRoot + "/Player1/Name").GetComponent<Text>();
         _minHp = GameObject.Find(Config.uiGameRoot + "/Player1/HpBar/Hp").GetComponent<Slider>();
         _minShield = GameObject.Find(Config.uiGameRoot + "/Player1/HpBar/Shield").GetComponent<Slider>();
         _minHpLable = GameObject.Find(Config.uiGameRoot + "/Player1/HpBar/Hp/Text").GetComponent<Text>();
         _minShieldLable = GameObject.Find(Config.uiGameRoot + "/Player1/HpBar/Shield/Text").GetComponent<Text>();
 
-
+        _emmyName = GameObject.Find(Config.uiGameRoot + "/Player2/Name").GetComponent<Text>();
         _emmyHp = GameObject.Find(Config.uiGameRoot + "/Player2/HpBar/Hp").GetComponent<Slider>();
         _emmyShield = GameObject.Find(Config.uiGameRoot + "/Player2/HpBar/Shield").GetComponent<Slider>();
         _emmyHpLable = GameObject.Find(Config.uiGameRoot + "/Player2/HpBar/Hp/Text").GetComponent<Text>();
@@ -114,8 +107,6 @@ public class MainController : GameController
 
         _skill_Mask = _skill1Btn.transform.Find("CD").GetComponent<Image>();
         _skill2_Slider = _skill2Btn.transform.Find("CDmask").GetComponent<Image>();
-
-        _DragBlock = transform.Find("DragBlock").gameObject;
 
         InitRoleData(MainManager.Ins.players);
 
@@ -136,15 +127,17 @@ public class MainController : GameController
         {
             if (infos[i].rid == MainManager.Ins.Uid)
             {
-                _minRoleData = new Role();
+                _minRoleData = new Role(infos[i].rname);
                 _minRoleData.side = (int)infos[i].render;
                 _minRoleData.isMin = true;
+                _minName.text = infos[i].rname;
             }
             else
             {
-                _emmyRoleData = new Role();
+                _emmyRoleData = new Role(infos[i].rname);
                 _emmyRoleData.side = (int)infos[i].render;
                 _emmyRoleData.isMin = false;
+                _emmyName.text = infos[i].rname;
             }
         }
 
@@ -166,8 +159,19 @@ public class MainController : GameController
     int cntInit = 0;
     void FixedUpdate()
     {
+        if (_gameOver)
+            return;
+
         cntInit++;
+        _delta += Time.deltaTime;
+
+        if (cntInit % 50 == 0)
+        {
+            PrintMatrix();
+        }
+
         UpdateBlockArea();
+
         if (_gameInit)
         {
             if (cntInit % 5 == 0)
@@ -176,18 +180,6 @@ public class MainController : GameController
             }
             return;
         }
-        if (cntInit % 50 == 0)
-        {
-            // PrintMatrix();
-        }
-    }
-
-    void Update()
-    {
-        _delta += Time.deltaTime;
-        
-        if (_gameInit || _gameOver)
-            return;
 
         if (_gameReady)
         {
@@ -363,7 +355,6 @@ public class MainController : GameController
     void ShowResult()
     {
         _resultObj.SetActive(true);
-        _resultInfoText.text = Util.FormatTime(Time.realtimeSinceStartup);
     }
 
     void TouchTop()
@@ -403,7 +394,7 @@ public class MainController : GameController
 
     public void SyncNewpreBlock(SprotoType.eliminate_broadcast.request data)
     {
-        Debug.Log(_boardType+" -- data.count:" + data.count);
+        Debug.Log(_boardType + " -- data.count:" + data.count);
         PlayAnima(data.count == 3 ? "atk" : data.count == 4 ? "atk2" : "atk3", false);
         PlayAnima("hurt");
 
@@ -570,7 +561,6 @@ public class MainController : GameController
             yield return new WaitForSeconds(1);
             MainManager.Ins.Timer++;
             CheckGameOver();
-            CheckDrag();
             CheckRecoverShield();
             UpdateSkill1Cd();
         }
@@ -594,20 +584,7 @@ public class MainController : GameController
             }
         }
     }
-    void CheckDrag()
-    {
-        if (MainManager.Ins.Timer >= MainManager.Ins.DragTime)
-        {
-            MainManager.Ins.DragBlock = true;
-            if (_DragBlock.activeSelf)
-                _DragBlock.SetActive(false);
-        }
-        else if (MainManager.Ins.Timer < MainManager.Ins.DragTime)
-        {
-            if (!_DragBlock.activeSelf)
-                _DragBlock.SetActive(true);
-        }
-    }
+
     void CheckRecoverShield()
     {
         if (MainManager.Ins.Timer - 3 > _minRoleData.hurtTimer)

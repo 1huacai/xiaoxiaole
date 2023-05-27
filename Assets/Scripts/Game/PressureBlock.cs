@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using Spine.Unity;
 
 public class PressureBlock : MonoBehaviour
 {
     [SerializeField]
-    public int Row_y;
+    private int _row;
     [SerializeField]
     public int xNum;
     [SerializeField]
@@ -44,16 +45,25 @@ public class PressureBlock : MonoBehaviour
         {
             float duration = Mathf.Abs(fallCnt) * Config.fallDuration;
             float yDis = transform.localPosition.y + fallCnt * (Config.blockHeight);
-            Debug.Log(_controller._boardType + " -- before fall Pressure[" + Row_y + " - " + xNum + "] - fallCnt:" + fallCnt + " - y:" + transform.localPosition.y);
+            Debug.Log(_controller._boardType + " -- before fall Pressure[" + Row + " - " + xNum + "] - fallCnt:" + fallCnt + " - y:" + transform.localPosition.y);
             transform.DOLocalMoveY(yDis, duration).OnComplete(() =>
             {
-                Row_y = Row_y + fallCnt;
-                gameObject.name = "pressure + " + Row_y;
-                Debug.Log(_controller._boardType + " -- after fall Pressure[" + Row_y + " - " + xNum + "] - fallCnt:" + fallCnt + " - y:" + transform.localPosition.y);
+                Row = Row + fallCnt;
+                gameObject.name = "pressure + " + Row;
+                Debug.Log(_controller._boardType + " -- after fall Pressure[" + Row + " - " + xNum + "] - fallCnt:" + fallCnt + " - y:" + transform.localPosition.y);
                 fallCnt = 0;
                 IsMoved = true;
             });
             NeedFall = false;
+        }
+    }
+
+    public int Row
+    {
+        get { return _row; }
+        set
+        {
+            _row = value;
         }
     }
 
@@ -80,7 +90,7 @@ public class PressureBlock : MonoBehaviour
             {
                 if (IsTagged)
                 {
-                    Debug.LogError(_controller._boardType + " -- pressure[" + Row_y + " - " + xNum + "] already tagged");
+                    Debug.LogError(_controller._boardType + " -- pressure[" + Row + " - " + xNum + "] already tagged");
                     return;
                 }
                 _state |= 1 << (int)BlockState.Tagged;
@@ -106,7 +116,8 @@ public class PressureBlock : MonoBehaviour
     // 播放解锁动画
     public void PlayUnlockAnim()
     {
-        _anim.runtimeAnimatorController = Config._animPressure[xNum - 3];
+        // _anim.runtimeAnimatorController = Config._animPressure[xNum - 3];
+        ShowBlankAnima(1);
     }
 
     // 解锁动画播放完成后回调
@@ -119,8 +130,44 @@ public class PressureBlock : MonoBehaviour
         }
 
         _controller._PressureMatrix.Remove(this);
-        Debug.Log(_controller._boardType + " -- pressure[" + Row_y + " - " + xNum + "] destroyed");
+        Debug.Log(_controller._boardType + " -- pressure[" + Row + " - " + xNum + "] destroyed");
         DoDestroy();
+    }
+
+    private void ShowBlankAnima(int shift)
+    {
+        string path = "spineArt/pressure/boom/yalikuai_SkeletonData";
+
+        var effectData = Resources.Load<SkeletonDataAsset>(path);
+        Material minmaterial = new Material(Shader.Find("Spine/SkeletonGraphic"));
+        SkeletonGraphic effect = SkeletonGraphic.NewSkeletonGraphicGameObject(effectData, this.transform, minmaterial);
+        effect.transform.localPosition = new Vector3(55, effect.transform.localPosition.y, effect.transform.localPosition.z);
+        effect.transform.localScale = new Vector3(3.8f, 3.5f, 3.5f);
+
+        effect.skeletonDataAsset = effectData;
+        effect.initialSkinName = "default";
+        effect.startingAnimation = "animation";
+        effect.startingLoop = false;
+        effect.MatchRectTransformWithBounds();
+        effect.material = minmaterial;
+        effect.Initialize(true);
+
+        effect.AnimationState.Complete += (a) =>
+        {
+            if (shift < xNum)
+            {
+                float posx = transform.localPosition.x + Config.blockWidth;
+                transform.localPosition = new Vector3(posx, transform.localPosition.y, 0);
+                RectTransform rect = GetComponent<RectTransform>();
+                rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, (xNum - shift) * Config.blockWidth);
+                ShowBlankAnima(++shift);
+            }
+            else
+            {
+                Destroy(effect.gameObject);
+                FinishUnlockAnim();
+            }
+        };
     }
 
     public static PressureBlock CreatePressureObject(int row, int xNum, Transform parent, GameController ctrl)
@@ -135,11 +182,10 @@ public class PressureBlock : MonoBehaviour
         PressureBlock pressure = obj.GetComponent<PressureBlock>();
         pressure._image = obj.GetComponent<Image>();
         pressure._anim = obj.GetComponent<Animator>();
-        pressure.Row_y = row;
+        pressure.Row = row;
         pressure.xNum = xNum;
         pressure._controller = ctrl;
-        Debug.Log(ctrl._boardType + " -- new pressure[" + pressure.Row_y + " - " + pressure.xNum + "]");
-
+        Debug.Log(ctrl._boardType + " -- new pressure[" + pressure.Row + " - " + pressure.xNum + "]");
         return pressure;
     }
 

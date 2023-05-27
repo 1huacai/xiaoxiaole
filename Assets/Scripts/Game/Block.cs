@@ -340,6 +340,9 @@ public class Block : MonoBehaviour
                 Debug.Log(_controller._boardType + " -- block[" + Row + "," + Column + " - " + Type + "] destroyed");
                 _state |= 1 << (int)BlockState.Blanked;
                 DoDestroy();
+
+                // 播放飞星特效
+
             }
             else
                 _state &= ~(1 << (int)BlockState.Blanked);
@@ -364,9 +367,15 @@ public class Block : MonoBehaviour
         set
         {
             if (value)
+            {
                 _state |= 1 << (int)BlockState.Locked;
+                _image.sprite = Config._lockSprites[(int)_type];
+            }
             else
+            {
                 _state &= ~(1 << (int)BlockState.Locked);
+                _image.sprite = Config._sprites[(int)_type];
+            }
         }
     }
 
@@ -433,14 +442,13 @@ public class Block : MonoBehaviour
         block._anim = obj.GetComponent<Animator>();
         block._selectImage = obj.transform.Find("Select").gameObject;
         block.Type = (BlockType)type;
+        block._image.sprite = Config._sprites[(int)block._type];
         block.Row = row;
         block.Column = col;
-        block._image.sprite = Config._sprites[(int)block._type];
         block.gameObject.name = row + " + " + col;
-        block.transform.localScale = new Vector3(0.8f, 0.8f, 0.8f);
+        // block.transform.localScale = new Vector3(0.8f, 0.8f, 0.8f);
         block._controller = ctrl;
         // Debug.Log(ctrl._boardType + " -- new block["+Row+","+Column+" - "+Type+"]");
-
         return block;
     }
 

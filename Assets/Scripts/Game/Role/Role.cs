@@ -37,6 +37,9 @@ public class Role
             return side > 1 ? "Spine/SkeletonGraphic" : "Spine/SkeletonGraphic";
         }
     }
+
+    public string Name;
+
     public int MaxHp;
 
     public int Hp;
@@ -83,8 +86,9 @@ public class Role
 
     public int hurtTimer;
 
-    public Role()
+    public Role(string rname)
     {
+        Name = rname;
         side = Random.Range(1, 3);
         MaxHp = 100;
         MaxShield = 50;

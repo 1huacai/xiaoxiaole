@@ -3,46 +3,24 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
-public enum CheckerboardType
-{
-    mine,
-    emmy,
-}
 
 public class Main : MonoBehaviour
 {
     private Button _singleBtn;
     private Button _multiBtn;
-    private Button _multiExBtn;
 
     private GameObject _matchingUI;
     private Text _matchingText;
     private Text _matchingDotText;
-
-    private GameObject _matchSuccessUI;
-    private Text _matchSuccessText;
+    public Button _cancelMatchBtn;
 
     private GameObject _mainGamerObj;
     private GameObject _rivalGamerObj;
-
-    private GameObject _emmyGamerObj;
 
     private GameObject _comingSoonObj;
     private Tweener _comingSoonTw;
     private GameObject _timerObj;
 
-    private Button _playerInfoBtn;
-    private Button _signBtn;
-    private Button _giftBtn;
-    private Button _fetterBtn;
-    private Button _mailBtn;
-    private Button _friendsBtn;
-    private Button _chargeBtn;
-    private Button _mallBtn;
-    private Button _diaryBtn;
-
-    private Button _loginBtn;
-    public Button _unmatchBtn;
 
 
     private bool _enterGame = false; // 进入游戏开关
@@ -62,47 +40,17 @@ public class Main : MonoBehaviour
         Application.runInBackground = true;
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
 
-        _singleBtn = GameObject.Find(Config.singleStartPath).GetComponent<Button>();
-        //_singleBtn.onClick.AddListener(OnSingleBtnClick);
-
-        _multiBtn = GameObject.Find(Config.multiStartPath).GetComponent<Button>();
-        _multiBtn.onClick.AddListener(OnMultiBtnClick);
-
-        _multiExBtn = GameObject.Find(Config.multiExStartPath).GetComponent<Button>();
-        _multiExBtn.onClick.AddListener(OnMultiExBtnClick);
+        _singleBtn = GameObject.Find(Config.singleModePath).GetComponent<Button>();
+        _singleBtn.onClick.AddListener(OnSingleModeClick);
+        _multiBtn = GameObject.Find(Config.multiModePath).GetComponent<Button>();
+        _multiBtn.onClick.AddListener(OnMultiModeClick);
 
         _matchingUI = GameObject.Find(Config.matchingPath);
         _matchingText = GameObject.Find(Config.matchingTextPath).GetComponent<Text>();
         _matchingDotText = GameObject.Find(Config.matchingDotTextPath).GetComponent<Text>();
         _matchingUI.SetActive(false);
-
-
-        _matchSuccessUI = GameObject.Find(Config.matchSuccessPath);
-        _matchSuccessText = GameObject.Find(Config.matchSuccessTextPath).GetComponent<Text>();
-        _matchSuccessUI.SetActive(false);
-
-        _playerInfoBtn = GameObject.Find(Config.playereInfoBtnPath).GetComponent<Button>();
-        _playerInfoBtn.onClick.AddListener(OnOtherBtnClick);
-        _signBtn = GameObject.Find(Config.signBtnPath).GetComponent<Button>();
-        _signBtn.onClick.AddListener(OnOtherBtnClick);
-        _giftBtn = GameObject.Find(Config.giftBtnPath).GetComponent<Button>();
-        _giftBtn.onClick.AddListener(OnOtherBtnClick);
-        _fetterBtn = GameObject.Find(Config.fetterBtnPath).GetComponent<Button>();
-        _fetterBtn.onClick.AddListener(OnOtherBtnClick);
-        _mailBtn = GameObject.Find(Config.mailBtnPath).GetComponent<Button>();
-        _mailBtn.onClick.AddListener(OnOtherBtnClick);
-        _friendsBtn = GameObject.Find(Config.friendsBtnPath).GetComponent<Button>();
-        _friendsBtn.onClick.AddListener(OnOtherBtnClick);
-        _chargeBtn = GameObject.Find(Config.chargeBtnPath).GetComponent<Button>();
-        _chargeBtn.onClick.AddListener(OnOtherBtnClick);
-        _mallBtn = GameObject.Find(Config.mallBtnPath).GetComponent<Button>();
-        _mallBtn.onClick.AddListener(OnOtherBtnClick);
-        _diaryBtn = GameObject.Find(Config.diaryBtnPath).GetComponent<Button>();
-        _diaryBtn.onClick.AddListener(OnOtherBtnClick);
-
-        _loginBtn = GameObject.Find("login").GetComponent<Button>();
-        _loginBtn.onClick.AddListener(OnLoginClick);
-        _unmatchBtn.onClick.AddListener(OnUnmatchClick);
+        _cancelMatchBtn = GameObject.Find(Config.cancelMatchPath).GetComponent<Button>();
+        _cancelMatchBtn.onClick.AddListener(OnCancelMatchClick);
 
         Config.gameObj.SetActive(false);
     }
@@ -129,8 +77,6 @@ public class Main : MonoBehaviour
                 GameObject.Destroy(_timerObj);
                 _timerObj = null;
             }
-            if (_loginBtn != null)
-                _loginBtn.gameObject.SetActive(true);
             _reset = false;
         }
 
@@ -147,7 +93,6 @@ public class Main : MonoBehaviour
             Config.mainObj.SetActive(false);
             Config.gameObj.SetActive(true);
             _matchingUI.SetActive(false);
-            _matchSuccessUI.SetActive(false);
 
             var parent = Config.gameObj.transform.Find("GameArea");
             _mainGamerObj = Instantiate(Config._mainGamerObj, parent) as GameObject;
@@ -168,6 +113,7 @@ public class Main : MonoBehaviour
             if (_multiPlayer)
             {
                 _rivalGamerObj = Instantiate(Config._rivalGamerObj, parent) as GameObject;
+                _rivalGamerObj.name = "RivalGameArea";
                 var rivalController = _rivalGamerObj.GetComponent<RivalController>();
                 foreach (var item in _initMatrix)
                 {
@@ -190,59 +136,18 @@ public class Main : MonoBehaviour
     }
 
     // 单人模式开始
-    void OnSingleBtnClick()
+    void OnSingleModeClick()
     {
         Util.PlayClickSound(_singleBtn.gameObject);
-        _initMatrix = GenInitBlocks(false);
-        _enterGame = true;
+
+        // _initMatrix = GenInitBlocks();
+        // _enterGame = true;
     }
 
     // 多人模式开始
-    void OnMultiBtnClick()
+    void OnMultiModeClick()
     {
         Util.PlayClickSound(_multiBtn.gameObject);
-        GameBattle();
-    }
-
-    void OnMultiExBtnClick()
-    {
-        Util.PlayClickSound(_multiBtn.gameObject);
-        GameBattle();
-    }
-
-    // 匹配失败确认框取消
-    void OnMatchCancelClick()
-    {
-        _matchingUI.SetActive(false);
-        _loginBtn.gameObject.SetActive(true);
-    }
-
-    // 匹配失败确认框重试
-    void OnMatchRetryClick()
-    {
-        SwitchMatchingText(true);
-        MatchReq();
-    }
-
-    void OnOtherBtnClick()
-    {
-        Debug.Log("OnLoginClick");
-        Util.PlayClickSound(_multiBtn.gameObject);
-        if (_comingSoonObj == null)
-        {
-            _comingSoonObj = Instantiate(Config._comingSoonObj, this.transform) as GameObject;
-            _comingSoonTw = _comingSoonObj.GetComponent<Image>().DOFade(0.1f, 3.5f);
-            _comingSoonTw.OnComplete(DestroyComingSoonObj);
-        }
-        else
-        {
-            _comingSoonTw.Restart();
-        }
-    }
-    void OnLoginClick()
-    {
-        Debug.Log("OnLoginClick");
-        Util.PlayClickSound(_loginBtn.gameObject);
 
         if (NetCore.connected == false)
         {
@@ -276,7 +181,6 @@ public class Main : MonoBehaviour
                             {
                             }
                         });
-
                     }
                 });
                 Debug.Log("connect server success");
@@ -287,14 +191,25 @@ public class Main : MonoBehaviour
             _server_logind = true;
             GameBattle();
         }
-
-
     }
 
-    void OnUnmatchClick()
+    // 匹配失败确认框重试
+    void OnMatchRetryClick()
     {
-        Debug.Log("OnUnmatchClick");
-        Util.PlayClickSound(_unmatchBtn.gameObject);
+        SwitchMatchingText(true);
+        MatchReq();
+    }
+
+    // 匹配失败确认框取消
+    void OnMatchCancelClick()
+    {
+        _matchingUI.SetActive(false);
+    }
+
+    // 取消匹配
+    void OnCancelMatchClick()
+    {
+        Util.PlayClickSound(_cancelMatchBtn.gameObject);
 
         var req = new SprotoType.match_cancel.request();
         NetSender.Send<Protocol.match_cancel>(req, (data) =>
@@ -304,9 +219,24 @@ public class Main : MonoBehaviour
             if (resp.e == 0)
             {
                 _matchingUI.gameObject.SetActive(false);
-                _loginBtn.gameObject.SetActive(true);
             }
         });
+    }
+
+    void OnOtherBtnClick()
+    {
+        Debug.Log("OnLoginClick");
+        Util.PlayClickSound(_multiBtn.gameObject);
+        if (_comingSoonObj == null)
+        {
+            _comingSoonObj = Instantiate(Config._comingSoonObj, this.transform) as GameObject;
+            _comingSoonTw = _comingSoonObj.GetComponent<Image>().DOFade(0.1f, 3.5f);
+            _comingSoonTw.OnComplete(DestroyComingSoonObj);
+        }
+        else
+        {
+            _comingSoonTw.Restart();
+        }
     }
 
     void DestroyComingSoonObj()
@@ -332,10 +262,6 @@ public class Main : MonoBehaviour
             MatchReq();
         else
             GameAuthReq();
-    }
-
-    void MatchSuccessTexTWFinish()
-    {
     }
 
     void SwitchMatchingText(bool signal)
@@ -392,30 +318,12 @@ public class Main : MonoBehaviour
             if (resp.e == 0)
             {
                 _matchingUI.SetActive(true);
-                _loginBtn.gameObject.SetActive(false);
                 SwitchMatchingText(true);
                 _matchingDotText.text = "";
                 Tweener textTW = _matchingDotText.DOText("...", 3.0f);
                 textTW.SetLoops(4);
             }
         });
-    }
-
-    void InitDataReq(List<SprotoType.block_info> pack)
-    {
-        //var req = new SprotoType.init_data.request()
-        //{
-        //    matrix = pack,
-        //};
-        //NetSender.Send<Protocol.init_data>(req, (data) =>
-        //{
-        //    var resp = data as SprotoType.init_data.response;
-        //    Debug.LogFormat(" init_data response : {0}", resp.e);
-        //    if (resp.e == 0)
-        //    {
-
-        //    }
-        //});
     }
 
     void ShowMatchMsgBox(string title)
@@ -433,23 +341,18 @@ public class Main : MonoBehaviour
         MessageBox msgBox = new MessageBox(dialog);
     }
 
-    // 匹配超时处理
-    public void MatchTimeout(SprotoType.match_timeout.request data)
-    {
-        ShowMatchMsgBox(Config.matchFailureMsgBoxTitle);
-    }
-
     // 匹配成功处理
     public void MatchSuccess(SprotoType.match_success.request data)
     {
         _multiPlayer = true;
-        GenInitBlocks(true);
 
         MainManager.Ins.players = data.players;
+    }
 
-        var colorTW = _matchSuccessText.DOColor(Color.red, 0.1f);
-        colorTW.SetLoops(3);
-        colorTW.OnComplete(MatchSuccessTexTWFinish);
+    // 匹配超时处理
+    public void MatchTimeout(SprotoType.match_timeout.request data)
+    {
+        ShowMatchMsgBox(Config.matchFailureMsgBoxTitle);
     }
 
     // 匹配异常处理
@@ -470,7 +373,7 @@ public class Main : MonoBehaviour
         _enterGame = true;
     }
 
-    public void GenBringForward(BlockType[,] matrix, int rowCnt)
+    private void GenBringForward(BlockType[,] matrix, int rowCnt)
     {
         int opRow = rowCnt;
         while (opRow > 0)
@@ -484,7 +387,7 @@ public class Main : MonoBehaviour
         }
     }
 
-    public bool GenCheckRowType(BlockType[,] matrix, int opCol, BlockType newType)
+    private bool GenCheckRowType(BlockType[,] matrix, int opCol, BlockType newType)
     {
         if (opCol < 2)
             return true;
@@ -495,7 +398,7 @@ public class Main : MonoBehaviour
         return true;
     }
 
-    private List<SprotoType.block_info> GenInitBlocks(bool needSync = false)
+    private List<SprotoType.block_info> GenInitBlocks()
     {
         List<SprotoType.block_info> pack = new List<SprotoType.block_info>();
         var blockMatrix = new BlockType[Config.initRows, Config.initCols];
@@ -554,10 +457,6 @@ public class Main : MonoBehaviour
                 };
                 pack.Add(item);
             }
-        }
-        if (needSync)
-        {
-            InitDataReq(pack);
         }
         return pack;
     }

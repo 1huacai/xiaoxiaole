@@ -12,6 +12,7 @@ public class GameController : MonoBehaviour
 
     public GameObject _blockBoardObj; // 方块面板区
     public GameObject _blockAreaObj; // 方块面板区底图
+    public GameObject _pressureBoardObj; // 压力块面板区
 
     public Dictionary<GameBoardState, StateBase> _states;
     public GameBoardState _curGameBoardState = GameBoardState.Idle;
@@ -69,7 +70,7 @@ public class GameController : MonoBehaviour
             {
                 for (int i = 0; i < pressure.xNum; i++)
                 {
-                    str = str + "\t[" + pressure.Row_y + "," + i + " - @@ ]";
+                    str = str + "\t[" + pressure.Row + "," + i + " - @@ ]";
                     col++;
                 }
             }
@@ -107,6 +108,7 @@ public class GameController : MonoBehaviour
     {
         _blockBoardObj = transform.Find("BlockBoard").gameObject;
         _blockAreaObj = _blockBoardObj.transform.Find("AreaBottom").gameObject;
+        _pressureBoardObj = transform.Find("PressureBoard").gameObject;
 
         // _gameReady = true;
         _gameStart = false;
@@ -169,7 +171,7 @@ public class GameController : MonoBehaviour
     {
         for (int i = 0; i < _PressureMatrix.Count; i++)
         {
-            if (_PressureMatrix[i].Row_y >= Config.alarmRow)
+            if (_PressureMatrix[i].Row >= Config.alarmRow)
             {
                 _alarmSet = true;
             }
@@ -222,6 +224,9 @@ public class GameController : MonoBehaviour
             _addNewRow = true;
             _suspendRaise = _suspendRaise - 1;
         });
+
+        Transform _pressureTrans = _pressureBoardObj.transform;
+        _pressureTrans.DOLocalMoveY(moveDis, 0.2f);
     }
 
     public void RaiseOneStep()
@@ -229,6 +234,8 @@ public class GameController : MonoBehaviour
         Transform _tran = _blockBoardObj.transform;
         Transform _areaTran = _blockAreaObj.transform;
         _tran.DOLocalMoveY(_tran.localPosition.y + Config.raiseDis, 0);
+        Transform _pressureTrans = _pressureBoardObj.transform;
+        _pressureTrans.DOLocalMoveY(_tran.localPosition.y + Config.raiseDis, 0);
 
         if (_tran.localPosition.y > (_totalRowCnt - Config.initRows + 1) * Config.blockHeight - 15)
         {
@@ -260,8 +267,7 @@ public class GameController : MonoBehaviour
 
         // Debug.Log(_boardType + " -- init block["+row+","+col=+" - "+type+"] - count:"+_initMatrix.Count);
         var block = Block.CreateBlockObject(row, col, type, _blockBoardObj.transform, this);
-        var initY = 840;
-        block.transform.localPosition = new Vector3(Config.blockXPosShit + col * Config.blockWidth, initY, 0);
+        block.transform.localPosition = new Vector3(Config.XPosShift + col * Config.blockWidth, Config.YPosShift, 0);
         block.BlockOperationEvent += OnBlockOperation;
         block.IsIniting = true;
         block.NeedFall = true;
@@ -269,8 +275,8 @@ public class GameController : MonoBehaviour
 
         _blockMatrix[row, col] = block;
 
-        _curRowCnt = row + 1; //Config.initRows;
-        _totalRowCnt = row + 1; //Config.initRows;
+        _curRowCnt = row + 1;
+        _totalRowCnt = row + 1;
     }
 
     public void GreatPressureBlock(int count)
@@ -286,12 +292,12 @@ public class GameController : MonoBehaviour
                 yOffset = _curMaxRowCnt - Config.matrixRows + i;
             }
             Debug.Log("-- create pressure _curMaxRowCnt:" + _curMaxRowCnt + " - initRow:" + initRow + " - yOffset:" + yOffset);
-            var pressure = PressureBlock.CreatePressureObject(initRow, _pressureInfo[i].Key, _blockBoardObj.transform, this);
+            var pressure = PressureBlock.CreatePressureObject(initRow, _pressureInfo[i].Key, _pressureBoardObj.transform, this);
             pressure.GetComponent<RectTransform>().sizeDelta = new Vector2(_pressureInfo[i].Key * Config.blockWidth, _pressureInfo[i].Value * Config.blockHeight - 15);
-            float posx = Config.blockXPosShit - Config.blockWidth / 2;
-            float posy = 840 - (_totalRowCnt - Config.initRows - yOffset) * Config.blockHeight;
+            float posx = Config.XPosShift - Config.blockWidth / 2;
+            float posy = Config.YPosShift - (_totalRowCnt - Config.initRows - yOffset) * Config.blockHeight;
             pressure.transform.localPosition = new Vector3(posx, posy, 0);
-            pressure.gameObject.name = "pressure + " + pressure.Row_y;
+            pressure.gameObject.name = "pressure + " + pressure.Row;
             if (_curMaxRowCnt < Config.matrixRows)
             {
                 pressure.NeedFall = true;
@@ -481,8 +487,8 @@ public class GameController : MonoBehaviour
         for (int i = 0; i < _PressureMatrix.Count; i++)
         {
             var item = _PressureMatrix[i];
-            item.Row_y++;
-            item.gameObject.name = "pressure + " + item.Row_y;
+            item.Row++;
+            item.gameObject.name = "pressure + " + item.Row;
         }
     }
 
@@ -520,7 +526,7 @@ public class GameController : MonoBehaviour
     {
         foreach (var pressure in _PressureMatrix)
         {
-            if (pressure.Row_y == row)
+            if (pressure.Row == row)
                 return pressure;
         }
         return null;
@@ -539,8 +545,8 @@ public class GameController : MonoBehaviour
         _curMaxRowCnt = _curRowCnt;
         foreach (var item in _PressureMatrix)
         {
-            if (item.Row_y > _curMaxRowCnt && item.fallCnt == 0)
-                _curMaxRowCnt = item.Row_y;
+            if (item.Row > _curMaxRowCnt && item.fallCnt == 0)
+                _curMaxRowCnt = item.Row;
         }
         _curRowCnt += 1;
         _curMaxRowCnt += 1;
@@ -553,7 +559,7 @@ public class GameController : MonoBehaviour
         foreach (BlockData data in newRow)
         {
             var block = Block.CreateBlockObject(data.row, data.col, (int)data.type, _blockBoardObj.transform, this);
-            block.transform.localPosition = new Vector3(Config.blockXPosShit + data.col * Config.blockWidth, (-_totalRowCnt + data.row + 1) * Config.blockHeight, 0);
+            block.transform.localPosition = new Vector3(Config.XPosShift + data.col * Config.blockWidth, (-_totalRowCnt + data.row + 1) * Config.blockHeight, 0);
             block.BlockOperationEvent += OnBlockOperation;
             block.IsLocked = true;
             pressure._genBlocks.Add(block);
@@ -606,7 +612,7 @@ public class GameController : MonoBehaviour
         foreach (BlockData item in newRow)
         {
             var block = Block.CreateBlockObject(0, item.col, (int)item.type, _blockBoardObj.transform, this);
-            block.transform.localPosition = new Vector3(Config.blockXPosShit + item.col * Config.blockWidth, -_totalRowCnt * Config.blockHeight, 0);
+            block.transform.localPosition = new Vector3(Config.XPosShift + item.col * Config.blockWidth, -_totalRowCnt * Config.blockHeight, 0);
             block.BlockOperationEvent += OnBlockOperation;
 
             _blockMatrix[0, item.col] = block;
@@ -659,16 +665,16 @@ public class GameController : MonoBehaviour
             for (int i = 0; i < _PressureMatrix.Count; i++)
             {
                 var pressure = _PressureMatrix[i];
-                if (pressure.Row_y != row)
+                if (pressure.Row != row)
                 {
                     if (logFlag)
-                        Debug.LogError(_boardType + " -- row:" + row + " -- Row_y:" + pressure.Row_y + " -- i:" + i);
+                        Debug.LogError(_boardType + " -- row:" + row + " -- Row:" + pressure.Row + " -- i:" + i);
                     break;
                 }
                 bool underFall = true;
-                for (int j = 0; j < pressure.xNum && pressure.Row_y < Config.matrixRows; j++)
+                for (int j = 0; j < pressure.xNum && pressure.Row < Config.matrixRows; j++)
                 {
-                    var item = _blockMatrix[pressure.Row_y - 1, j];
+                    var item = _blockMatrix[pressure.Row - 1, j];
                     if (item != null && item.Type != BlockType.None && item.fallCnt == 0)
                     {
                         underFall = false;
@@ -681,7 +687,7 @@ public class GameController : MonoBehaviour
                 row++;
                 if (pressure.fallCnt == 0 && pressure.IsLocked == false)
                 {
-                    Debug.Log(_boardType + " -- above pressure[" + pressure.Row_y + " - " + pressure.xNum + "] fall");
+                    Debug.Log(_boardType + " -- above pressure[" + pressure.Row + " - " + pressure.xNum + "] fall");
                     pressure.NeedFall = true;
                     pressure.fallCnt = -1;
                     logFlag = true;
@@ -764,12 +770,12 @@ public class GameController : MonoBehaviour
             for (int i = 0; i < _PressureMatrix.Count; i++)
             {
                 var pressure = _PressureMatrix[i];
-                if (pressure.Row_y != row)
+                if (pressure.Row != row)
                     break;
                 bool underFall = true;
-                for (int j = 0; j < pressure.xNum && pressure.Row_y < Config.matrixRows; j++)
+                for (int j = 0; j < pressure.xNum && pressure.Row < Config.matrixRows; j++)
                 {
-                    var item = _blockMatrix[pressure.Row_y - 1, j];
+                    var item = _blockMatrix[pressure.Row - 1, j];
                     if (item != null && item.Type != BlockType.None && item.fallCnt == 0)
                     {
                         underFall = false;
@@ -781,7 +787,7 @@ public class GameController : MonoBehaviour
                 row++;
                 if (pressure.fallCnt == 0 && pressure.IsLocked == false)
                 {
-                    Debug.Log(_boardType + " -- above pressure[" + pressure.Row_y + " - " + pressure.xNum + "] fall");
+                    Debug.Log(_boardType + " -- above pressure[" + pressure.Row + " - " + pressure.xNum + "] fall");
                     pressure.NeedFall = true;
                     pressure.fallCnt = -1;
 
@@ -935,14 +941,14 @@ public class GameController : MonoBehaviour
     {
         UpdateMaxCnt();
 
-        Debug.Log(_boardType + " -- pressure[" + pressure.Row_y + " - " + pressure.xNum + "] move proc");
+        Debug.Log(_boardType + " -- pressure[" + pressure.Row + " - " + pressure.xNum + "] move proc");
         bool underFall = true;
         // 判断下方的压力块
         foreach (var item in _PressureMatrix)
         {
-            if ((pressure.Row_y == item.Row_y + 1) && (item.fallCnt == 0))
+            if ((pressure.Row == item.Row + 1) && (item.fallCnt == 0))
             {
-                Debug.Log(_boardType + " -- pressure.Row_y:" + pressure.Row_y + " - item.Row_y:" + item.Row_y + " - item.fallCnt:" + item.fallCnt);
+                Debug.Log(_boardType + " -- pressure.Row:" + pressure.Row + " - item.Row:" + item.Row + " - item.fallCnt:" + item.fallCnt);
                 underFall = false;
                 break;
             }
@@ -953,7 +959,7 @@ public class GameController : MonoBehaviour
         // 判断下方的方块
         for (int j = 0; j < pressure.xNum; j++)
         {
-            var item = _blockMatrix[pressure.Row_y - 1, j];
+            var item = _blockMatrix[pressure.Row - 1, j];
             if (item != null && item.Type != BlockType.None && item.fallCnt == 0)
             {
                 underFall = false;
@@ -964,7 +970,7 @@ public class GameController : MonoBehaviour
             return;
 
         // 压力块下落
-        Debug.Log(_boardType + " -- self pressure[" + pressure.Row_y + " - " + pressure.xNum + "] fall");
+        Debug.Log(_boardType + " -- self pressure[" + pressure.Row + " - " + pressure.xNum + "] fall");
         if (pressure.fallCnt == 0 && pressure.IsLocked == false)
         {
             pressure.NeedFall = true;
@@ -972,7 +978,7 @@ public class GameController : MonoBehaviour
         }
 
         // 处理压力块上方的方块
-        int row = pressure.Row_y + 1;
+        int row = pressure.Row + 1;
         if (row <= Config.rows)
         {
             for (int i = 0; i < pressure.xNum; i++)
@@ -995,7 +1001,7 @@ public class GameController : MonoBehaviour
         int col = block.Column;
         foreach (var pressure in _PressureMatrix)
         {
-            if ((pressure.Row_y == row + 1) && (pressure.xNum > col) && (pressure.IsLocked == false))
+            if ((pressure.Row == row + 1) && (pressure.xNum > col) && (pressure.IsLocked == false))
             {
                 pressure.IsTagged = true;
                 break;
@@ -1006,10 +1012,10 @@ public class GameController : MonoBehaviour
     // 解锁压力块逻辑
     public void PressureTagged(PressureBlock pressure)
     {
-        Debug.Log(_boardType + " -- pressure[" + pressure.Row_y + " - " + pressure.xNum + "] tag proc");
+        Debug.Log(_boardType + " -- pressure[" + pressure.Row + " - " + pressure.xNum + "] tag proc");
         if (_boardType == CheckerboardType.mine && IsMultiPlayer())
         {
-            var newBlocks = SpawnBlock(pressure.xNum, pressure.Row_y, 0);
+            var newBlocks = SpawnBlock(pressure.xNum, pressure.Row, 0);
             SendNet(newBlocks, pressure);
         }
     }
@@ -1027,7 +1033,7 @@ public class GameController : MonoBehaviour
                 type = (int)data.type,
             });
         }
-        Debug.Log(_boardType + " -- send createBlock pressure[" + pressure.Row_y + " - " + pressure.xNum + "]");
+        Debug.Log(_boardType + " -- send createBlock pressure[" + pressure.Row + " - " + pressure.xNum + "]");
         NetSender.Send<Protocol.createBlock>(req, (data) =>
         {
             var resp = data as SprotoType.createBlock.response;
@@ -1035,7 +1041,7 @@ public class GameController : MonoBehaviour
             if (resp.e == 0)
             {
                 pressure.PlayUnlockAnim();
-                Debug.Log(_boardType + " -- createBlock response pressure[" + pressure.Row_y + " - " + pressure.xNum + "]");
+                Debug.Log(_boardType + " -- createBlock response pressure[" + pressure.Row + " - " + pressure.xNum + "]");
                 AddNewBlock(_list, pressure);
             }
         });
