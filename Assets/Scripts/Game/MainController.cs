@@ -576,7 +576,6 @@ public class MainController : GameController
             CheckRecoverShield();
             UpdateSkill1Cd();
             CheckShowDrag();
-            Debug.LogError(MainManager.Ins.Timer);
         }
     }
     void CheckShowDrag()
