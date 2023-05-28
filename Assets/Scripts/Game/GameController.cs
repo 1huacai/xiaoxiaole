@@ -670,7 +670,7 @@ public class GameController : MonoBehaviour
             for (int i = 0; i < _PressureMatrix.Count; i++)
             {
                 var pressure = _PressureMatrix[i];
-                if (pressure.Row != row)
+                if (pressure.Row > row)
                 {
                     if (logFlag)
                         Debug.LogError(_boardType + " -- row:" + row + " -- Row:" + pressure.Row + " -- i:" + i);
@@ -686,8 +686,14 @@ public class GameController : MonoBehaviour
                         break;
                     }
                 }
+                if (i > 0)
+                {
+                    var underPress = _PressureMatrix[i - 1];
+                    if (underPress != null && underPress.Row == pressure.Row - 1 &&  _PressureMatrix[i - 1].fallCnt == 0)
+                        underFall = false;
+                }
                 if (underFall == false)
-                    break;
+                    continue;
 
                 row++;
                 if (pressure.fallCnt == 0 && pressure.IsLocked == false)
@@ -726,7 +732,6 @@ public class GameController : MonoBehaviour
                     }
                 }
             }
-
             return;
         }
 
@@ -775,7 +780,7 @@ public class GameController : MonoBehaviour
             for (int i = 0; i < _PressureMatrix.Count; i++)
             {
                 var pressure = _PressureMatrix[i];
-                if (pressure.Row != row)
+                if (pressure.Row > row)
                     break;
                 bool underFall = true;
                 for (int j = 0; j < pressure.xNum && pressure.Row < Config.matrixRows; j++)
@@ -787,8 +792,14 @@ public class GameController : MonoBehaviour
                         break;
                     }
                 }
+                if (i > 0)
+                {
+                    var underPress = _PressureMatrix[i - 1];
+                    if (underPress != null && underPress.Row == pressure.Row - 1 && _PressureMatrix[i - 1].fallCnt == 0)
+                        underFall = false;
+                }
                 if (underFall == false)
-                    break;
+                    continue;
                 row++;
                 if (pressure.fallCnt == 0 && pressure.IsLocked == false)
                 {
@@ -825,7 +836,6 @@ public class GameController : MonoBehaviour
                     }
                 }
             }
-
             return;
         }
 
