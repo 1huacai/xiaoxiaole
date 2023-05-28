@@ -1172,6 +1172,8 @@ public class GameController : MonoBehaviour
                     if (cnt > 3 && cnt - 3 <= 8 && MainManager.Ins.Timer < MainManager.Ins._mainController._emmyRoleData.UseRecoverSkillTime)
                         MainManager.Ins._mainController.ShowEmmeyEffect(SKillType.huixue);
                 }
+                MainManager.Ins._mainController._minRoleData.UpdateSkill2(cnt);
+                MainManager.Ins._mainController.UpdateSkill2Cd();
             }
         }
     }

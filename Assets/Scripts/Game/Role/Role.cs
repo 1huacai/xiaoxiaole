@@ -18,7 +18,7 @@ public class Role
     {
         get
         {
-            return 10000 + side;
+            return 10000 + (side * 10);
         }
     }
 
@@ -109,6 +109,7 @@ public class Role
         else
         {
             //快速充能
+            ChangeShieldTime = MainManager.Ins.Timer + 5;
         }
     }
     public bool IsRecoverHpSKill
@@ -189,7 +190,7 @@ public class Role
     public void ChangeShieldValue(int changeValue)
     {
         if(Shield < MaxShield)
-            HudManager.Ins.ShowHud(Shield + changeValue >= MaxShield ? MaxShield - changeValue : changeValue, HudType.jiadun, isMin ? RoleType.min : RoleType.emmey);
+            HudManager.Ins.ShowHud(Shield + changeValue > MaxShield ? (Shield + changeValue) - MaxShield : changeValue, HudType.jiadun, isMin ? RoleType.min : RoleType.emmey);
         if (Shield + changeValue >= MaxShield)
             Shield = MaxShield;
         else
