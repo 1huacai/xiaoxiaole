@@ -1134,6 +1134,7 @@ public class GameController : MonoBehaviour
                     chain.chainNum = garbage.ChainCnt;
                 }
                 MainManager.Ins._mainController._minRoleData.UpdateSkill2(cnt);
+                MainManager.Ins._mainController.UpdateSkill2Cd();
             }
         }
     }

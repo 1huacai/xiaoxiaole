@@ -48,7 +48,11 @@ public class MainController : GameController
     private Text _skill2Cd;
 
     private Image _skill_Mask;
+    private Image _skill_MaskBg;
     private Image _skill2_Slider;
+
+    private Image _skil2_Mask;
+    private Image _skil2_MaskBg;
 
     public GameObject _DragBlockIma;
 
@@ -110,8 +114,15 @@ public class MainController : GameController
         _skill1Cd = _skill1Btn.transform.Find("Text").GetComponent<Text>();
         _skill2Cd = _skill2Btn.transform.Find("Text").GetComponent<Text>();
 
+        _skill_MaskBg = _skill1Btn.transform.Find("CD/mask").GetComponent<Image>();
         _skill_Mask = _skill1Btn.transform.Find("CD").GetComponent<Image>();
         _skill2_Slider = _skill2Btn.transform.Find("CDmask").GetComponent<Image>();
+
+        _skill_Mask.gameObject.SetActive(false);
+
+        _skil2_Mask = _skill2Btn.transform.Find("CDmask").GetComponent<Image>();
+        _skil2_MaskBg = _skill2Btn.transform.Find("CDmask/mask").GetComponent<Image>();
+        _skil2_Mask.gameObject.SetActive(false);
 
         InitRoleData(MainManager.Ins.players);
 
@@ -135,14 +146,14 @@ public class MainController : GameController
                 _minRoleData = new Role(infos[i].rname);
                 _minRoleData.side = (int)infos[i].render;
                 _minRoleData.isMin = true;
-                _minName.text = infos[i].rname;
+                _minName.text = "玩家";// infos[i].rname;
             }
             else
             {
                 _emmyRoleData = new Role(infos[i].rname);
                 _emmyRoleData.side = (int)infos[i].render;
                 _emmyRoleData.isMin = false;
-                _emmyName.text = infos[i].rname;
+                _emmyName.text = "对手";// infos[i].rname;
             }
         }
 
@@ -538,6 +549,8 @@ public class MainController : GameController
             _skill_Mask.gameObject.SetActive(true);
             _skill1Cd.gameObject.SetActive(true);
             _skill1Cd.text = string.Format("{0}", _minRoleData.Cd - MainManager.Ins.Timer);
+            _skill_Mask.fillAmount = 1 -  (float)(_minRoleData.Cd - MainManager.Ins.Timer) / 15;
+            _skill_MaskBg.fillAmount = (float)(_minRoleData.Cd - MainManager.Ins.Timer) / 15;
         }
         else
         {
@@ -551,12 +564,17 @@ public class MainController : GameController
         {
             _skill2Cd.gameObject.SetActive(false);
             //_skill2Cd.text = string.Format("{0}/{1}", _minRoleData.Skill_2_Value >= 30 ? 30 : _minRoleData.Skill_2_Value, 30);
-            _skill2_Slider.fillAmount = _minRoleData.Skill_2_Value >= 30 ? 1 : (float)_minRoleData.Skill_2_Value / 30;
+            // _skill2_Slider.fillAmount = _minRoleData.Skill_2_Value >= 30 ? 1 : (float)_minRoleData.Skill_2_Value / 30;
+
+            _skil2_Mask.gameObject.SetActive(true);
+            _skil2_Mask.fillAmount = _minRoleData.Skill_2_Value >= 30 ? 1 : (float)_minRoleData.Skill_2_Value / 30;
+            _skil2_MaskBg.fillAmount = _minRoleData.Skill_2_Value >= 30 ? 0 :  1 - (float)_minRoleData.Skill_2_Value / 30;
         }
         else
         {
-            _skill2_Slider.fillAmount = 0;
+            //_skill2_Slider.fillAmount = 0;
             _skill2Cd.gameObject.SetActive(false);
+            _skil2_Mask.gameObject.SetActive(false);
         }
     }
 
@@ -633,7 +651,7 @@ public class MainController : GameController
         var effectData = Resources.Load<SkeletonDataAsset>(path);
         Material minmaterial = new Material(Shader.Find("Spine/SkeletonGraphic"));
         SkeletonGraphic Minffect = SkeletonGraphic.NewSkeletonGraphicGameObject(effectData, _minRoleeffect, minmaterial);
-        Minffect.transform.localPosition = type != SKillType.huixue ? new Vector3(Minffect.transform.localPosition.x, Minffect.transform.localPosition.y + 100, Minffect.transform.localPosition.z) : Minffect.transform.localPosition;
+        Minffect.transform.localPosition = type != SKillType.huixue ? new Vector3(Minffect.transform.localPosition.x, Minffect.transform.localPosition.y + 160, Minffect.transform.localPosition.z) : Minffect.transform.localPosition;
         Minffect.transform.localScale = type != SKillType.toushiche ? new Vector3(3, 3, 3) : Vector3.one;
 
         Minffect.skeletonDataAsset = effectData;
@@ -660,7 +678,7 @@ public class MainController : GameController
         var effectData = Resources.Load<SkeletonDataAsset>(path);
         Material minmaterial = new Material(Shader.Find("Spine/SkeletonGraphic"));
         SkeletonGraphic Emmeyeffect = SkeletonGraphic.NewSkeletonGraphicGameObject(effectData, _emmyRoleeffect, minmaterial);
-        Emmeyeffect.transform.localPosition = type != SKillType.huixue ? new Vector3(Emmeyeffect.transform.localPosition.x, Emmeyeffect.transform.localPosition.y + 100, Emmeyeffect.transform.localPosition.z) : Emmeyeffect.transform.localPosition;
+        Emmeyeffect.transform.localPosition = type != SKillType.huixue ? new Vector3(Emmeyeffect.transform.localPosition.x, Emmeyeffect.transform.localPosition.y + 160, Emmeyeffect.transform.localPosition.z) : Emmeyeffect.transform.localPosition;
         Emmeyeffect.transform.localScale = type != SKillType.toushiche ? new Vector3(3, 3, 3) : Vector3.one;
 
         Emmeyeffect.skeletonDataAsset = effectData;
