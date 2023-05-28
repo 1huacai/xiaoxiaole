@@ -50,6 +50,8 @@ public class MainController : GameController
     private Image _skill_Mask;
     private Image _skill2_Slider;
 
+    public GameObject _DragBlockIma;
+
 
     void Awake()
     {
@@ -101,6 +103,9 @@ public class MainController : GameController
         _emmyShield = GameObject.Find(Config.uiGameRoot + "/Player2/HpBar/Shield").GetComponent<Slider>();
         _emmyHpLable = GameObject.Find(Config.uiGameRoot + "/Player2/HpBar/Hp/Text").GetComponent<Text>();
         _emmyShieldLable = GameObject.Find(Config.uiGameRoot + "/Player2/HpBar/Shield/Text").GetComponent<Text>();
+
+        _DragBlockIma = GameObject.Find("DragBlock");
+        _DragBlockIma.SetActive(false);
 
         _skill1Cd = _skill1Btn.transform.Find("Text").GetComponent<Text>();
         _skill2Cd = _skill2Btn.transform.Find("Text").GetComponent<Text>();
@@ -323,6 +328,9 @@ public class MainController : GameController
             UpdateSkill2Cd();
             if (_minRoleData.side == 1)
                 ShowEmmeyEffect(SKillType.toushiche);
+
+            if (_minRoleData.side == 2)
+                ShowMinEffect(SKillType.huixue);
         });
     }
 
@@ -404,6 +412,9 @@ public class MainController : GameController
             GreatPressureBlock((int)data.count);
             _minRoleData.ChangeHpValue((int)(data.count) - 1);
             UpdateMinSlider();
+
+
+            _emmyRoleData.UpdateSkill2((int)data.count);
         }
     }
 
@@ -413,24 +424,25 @@ public class MainController : GameController
         PlayAnima("hurt");
 
         var value = data.skill_id % 1000;
-        if (value == 2)
+        if (value == 1)//女
         {
             MainManager.Ins.DragBlock = false;
             MainManager.Ins.DragTime = MainManager.Ins.Timer + 5;
         }
-        else if (value > 1 && value < 10)
+        else if (value == 2 )//男
         {
-            _minRoleData.ChangeShieldTime = MainManager.Ins.Timer + 5;
+            _emmyRoleData.ChangeShieldTime = MainManager.Ins.Timer + 5;
         }
-        else if (data.skill_id % 10000 < 2)
+        else if (data.skill_id % 1000 == 10)//女
         {
             _minRoleData.ChangeHpValue(30);
             UpdateMinSlider();
             ShowMinEffect(SKillType.toushiche);
         }
-        else if (data.skill_id % 10000 > 1)
+        else if (data.skill_id % 1000 == 20)//男
         {
             _emmyRoleData.UseSkill2();
+            ShowEmmeyEffect(SKillType.huixue);
         }
     }
 
@@ -563,7 +575,16 @@ public class MainController : GameController
             CheckGameOver();
             CheckRecoverShield();
             UpdateSkill1Cd();
+            CheckShowDrag();
+            Debug.LogError(MainManager.Ins.Timer);
         }
+    }
+    void CheckShowDrag()
+    {
+        if (MainManager.Ins.Timer > MainManager.Ins.DragTime && MainManager.Ins.DragTime != 0)
+            MainManager.Ins.DragBlock = true;
+        if (_DragBlockIma.activeSelf != !MainManager.Ins.DragBlock)
+            _DragBlockIma.SetActive(!MainManager.Ins.DragBlock);
     }
     void CheckGameOver()
     {
@@ -587,14 +608,19 @@ public class MainController : GameController
 
     void CheckRecoverShield()
     {
-        if (MainManager.Ins.Timer - 3 > _minRoleData.hurtTimer)
+        if (MainManager.Ins.Timer < _minRoleData.ChangeShieldTime && _minRoleData.ChangeShieldTime != 0)
+            MainManager.Ins._mainController.ShowMinEffect(SKillType.dun);
+        if (MainManager.Ins.Timer < _emmyRoleData.ChangeShieldTime && _emmyRoleData.ChangeShieldTime != 0)
+            MainManager.Ins._mainController.ShowEmmeyEffect(SKillType.dun);
+
+        if (MainManager.Ins.Timer - 3 > _minRoleData.hurtTimer && _minRoleData.hurtTimer != 0 )
         {
-            _minRoleData.ChangeShieldValue(MainManager.Ins.Timer < _minRoleData.ChangeShieldTime ? 5 : 2);
+            _minRoleData.ChangeShieldValue(MainManager.Ins.Timer < _minRoleData.ChangeShieldTime && _minRoleData.ChangeShieldTime != 0 ? 5 : 2);
             UpdateMinSlider();
         }
-        if (MainManager.Ins.Timer - 3 > _emmyRoleData.hurtTimer)
+        if (MainManager.Ins.Timer - 3 > _emmyRoleData.hurtTimer && _emmyRoleData.hurtTimer != 0)
         {
-            _emmyRoleData.ChangeShieldValue(2);
+            _emmyRoleData.ChangeShieldValue(MainManager.Ins.Timer < _emmyRoleData.ChangeShieldTime && _emmyRoleData.ChangeShieldTime != 0 ? 5 : 2);
             UpdateEmmySlider();
         }
     }
@@ -607,7 +633,9 @@ public class MainController : GameController
 
         var effectData = Resources.Load<SkeletonDataAsset>(path);
         Material minmaterial = new Material(Shader.Find("Spine/SkeletonGraphic"));
-        Minffect = SkeletonGraphic.NewSkeletonGraphicGameObject(effectData, _minRoleeffect, minmaterial);
+        SkeletonGraphic Minffect = SkeletonGraphic.NewSkeletonGraphicGameObject(effectData, _minRoleeffect, minmaterial);
+        Minffect.transform.localPosition = type != SKillType.huixue ? new Vector3(Minffect.transform.localPosition.x, Minffect.transform.localPosition.y + 100, Minffect.transform.localPosition.z) : Minffect.transform.localPosition;
+        Minffect.transform.localScale = type != SKillType.toushiche ? new Vector3(3, 3, 3) : Vector3.one;
 
         Minffect.skeletonDataAsset = effectData;
         Minffect.initialSkinName = "default";
@@ -622,8 +650,6 @@ public class MainController : GameController
             Destroy(Minffect.gameObject);
         };
     }
-    SkeletonGraphic Minffect;
-    SkeletonGraphic Emmeyeffect;
 
     public void ShowEmmeyEffect(SKillType type)
     {
@@ -634,19 +660,21 @@ public class MainController : GameController
 
         var effectData = Resources.Load<SkeletonDataAsset>(path);
         Material minmaterial = new Material(Shader.Find("Spine/SkeletonGraphic"));
-        Minffect = SkeletonGraphic.NewSkeletonGraphicGameObject(effectData, _minRoleeffect, minmaterial);
+        SkeletonGraphic Emmeyeffect = SkeletonGraphic.NewSkeletonGraphicGameObject(effectData, _emmyRoleeffect, minmaterial);
+        Emmeyeffect.transform.localPosition = type != SKillType.huixue ? new Vector3(Emmeyeffect.transform.localPosition.x, Emmeyeffect.transform.localPosition.y + 100, Emmeyeffect.transform.localPosition.z) : Emmeyeffect.transform.localPosition;
+        Emmeyeffect.transform.localScale = type != SKillType.toushiche ? new Vector3(3, 3, 3) : Vector3.one;
 
-        Minffect.skeletonDataAsset = effectData;
-        Minffect.initialSkinName = "default";
-        Minffect.startingAnimation = "animation";
-        Minffect.startingLoop = false;
-        Minffect.MatchRectTransformWithBounds();
-        Minffect.material = minmaterial;
-        Minffect.Initialize(true);
+        Emmeyeffect.skeletonDataAsset = effectData;
+        Emmeyeffect.initialSkinName = "default";
+        Emmeyeffect.startingAnimation = "animation";
+        Emmeyeffect.startingLoop = false;
+        Emmeyeffect.MatchRectTransformWithBounds();
+        Emmeyeffect.material = minmaterial;
+        Emmeyeffect.Initialize(true);
 
-        Minffect.AnimationState.Complete += (a) =>
+        Emmeyeffect.AnimationState.Complete += (a) =>
         {
-            Destroy(Minffect.gameObject);
+            Destroy(Emmeyeffect.gameObject);
         };
     }
 }

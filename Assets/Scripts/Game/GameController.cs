@@ -1133,21 +1133,7 @@ public class GameController : MonoBehaviour
                     Chain chain = obj.gameObject.GetComponent<Chain>();
                     chain.chainNum = garbage.ChainCnt;
                 }
-            }
-            if (cnt >= 3)
-            {
-                if (this is MainController)
-                    MainManager.Ins._mainController._minRoleData.UpdateSkill2(cnt);
-                if (MainManager.Ins._mainController._minRoleData.IsRecoverHpSKill && this is RivalController)
-                {
-                    if (cnt > 3 && cnt - 3 <= 8 && MainManager.Ins.Timer < MainManager.Ins._mainController._minRoleData.UseRecoverSkillTime)
-                        MainManager.Ins._mainController.ShowMinEffect(SKillType.huixue);
-                }
-                else if (MainManager.Ins._mainController._emmyRoleData.IsRecoverHpSKill && this is MainController)
-                {
-                    if (cnt > 3 && cnt - 3 <= 8 && MainManager.Ins.Timer < MainManager.Ins._mainController._emmyRoleData.UseRecoverSkillTime)
-                        MainManager.Ins._mainController.ShowEmmeyEffect(SKillType.huixue);
-                }
+                MainManager.Ins._mainController._minRoleData.UpdateSkill2(cnt);
             }
         }
     }

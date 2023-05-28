@@ -5077,7 +5077,7 @@ RectTransform:
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!95 &2146153524
 Animator:
-  serializedVersion: 5
+  serializedVersion: 3
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -5090,12 +5090,10 @@ Animator:
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
+  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!114 &2146153526
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5173,6 +5171,7 @@ MonoBehaviour:
   _boardType: 0
   _blockBoardObj: {fileID: 0}
   _blockAreaObj: {fileID: 0}
+  _pressureBoardObj: {fileID: 0}
   _curGameBoardState: 0
   _multiPlayer: 0
   _PressureMatrix: []
