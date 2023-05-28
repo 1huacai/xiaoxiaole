@@ -118,6 +118,7 @@
     <None Include="Assets\Demigiant\DOTween\readme.txt" />
     <None Include="Assets\Resources\spineArt\effect\huixue\huixue.atlas.txt" />
     <None Include="Assets\Resources\spineArt\pressure\boom\yalikuai.atlas.txt" />
+    <None Include="Assets\Resources\spineArt\effect\dazhao\skeleton.atlas.txt" />
     <None Include="Assets\Resources\spineArt\block\boom\qizi.atlas.txt" />
     <None Include="Assets\Resources\spineArt\role2\Phoenix.atlas.txt" />
     <None Include="Assets\Demigiant\DOTween\DOTween.XML" />

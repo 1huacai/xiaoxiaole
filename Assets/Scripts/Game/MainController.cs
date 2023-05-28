@@ -54,6 +54,8 @@ public class MainController : GameController
     private Image _skil2_Mask;
     private Image _skil2_MaskBg;
 
+    private GameObject _skilleffect;
+
     public GameObject _DragBlockIma;
 
 
@@ -123,6 +125,11 @@ public class MainController : GameController
         _skil2_Mask = _skill2Btn.transform.Find("CDmask").GetComponent<Image>();
         _skil2_MaskBg = _skill2Btn.transform.Find("CDmask/mask").GetComponent<Image>();
         _skil2_Mask.gameObject.SetActive(false);
+
+        _skilleffect = _skill2Btn.transform.Find("skilleffect").gameObject;
+        _skilleffect.SetActive(false);
+
+
 
         InitRoleData(MainManager.Ins.players);
 
@@ -569,12 +576,14 @@ public class MainController : GameController
             _skil2_Mask.gameObject.SetActive(true);
             _skil2_Mask.fillAmount = _minRoleData.Skill_2_Value >= 30 ? 1 : (float)_minRoleData.Skill_2_Value / 30;
             _skil2_MaskBg.fillAmount = _minRoleData.Skill_2_Value >= 30 ? 0 :  1 - (float)_minRoleData.Skill_2_Value / 30;
+            _skilleffect.SetActive(false);
         }
         else
         {
             //_skill2_Slider.fillAmount = 0;
             _skill2Cd.gameObject.SetActive(false);
             _skil2_Mask.gameObject.SetActive(false);
+            _skilleffect.SetActive(true);
         }
     }
 
