@@ -117,7 +117,7 @@ public class MainController : GameController
         _skill_MaskBg = _skill1Btn.transform.Find("CD/mask").GetComponent<Image>();
         _skill_Mask = _skill1Btn.transform.Find("CD").GetComponent<Image>();
         _skill2_Slider = _skill2Btn.transform.Find("CDmask").GetComponent<Image>();
-
+        _skill1Cd.gameObject.SetActive(false);
         _skill_Mask.gameObject.SetActive(false);
 
         _skil2_Mask = _skill2Btn.transform.Find("CDmask").GetComponent<Image>();
