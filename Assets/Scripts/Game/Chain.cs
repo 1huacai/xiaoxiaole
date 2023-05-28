@@ -19,9 +19,7 @@ public class Chain : MonoBehaviour
         Texture2D _textrue = Resources.Load(Config.textureChainPath + chainNum.ToString("D2")) as Texture2D;
         _image.sprite = Sprite.Create(_textrue, new Rect(0, 0, _textrue.width, _textrue.height), new Vector2(1f, 1f));
 
-        var seq = DOTween.Sequence();
-        seq.Append(transform.DOLocalMoveY(transform.localPosition.y + _moveDis, _moveDuration));
-        seq.AppendCallback(() =>
+        transform.DOLocalMoveY(transform.localPosition.y + _moveDis, _moveDuration).OnComplete(() =>
         {
             //this.gameObject.SetActive(false);
             GameObject.Destroy(gameObject);

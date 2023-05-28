@@ -84,7 +84,7 @@ public class Block : MonoBehaviour
             Vector3 curPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             float xOffset = Mathf.Abs(curPosition.x - _dragBeginPos.x);
             float yOffset = Mathf.Abs(curPosition.y - _dragBeginPos.y);
-            if (xOffset > Config.blockWidth / 2)
+            if (xOffset > Config.blockWidth / 5)
             {
                 if (xOffset > Config.blockWidth)
                     return;
@@ -93,7 +93,7 @@ public class Block : MonoBehaviour
                 if (curPosition.x < _dragBeginPos.x && _column > 0)
                     BlockOperationEvent(_row, _column - 1, BlockOperation.DragHalf);
             }
-            else if (yOffset > Config.blockHeight / 2)
+            else if (yOffset > Config.blockHeight / 5)
             {
                 if (yOffset > Config.blockHeight)
                     return;
@@ -340,9 +340,6 @@ public class Block : MonoBehaviour
                 Debug.Log(_controller._boardType + " -- block[" + Row + "," + Column + " - " + Type + "] destroyed");
                 _state |= 1 << (int)BlockState.Blanked;
                 DoDestroy();
-
-                // 播放飞星特效
-
             }
             else
                 _state &= ~(1 << (int)BlockState.Blanked);
@@ -446,7 +443,6 @@ public class Block : MonoBehaviour
         block.Row = row;
         block.Column = col;
         block.gameObject.name = row + " + " + col;
-        // block.transform.localScale = new Vector3(0.8f, 0.8f, 0.8f);
         block._controller = ctrl;
         // Debug.Log(ctrl._boardType + " -- new block["+Row+","+Column+" - "+Type+"]");
         return block;

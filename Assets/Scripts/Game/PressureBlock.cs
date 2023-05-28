@@ -170,7 +170,7 @@ public class PressureBlock : MonoBehaviour
         };
     }
 
-    public static PressureBlock CreatePressureObject(int row, int xNum, Transform parent, GameController ctrl)
+    public static PressureBlock CreatePressureObject(int row, int xNum, Transform parent, GameController controller)
     {
         GameObject obj = Instantiate(Config._pressureBlockObj, parent) as GameObject;
         if (obj == null)
@@ -184,8 +184,8 @@ public class PressureBlock : MonoBehaviour
         pressure._anim = obj.GetComponent<Animator>();
         pressure.Row = row;
         pressure.xNum = xNum;
-        pressure._controller = ctrl;
-        Debug.Log(ctrl._boardType + " -- new pressure[" + pressure.Row + " - " + pressure.xNum + "]");
+        pressure._controller = controller;
+        Debug.Log(controller._boardType + " -- new pressure[" + pressure.Row + " - " + pressure.xNum + "]");
         return pressure;
     }
 

@@ -13,6 +13,7 @@ public class GameController : MonoBehaviour
     public GameObject _blockBoardObj; // 方块面板区
     public GameObject _blockAreaObj; // 方块面板区底图
     public GameObject _pressureBoardObj; // 压力块面板区
+    public GameObject _effectObj; // 特效
 
     public Dictionary<GameBoardState, StateBase> _states;
     public GameBoardState _curGameBoardState = GameBoardState.Idle;
@@ -109,6 +110,7 @@ public class GameController : MonoBehaviour
         _blockBoardObj = transform.Find("BlockBoard").gameObject;
         _blockAreaObj = _blockBoardObj.transform.Find("AreaBottom").gameObject;
         _pressureBoardObj = transform.Find("PressureBoard").gameObject;
+        _effectObj = transform.Find("Effect").gameObject;
 
         // _gameReady = true;
         _gameStart = false;
@@ -227,6 +229,8 @@ public class GameController : MonoBehaviour
 
         Transform _pressureTrans = _pressureBoardObj.transform;
         _pressureTrans.DOLocalMoveY(moveDis, 0.2f);
+        Transform _effectTrans = _effectObj.transform;
+        _effectTrans.DOLocalMoveY(moveDis, 0.2f);
     }
 
     public void RaiseOneStep()
@@ -235,7 +239,9 @@ public class GameController : MonoBehaviour
         Transform _areaTran = _blockAreaObj.transform;
         _tran.DOLocalMoveY(_tran.localPosition.y + Config.raiseDis, 0);
         Transform _pressureTrans = _pressureBoardObj.transform;
-        _pressureTrans.DOLocalMoveY(_tran.localPosition.y + Config.raiseDis, 0);
+        _pressureTrans.DOLocalMoveY(_pressureTrans.localPosition.y + Config.raiseDis, 0);
+        Transform _effectTrans = _effectObj.transform;
+        _effectTrans.DOLocalMoveY(_effectTrans.localPosition.y + Config.raiseDis, 0);
 
         if (_tran.localPosition.y > (_totalRowCnt - Config.initRows + 1) * Config.blockHeight - 15)
         {
@@ -310,7 +316,6 @@ public class GameController : MonoBehaviour
 
     public Garbage GetGarbageInst()
     {
-        Debug.Log("======================= get garbage inst idx:" + _poolIdx);
         if (_poolIdx >= 50)
             _poolIdx = 0;
         var garbage = _garbagePool[_poolIdx];
@@ -861,6 +866,8 @@ public class GameController : MonoBehaviour
 
                 if (garbage.Parent.ContainsKey(trans) == false)
                     garbage.Parent.Add(trans, block.transform);
+                // else
+                    // garbage.Parent[trans] = block.transform;
             }
             foreach (var matchedBlock in h_matchList)
             {
@@ -912,6 +919,8 @@ public class GameController : MonoBehaviour
 
                     if (garbage.Parent.ContainsKey(trans) == false)
                         garbage.Parent.Add(trans, block.transform);
+                    // else
+                        // garbage.Parent[trans] = block.transform;
                 }
             }
             foreach (var matchedBlock in v_matchList)
@@ -1105,10 +1114,11 @@ public class GameController : MonoBehaviour
                         {
                             Debug.Log(" -- show combo - garbage:" + garbage.ID + " - trans:" + trans);
                             // 己方显示combo
-                            GameObject obj = GameObject.Instantiate(Config._comboObj, garbage.Parent[trans]) as GameObject;
-                            obj.transform.localPosition = new Vector3(0, 0, -1);
+                            GameObject obj = GameObject.Instantiate(Config._comboObj, _effectObj.transform) as GameObject;
+                            Vector3 relative = garbage.Parent[trans].localPosition;
+                            obj.transform.localPosition = new Vector3(relative.x, relative.y, 0);
                             Combo comb = obj.gameObject.GetComponent<Combo>();
-                            comb.Show(cnt);
+                            comb.Show(cnt, this);
 
                             // 对手生成压力块
                             MainManager.Ins._rivalController.GreatPressureBlock(cnt);
@@ -1128,11 +1138,25 @@ public class GameController : MonoBehaviour
                 if (garbage.ChainCnt >= 2)
                 {
                     Debug.Log(" -- show chain - garbage:" + garbage.ID + " - trans:" + trans);
-                    GameObject obj = GameObject.Instantiate(Config._chainObj, garbage.Parent[trans]) as GameObject;
-                    obj.transform.localPosition = new Vector3(0, 0, -1);
+                    GameObject obj = GameObject.Instantiate(Config._chainObj, _effectObj.transform) as GameObject;
+                    Vector3 relative = garbage.Parent[trans].localPosition;
+                    obj.transform.localPosition = new Vector3(relative.x, relative.y, 0);
                     Chain chain = obj.gameObject.GetComponent<Chain>();
                     chain.chainNum = garbage.ChainCnt;
                 }
+            }
+            // star
+            if (cnt >= 3 && !garbage.StarShowed.Contains(trans))
+            {
+                garbage.StarShowed.Add(trans);
+                GameObject star = GameObject.Instantiate(Config._starObj, _effectObj.transform) as GameObject;
+                Vector3 relative = garbage.Parent[trans].localPosition;
+                star.transform.localPosition = new Vector3(relative.x, relative.y, 0);
+                Transform role = Config.gameObj.transform.Find("Player1/role");
+                star.transform.DOMove(role.position, 1.0f).OnComplete(() =>
+                {
+                    GameObject.Destroy(star);
+                });
             }
             if (cnt >= 3)
             {

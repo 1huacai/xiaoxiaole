@@ -79,6 +79,9 @@ public class Config : ScriptableObject
     public const string pressureBlockPrefabPath = "Prefabs/PressureBlock";
     public static Object _pressureBlockObj = Resources.Load(pressureBlockPrefabPath);
 
+    public const string starPrefabPath = "Prefabs/Star";
+    public static Object _starObj = Resources.Load(starPrefabPath);
+
     public static List<Object> obstacleObjs = new List<Object>();
 
     public const string textureBlockPath = "Texture/block/panel";
@@ -173,11 +176,11 @@ public class Config : ScriptableObject
     public const int initRows = 7; // 初始行数
     public const int initCols = 6; // 初始列数
 
-    public const float blockWidth = 124.0f; // 方块宽度
-    public const float blockHeight = 124.0f; // 方块高度
+    public const float blockWidth = 126.0f; // 方块宽度
+    public const float blockHeight = 126.0f; // 方块高度
 
-    public const float XPosShift = -310.0f; // 方块位置x坐标偏移值
-    public const float YPosShift = 745.0f; // 方块位置y坐标偏移值
+    public const float XPosShift = -315.0f; // 方块位置x坐标偏移值
+    public const float YPosShift = 756.0f; // 方块位置y坐标偏移值
     public const int raiseSteps = 11; // 上升一行需要的步数
     public const float raiseDis = blockHeight / raiseSteps; // 每次上升的距离
     public const float moveDuration = 0.075f; // 方块滑动移动时间
