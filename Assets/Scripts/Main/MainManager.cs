@@ -85,6 +85,7 @@ public class HudManager
             {
                 GameObject obj = MainManager.LoadGameObject("Prefabs/windows/Hud");
                 obj.transform.SetParent(HudParent);
+                obj.transform.localPosition = new Vector3(-10000, 0, 0);
                 Enqu(obj);
             }
         }
