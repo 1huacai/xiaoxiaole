@@ -630,12 +630,12 @@ public class MainController : GameController
         if (MainManager.Ins.Timer < _emmyRoleData.ChangeShieldTime && _emmyRoleData.ChangeShieldTime != 0)
             MainManager.Ins._mainController.ShowEmmeyEffect(SKillType.dun);
 
-        if (MainManager.Ins.Timer - 3 > _minRoleData.hurtTimer && _minRoleData.hurtTimer != 0 )
+        if (MainManager.Ins.Timer - 6 > _minRoleData.hurtTimer && _minRoleData.hurtTimer != 0 )
         {
             _minRoleData.ChangeShieldValue(MainManager.Ins.Timer < _minRoleData.ChangeShieldTime && _minRoleData.ChangeShieldTime != 0 ? 5 : 2);
             UpdateMinSlider();
         }
-        if (MainManager.Ins.Timer - 3 > _emmyRoleData.hurtTimer && _emmyRoleData.hurtTimer != 0)
+        if (MainManager.Ins.Timer - 6 > _emmyRoleData.hurtTimer && _emmyRoleData.hurtTimer != 0)
         {
             _emmyRoleData.ChangeShieldValue(MainManager.Ins.Timer < _emmyRoleData.ChangeShieldTime && _emmyRoleData.ChangeShieldTime != 0 ? 5 : 2);
             UpdateEmmySlider();

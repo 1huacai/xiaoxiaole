@@ -122,6 +122,7 @@
     <None Include="Assets\Resources\spineArt\role2\Phoenix.atlas.txt" />
     <None Include="Assets\Demigiant\DOTween\DOTween.XML" />
     <None Include="Assets\Demigiant\DOTween\DOTween.dll" />
+    <None Include="Assets\Resources\spineArt\effect\yanwudan\skeleton.atlas.txt" />
     <None Include="Assets\Resources\spineArt\block\green\green.atlas.txt" />
   </ItemGroup>
   <ItemGroup>
