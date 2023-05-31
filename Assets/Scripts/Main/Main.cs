@@ -110,24 +110,24 @@ public class Main : MonoBehaviour
             mainController._multiPlayer = _multiPlayer;
 
             MainManager.Ins._mainController = mainController;
-            if (_multiPlayer)
+            // if (_multiPlayer)
+            // {
+            _rivalGamerObj = Instantiate(Config._rivalGamerObj, parent) as GameObject;
+            _rivalGamerObj.name = "RivalGameArea";
+            var rivalController = _rivalGamerObj.GetComponent<RivalController>();
+            foreach (var item in _initMatrix)
             {
-                _rivalGamerObj = Instantiate(Config._rivalGamerObj, parent) as GameObject;
-                _rivalGamerObj.name = "RivalGameArea";
-                var rivalController = _rivalGamerObj.GetComponent<RivalController>();
-                foreach (var item in _initMatrix)
-                {
-                    var newItem = new SprotoType.block_info();
-                    newItem.row = item.row;
-                    newItem.col = item.col;
-                    newItem.type = item.type;
-                    rivalController._initMatrix.Add(newItem);
-                }
-                rivalController._boardType = CheckerboardType.emmy;
-                rivalController._multiPlayer = _multiPlayer;
-
-                MainManager.Ins._rivalController = rivalController;
+                var newItem = new SprotoType.block_info();
+                newItem.row = item.row;
+                newItem.col = item.col;
+                newItem.type = item.type;
+                rivalController._initMatrix.Add(newItem);
             }
+            rivalController._boardType = CheckerboardType.emmy;
+            rivalController._multiPlayer = _multiPlayer;
+
+            MainManager.Ins._rivalController = rivalController;
+            // }
 
             var timerParent = Config.gameObj.transform.Find("Timer");
             _timerObj = Instantiate(Config._timerObj, timerParent) as GameObject;
@@ -140,8 +140,24 @@ public class Main : MonoBehaviour
     {
         Util.PlayClickSound(_singleBtn.gameObject);
 
-        // _initMatrix = GenInitBlocks();
-        // _enterGame = true;
+        _initMatrix = GenInitBlocks();
+        _enterGame = true;
+
+        MainManager.Ins.Uid = "1";
+
+        List<SprotoType.player_info> players = new List<SprotoType.player_info>();
+        SprotoType.player_info player1 = new SprotoType.player_info();
+        player1.rid = "1";
+        player1.rname = "self";
+        player1.render = 1;
+        SprotoType.player_info player2 = new SprotoType.player_info();
+        player2.rid = "2";
+        player2.rname = "self";
+        player2.render = 2;
+        players.Add(player1);
+        players.Add(player2);
+
+        MainManager.Ins.players = players;
     }
 
     // 多人模式开始
@@ -225,7 +241,7 @@ public class Main : MonoBehaviour
 
     void OnOtherBtnClick()
     {
-        Debug.Log("OnLoginClick");
+        Debug.Log("OnOtherBtnClick");
         Util.PlayClickSound(_multiBtn.gameObject);
         if (_comingSoonObj == null)
         {
@@ -389,9 +405,9 @@ public class Main : MonoBehaviour
 
     private bool GenCheckRowType(BlockType[,] matrix, int opCol, BlockType newType)
     {
-        if (opCol < 2)
+        if (opCol > 3)
             return true;
-        if (matrix[0, opCol - 2] == matrix[0, opCol - 1] && matrix[0, opCol - 1] == newType)
+        if (matrix[0, opCol + 2] == matrix[0, opCol + 1] && matrix[0, opCol + 1] == newType)
         {
             return false;
         }
@@ -431,7 +447,7 @@ public class Main : MonoBehaviour
                     }
                 }
             }
-            for (int col = 0; col < Config.initCols; col++)
+            for (int col = Config.initCols - 1; col >= 0; col--)
             {
                 int newType = (int)BlockType.None;
                 if (initSymb[row] == null || initSymb[row][col] == 0) // 没有指定或者0标识则生成方块，非0不生成方块
@@ -447,7 +463,6 @@ public class Main : MonoBehaviour
                         newType = rand.Next((int)BlockType.B1, (int)BlockType.Count);
                     }
                 }
-
                 blockMatrix[0, col] = (BlockType)newType;
                 SprotoType.block_info item = new SprotoType.block_info
                 {
@@ -458,6 +473,7 @@ public class Main : MonoBehaviour
                 pack.Add(item);
             }
         }
+        pack.Reverse();
         return pack;
     }
 }

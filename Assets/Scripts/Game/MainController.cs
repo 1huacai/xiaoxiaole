@@ -265,7 +265,10 @@ public class MainController : GameController
     void OnUpBtnClick()
     {
         Util.PlayClickSound(_upBtn.gameObject);
+        if (_raiseOneRow || _suspendRaise > 0)
+            return;
 
+        Debug.Log(" -- OnUpBtnClick");
         if (IsMultiPlayer())
         {
             var req = new SprotoType.game_up_row.request();
@@ -278,6 +281,11 @@ public class MainController : GameController
                     _raiseOneRow = true;
                 }
             });
+        }
+        else
+        {
+            _raiseOneRow = true;
+            MainManager.Ins._rivalController._raiseOneRow = true;
         }
     }
 
@@ -305,18 +313,21 @@ public class MainController : GameController
         }
         Util.PlayClickSound(_setupBtn.gameObject);
 
-        var req = new SprotoType.game_use_skill.request();
-        req.skill_id = _minRoleData.skillId_1;
-        NetSender.Send<Protocol.game_use_skill>(req, (data) =>
+        if (IsMultiPlayer())
         {
-            var resp = data as SprotoType.game_use_skill.response;
-            Debug.LogFormat("{0} -- game_use_skill response: {1}", _boardType, resp.e);
-            if (resp.e == 0) { }
-            PlayAnima(_minRoleData.skillAnimaName_1);
-            PlayAnima("hurt", false);
-            _minRoleData.UseSkill1();
-            UpdateSkill1Cd();
-        });
+            var req = new SprotoType.game_use_skill.request();
+            req.skill_id = _minRoleData.skillId_1;
+            NetSender.Send<Protocol.game_use_skill>(req, (data) =>
+            {
+                var resp = data as SprotoType.game_use_skill.response;
+                Debug.LogFormat("{0} -- game_use_skill response: {1}", _boardType, resp.e);
+                if (resp.e == 0) { }
+            });
+        }
+        PlayAnima(_minRoleData.skillAnimaName_1);
+        PlayAnima("hurt", false);
+        _minRoleData.UseSkill1();
+        UpdateSkill1Cd();
     }
 
     void OnSkill2BtnClick()
@@ -328,28 +339,31 @@ public class MainController : GameController
         }
         Util.PlayClickSound(_setupBtn.gameObject);
 
-        var req = new SprotoType.game_use_skill.request();
-        req.skill_id = _minRoleData.skillId_2;
-        NetSender.Send<Protocol.game_use_skill>(req, (data) =>
+        if (IsMultiPlayer())
         {
-            var resp = data as SprotoType.game_use_skill.response;
-            Debug.LogFormat("{0} -- game_use_skill response: {1}", _boardType, resp.e);
-            if (resp.e == 0) { }
-            PlayAnima(_minRoleData.skillAnimaName_2);
-            PlayAnima("hurt", false);
-            _minRoleData.UseSkill2();
-            if (_minRoleData.side == 1)
+            var req = new SprotoType.game_use_skill.request();
+            req.skill_id = _minRoleData.skillId_2;
+            NetSender.Send<Protocol.game_use_skill>(req, (data) =>
             {
-                _emmyRoleData.ChangeHpValue(30);
-                UpdateEmmySlider();
-            }
-            UpdateSkill2Cd();
-            if (_minRoleData.side == 1)
-                ShowEmmeyEffect(SKillType.toushiche);
+                var resp = data as SprotoType.game_use_skill.response;
+                Debug.LogFormat("{0} -- game_use_skill response: {1}", _boardType, resp.e);
+                if (resp.e == 0) { }
+            });
+        }
+        PlayAnima(_minRoleData.skillAnimaName_2);
+        PlayAnima("hurt", false);
+        _minRoleData.UseSkill2();
+        if (_minRoleData.side == 1)
+        {
+            _emmyRoleData.ChangeHpValue(30);
+            UpdateEmmySlider();
+        }
+        UpdateSkill2Cd();
+        if (_minRoleData.side == 1)
+            ShowEmmeyEffect(SKillType.toushiche);
 
-            if (_minRoleData.side == 2)
-                ShowMinEffect(SKillType.huixue);
-        });
+        if (_minRoleData.side == 2)
+            ShowMinEffect(SKillType.huixue);
     }
 
     void DestroyComingSoonObj()
@@ -385,7 +399,6 @@ public class MainController : GameController
 
     void TouchTop()
     {
-        // Debug.Log(_boardType + " -- touch top hp:" + _minRoleData.Hp);
         if (_minRoleData.Hp > 0)
             return;
 
@@ -424,7 +437,6 @@ public class MainController : GameController
         PlayAnima(data.count == 3 ? "atk" : data.count == 4 ? "atk2" : "atk3", false);
         PlayAnima("hurt");
 
-        // if (data.count > 3 && _curRowCnt < Config.rows)
         if (data.count > 3)
         {
             GreatPressureBlock((int)data.count);
@@ -447,7 +459,7 @@ public class MainController : GameController
             MainManager.Ins.DragBlock = false;
             MainManager.Ins.DragTime = MainManager.Ins.Timer + 5;
         }
-        else if (value == 2 )//男
+        else if (value == 2)//男
         {
             _emmyRoleData.ChangeShieldTime = MainManager.Ins.Timer + 5;
         }
@@ -556,7 +568,7 @@ public class MainController : GameController
             _skill_Mask.gameObject.SetActive(true);
             _skill1Cd.gameObject.SetActive(true);
             _skill1Cd.text = string.Format("{0}", _minRoleData.Cd - MainManager.Ins.Timer);
-            _skill_Mask.fillAmount = 1 -  (float)(_minRoleData.Cd - MainManager.Ins.Timer) / 15;
+            _skill_Mask.fillAmount = 1 - (float)(_minRoleData.Cd - MainManager.Ins.Timer) / 15;
             _skill_MaskBg.fillAmount = (float)(_minRoleData.Cd - MainManager.Ins.Timer) / 15;
         }
         else
@@ -575,7 +587,7 @@ public class MainController : GameController
 
             _skil2_Mask.gameObject.SetActive(true);
             _skil2_Mask.fillAmount = _minRoleData.Skill_2_Value >= 30 ? 1 : (float)_minRoleData.Skill_2_Value / 30;
-            _skil2_MaskBg.fillAmount = _minRoleData.Skill_2_Value >= 30 ? 0 :  1 - (float)_minRoleData.Skill_2_Value / 30;
+            _skil2_MaskBg.fillAmount = _minRoleData.Skill_2_Value >= 30 ? 0 : 1 - (float)_minRoleData.Skill_2_Value / 30;
             _skilleffect.SetActive(false);
         }
         else
@@ -639,7 +651,7 @@ public class MainController : GameController
         if (MainManager.Ins.Timer < _emmyRoleData.ChangeShieldTime && _emmyRoleData.ChangeShieldTime != 0)
             MainManager.Ins._mainController.ShowEmmeyEffect(SKillType.dun);
 
-        if (MainManager.Ins.Timer - 6 > _minRoleData.hurtTimer && _minRoleData.hurtTimer != 0 )
+        if (MainManager.Ins.Timer - 6 > _minRoleData.hurtTimer && _minRoleData.hurtTimer != 0)
         {
             _minRoleData.ChangeShieldValue(MainManager.Ins.Timer < _minRoleData.ChangeShieldTime && _minRoleData.ChangeShieldTime != 0 ? 5 : 2);
             UpdateMinSlider();

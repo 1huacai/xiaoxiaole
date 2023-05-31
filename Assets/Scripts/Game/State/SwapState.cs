@@ -26,6 +26,18 @@ class SwapState : StateBase
         }
     }
 
+    void DoSwap(Block first, Block second)
+    {
+        Garbage garbage = _controller.GetGarbageInst();
+        garbage.Reset();
+        first._garbage = garbage;
+        first.ComboTrans = 1;
+        second._garbage = garbage;
+        second.ComboTrans = 1;
+
+        _controller.DoSwap(first, second);
+    }
+
     void SwapBlock()
     {
         var first = _controller._firstSelected;
@@ -53,14 +65,7 @@ class SwapState : StateBase
                 Debug.LogFormat("{0} -- swap_block response : {1}", _controller._boardType, resp.e);
                 if (resp.e == 0)
                 {
-                    Garbage garbage = _controller.GetGarbageInst();
-                    garbage.Reset();
-                    first._garbage = garbage;
-                    first.ComboTrans = 1;
-                    second._garbage = garbage;
-                    second.ComboTrans = 1;
-
-                    _controller.DoSwap(first, second);
+                    DoSwap(first, second);
                 }
                 else
                 {
@@ -68,6 +73,24 @@ class SwapState : StateBase
                     _controller.ChangeToState(GameBoardState.Idle);
                 }
             });
+        }
+        else
+        {
+            // 己方
+            DoSwap(first, second);
+
+            // 对手
+            var rival = MainManager.Ins._rivalController;
+            Block rival_first = rival._controller._blockMatrix[first.Row, first.Column];
+            Block rival_second = rival._controller._blockMatrix[second.Row, second.Column];
+            if (rival_second == null)
+            {
+                Block block = Block.CreateBlockObject(second.Row, second.Column, (int)second.Type, rival._controller._blockBoardObj.transform, rival._controller);
+                block.transform.localPosition = new Vector3(0, 0, -1);
+                rival._controller._blockMatrix[second.Row, second.Column] = block;
+                rival_second = block;
+            }
+            rival.DoSwap(rival_first, rival_second);
         }
     }
 }

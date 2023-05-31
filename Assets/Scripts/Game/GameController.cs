@@ -18,7 +18,7 @@ public class GameController : MonoBehaviour
     public Dictionary<GameBoardState, StateBase> _states;
     public GameBoardState _curGameBoardState = GameBoardState.Idle;
 
-    public static bool _gameInit = false;
+    public bool _gameInit = false;
     public static bool _gameReady = false;
     public static bool _gameStart = false;
     public static bool _gameOver = false;
@@ -38,6 +38,7 @@ public class GameController : MonoBehaviour
     public int _curSpeed = 0;
     public int _curRaiseTime;
     public bool _raiseOneRow = false;
+    public int _raiseStepCnt = 0;
     public bool _addNewRow = false;
     public int _suspendRaise = 0;
     public bool _alarmSet = false; // 危险警报
@@ -62,6 +63,8 @@ public class GameController : MonoBehaviour
 
     public void PrintMatrix()
     {
+        if (_gameInit)
+            return;
         string str = _boardType + "\n";
         for (int row = _curMaxRowCnt - 1; row >= 0; row--)
         {
@@ -215,37 +218,37 @@ public class GameController : MonoBehaviour
     public void RaiseOneRow()
     {
         _raiseOneRow = false;
+        if (_curMaxRowCnt >= Config.matrixRows)
+            return;
 
-        Transform _tran = _blockBoardObj.transform;
-        Transform _areaTran = _blockAreaObj.transform;
-        _suspendRaise = _suspendRaise + 1;
+        _suspendRaise++;
         var moveDis = (_totalRowCnt - Config.initRows + 1) * Config.blockHeight;
-        _tran.DOLocalMoveY(moveDis, 0.2f).OnComplete(() =>
+        _blockBoardObj.transform.DOLocalMoveY(moveDis, 0.2f).OnComplete(() =>
         {
-            _areaTran.DOLocalMoveY(_areaTran.localPosition.y - Config.blockHeight, 0);
+            Transform _areaTran = _blockAreaObj.transform;
+            _areaTran.localPosition = new Vector3(_areaTran.localPosition.x, _areaTran.localPosition.y - Config.blockHeight, 0);
             _addNewRow = true;
-            _suspendRaise = _suspendRaise - 1;
+            _suspendRaise--;
         });
 
-        Transform _pressureTrans = _pressureBoardObj.transform;
-        _pressureTrans.DOLocalMoveY(moveDis, 0.2f);
-        Transform _effectTrans = _effectObj.transform;
-        _effectTrans.DOLocalMoveY(moveDis, 0.2f);
+        _pressureBoardObj.transform.DOLocalMoveY(moveDis, 0.2f);
+        _effectObj.transform.DOLocalMoveY(moveDis, 0.2f);
     }
 
     public void RaiseOneStep()
     {
         Transform _tran = _blockBoardObj.transform;
-        Transform _areaTran = _blockAreaObj.transform;
-        _tran.DOLocalMoveY(_tran.localPosition.y + Config.raiseDis, 0);
+        _tran.localPosition = new Vector3(_tran.localPosition.x, _tran.localPosition.y + Config.raiseDis, 0);
         Transform _pressureTrans = _pressureBoardObj.transform;
-        _pressureTrans.DOLocalMoveY(_pressureTrans.localPosition.y + Config.raiseDis, 0);
+        _pressureTrans.localPosition = new Vector3(_pressureTrans.localPosition.x, _pressureTrans.localPosition.y + Config.raiseDis, 0);
         Transform _effectTrans = _effectObj.transform;
-        _effectTrans.DOLocalMoveY(_effectTrans.localPosition.y + Config.raiseDis, 0);
-
-        if (_tran.localPosition.y > (_totalRowCnt - Config.initRows + 1) * Config.blockHeight - 15)
+        _effectTrans.localPosition = new Vector3(_effectTrans.localPosition.x, _effectTrans.localPosition.y + Config.raiseDis, 0);
+        _raiseStepCnt++;
+        if (_raiseStepCnt >= Config.raiseSteps)
         {
-            _areaTran.DOLocalMoveY(_areaTran.localPosition.y - Config.blockHeight, 0);
+            _raiseStepCnt = 0;
+            Transform _areaTran = _blockAreaObj.transform;
+            _areaTran.localPosition = new Vector3(_areaTran.localPosition.x, _areaTran.localPosition.y - Config.blockHeight, 0);
             _addNewRow = true;
         }
         _delta = 0;
@@ -258,6 +261,7 @@ public class GameController : MonoBehaviour
         {
             _gameInit = false;
             _gameReady = true;
+            UpdateMaxCnt();
             return;
         }
 
@@ -271,7 +275,6 @@ public class GameController : MonoBehaviour
         if ((BlockType)type == BlockType.None)
             return;
 
-        // Debug.Log(_boardType + " -- init block["+row+","+col=+" - "+type+"] - count:"+_initMatrix.Count);
         var block = Block.CreateBlockObject(row, col, type, _blockBoardObj.transform, this);
         block.transform.localPosition = new Vector3(Config.XPosShift + col * Config.blockWidth, Config.YPosShift, 0);
         block.BlockOperationEvent += OnBlockOperation;
@@ -282,6 +285,7 @@ public class GameController : MonoBehaviour
         _blockMatrix[row, col] = block;
 
         _curRowCnt = row + 1;
+        _curMaxRowCnt = _curRowCnt;
         _totalRowCnt = row + 1;
     }
 
@@ -294,21 +298,25 @@ public class GameController : MonoBehaviour
             int yOffset = 0;
             if (_curMaxRowCnt > Config.matrixRows)
             {
-                initRow = _curMaxRowCnt + i;
-                yOffset = _curMaxRowCnt - Config.matrixRows + i;
+                initRow = _curMaxRowCnt;
+                yOffset = _curMaxRowCnt - Config.matrixRows;
             }
-            Debug.Log("-- create pressure _curMaxRowCnt:" + _curMaxRowCnt + " - initRow:" + initRow + " - yOffset:" + yOffset);
+            Debug.Log(_boardType + "-- create pressure _curMaxRowCnt:" + _curMaxRowCnt + " - initRow:" + initRow + " - yOffset:" + yOffset);
             var pressure = PressureBlock.CreatePressureObject(initRow, _pressureInfo[i].Key, _pressureBoardObj.transform, this);
             pressure.GetComponent<RectTransform>().sizeDelta = new Vector2(_pressureInfo[i].Key * Config.blockWidth, _pressureInfo[i].Value * Config.blockHeight - 15);
             float posx = Config.XPosShift - Config.blockWidth / 2;
             float posy = Config.YPosShift - (_totalRowCnt - Config.initRows - yOffset) * Config.blockHeight;
             pressure.transform.localPosition = new Vector3(posx, posy, 0);
             pressure.gameObject.name = "pressure + " + pressure.Row;
-            if (_curMaxRowCnt < Config.matrixRows)
-            {
-                pressure.NeedFall = true;
-                pressure.fallCnt = -1;
-            }
+            // if (_curMaxRowCnt < Config.matrixRows)
+            // {
+            //     pressure.NeedFall = true;
+            //     pressure.fallCnt = -1;
+            // }
+            // else
+            // {
+            pressure.IsMoved = true;
+            // }
             _PressureMatrix.Add(pressure);
             UpdateMaxCnt();
         }
@@ -500,28 +508,39 @@ public class GameController : MonoBehaviour
     public void AddNewRow(List<BlockData> newRow)
     {
         // 多人模式同步数据
-        if (_boardType == CheckerboardType.mine && IsMultiPlayer())
+        if (_boardType == CheckerboardType.mine)
         {
-            var req = new SprotoType.game_new_row.request();
-            req.matrix = new List<SprotoType.block_info>();
-            foreach (BlockData data in newRow)
+            if (IsMultiPlayer())
             {
-                req.matrix.Add(new SprotoType.block_info
+                var req = new SprotoType.game_new_row.request();
+                req.matrix = new List<SprotoType.block_info>();
+                foreach (BlockData data in newRow)
                 {
-                    row = data.row,
-                    col = data.col,
-                    type = (int)data.type,
+                    req.matrix.Add(new SprotoType.block_info
+                    {
+                        row = data.row,
+                        col = data.col,
+                        type = (int)data.type,
+                    });
+                }
+                NetSender.Send<Protocol.game_new_row>(req, (data) =>
+                {
+                    var resp = data as SprotoType.game_new_row.response;
+                    Debug.LogFormat("{0} -- new_row response : {1}", _boardType, resp.e);
+                    if (resp.e == 0)
+                    {
+                        DoAddNewRow(newRow);
+                    }
                 });
             }
-            NetSender.Send<Protocol.game_new_row>(req, (data) =>
+            else
             {
-                var resp = data as SprotoType.game_new_row.response;
-                Debug.LogFormat("{0} -- new_row response : {1}", _boardType, resp.e);
-                if (resp.e == 0)
-                {
-                    DoAddNewRow(newRow);
-                }
-            });
+                // 己方
+                DoAddNewRow(newRow);
+
+                // 对手
+                MainManager.Ins._rivalController.DoAddNewRow(newRow);
+            }
         }
         _addNewRow = false;
         _delta = 0;
@@ -689,13 +708,12 @@ public class GameController : MonoBehaviour
                 if (i > 0)
                 {
                     var underPress = _PressureMatrix[i - 1];
-                    if (underPress != null && underPress.Row == pressure.Row - 1 &&  _PressureMatrix[i - 1].fallCnt == 0)
+                    if (underPress != null && underPress.Row == pressure.Row - 1 && _PressureMatrix[i - 1].fallCnt == 0)
                         underFall = false;
                 }
                 if (underFall == false)
                     continue;
 
-                row++;
                 if (pressure.fallCnt == 0 && pressure.IsLocked == false)
                 {
                     Debug.Log(_boardType + " -- above pressure[" + pressure.Row + " - " + pressure.xNum + "] fall");
@@ -704,9 +722,9 @@ public class GameController : MonoBehaviour
                     logFlag = true;
 
                     // 处理压力块上的方块
+                    row = pressure.Row + 1;
                     if (row < Config.rows)
                     {
-                        bool needInc = false;
                         for (int idx = 0; idx < pressure.xNum; idx++)
                         {
                             above = _blockMatrix[row, idx];
@@ -724,11 +742,8 @@ public class GameController : MonoBehaviour
                                         above.ComboTrans = block.ComboTrans;
                                     }
                                 }
-                                needInc = true;
                             }
                         }
-                        if (needInc)
-                            row++;
                     }
                 }
             }
@@ -800,7 +815,7 @@ public class GameController : MonoBehaviour
                 }
                 if (underFall == false)
                     continue;
-                row++;
+
                 if (pressure.fallCnt == 0 && pressure.IsLocked == false)
                 {
                     Debug.Log(_boardType + " -- above pressure[" + pressure.Row + " - " + pressure.xNum + "] fall");
@@ -808,9 +823,9 @@ public class GameController : MonoBehaviour
                     pressure.fallCnt = -1;
 
                     // 处理压力块上的方块
+                    row = pressure.Row + 1;
                     if (row < Config.rows)
                     {
-                        bool needInc = false;
                         for (int idx = 0; idx < pressure.xNum; idx++)
                         {
                             above = _blockMatrix[row, idx];
@@ -828,11 +843,8 @@ public class GameController : MonoBehaviour
                                         above.ComboTrans = block.ComboTrans;
                                     }
                                 }
-                                needInc = true;
                             }
                         }
-                        if (needInc)
-                            row++;
                     }
                 }
             }
@@ -872,12 +884,9 @@ public class GameController : MonoBehaviour
                     garbage.EliminateCnt[trans] += 1;
                 else
                     garbage.EliminateCnt.Add(trans, 1);
-                // Debug.LogError(" -- garbage.EliminateCnt:" + garbage.EliminateCnt.Count);
 
                 if (garbage.Parent.ContainsKey(trans) == false)
                     garbage.Parent.Add(trans, block.transform);
-                // else
-                    // garbage.Parent[trans] = block.transform;
             }
             foreach (var matchedBlock in h_matchList)
             {
@@ -890,7 +899,6 @@ public class GameController : MonoBehaviour
                     matchedBlock.ComboTrans = trans;
 
                     garbage.EliminateCnt[trans] += 1;
-                    // Debug.LogError(" -- garbage.EliminateCnt:" + garbage.EliminateCnt.Count);
                 }
             }
         }
@@ -925,12 +933,9 @@ public class GameController : MonoBehaviour
                         garbage.EliminateCnt[trans] += 1;
                     else
                         garbage.EliminateCnt.Add(trans, 1);
-                    // Debug.LogError(" -- garbage.EliminateCnt:" + garbage.EliminateCnt.Count);
 
                     if (garbage.Parent.ContainsKey(trans) == false)
                         garbage.Parent.Add(trans, block.transform);
-                    // else
-                        // garbage.Parent[trans] = block.transform;
                 }
             }
             foreach (var matchedBlock in v_matchList)
@@ -944,13 +949,12 @@ public class GameController : MonoBehaviour
                     matchedBlock.ComboTrans = trans;
 
                     garbage.EliminateCnt[trans] += 1;
-                    // Debug.LogError(" -- garbage.EliminateCnt:" + garbage.EliminateCnt.Count);
                 }
             }
         }
         if (garbage != null && (!garbage.EliminateCnt.ContainsKey(trans) || garbage.EliminateCnt[trans] < 3))
         {
-            Debug.Log(" -- block[" + block.Row + "," + block.Column + " - " + block.Type + "] garbage(" + garbage.ID + ") set null");
+            Debug.Log(_boardType + " -- block[" + block.Row + "," + block.Column + " - " + block.Type + "] garbage(" + garbage.ID + ") set null");
             block._garbage = null;
         }
     }
@@ -1032,10 +1036,52 @@ public class GameController : MonoBehaviour
     public void PressureTagged(PressureBlock pressure)
     {
         Debug.Log(_boardType + " -- pressure[" + pressure.Row + " - " + pressure.xNum + "] tag proc");
-        if (_boardType == CheckerboardType.mine && IsMultiPlayer())
+        if (_boardType == CheckerboardType.mine)
         {
             var newBlocks = SpawnBlock(pressure.xNum, pressure.Row, 0);
-            SendNet(newBlocks, pressure);
+            var req = new SprotoType.createBlock.request();
+            req.matrix = new List<SprotoType.block_info>();
+            foreach (BlockData data in newBlocks)
+            {
+                req.matrix.Add(new SprotoType.block_info
+                {
+                    row = data.row,
+                    col = data.col,
+                    type = (int)data.type,
+                });
+            }
+            if (IsMultiPlayer())
+            {
+                NetSender.Send<Protocol.createBlock>(req, (data) =>
+                {
+                    var resp = data as SprotoType.createBlock.response;
+                    Debug.LogFormat("{0} -- new_row response : {1}", _boardType, resp.e);
+                    if (resp.e == 0)
+                    {
+                        pressure.PlayUnlockAnim();
+                        Debug.Log(_boardType + " -- createBlock response pressure[" + pressure.Row + " - " + pressure.xNum + "]");
+                        AddNewBlock(newBlocks, pressure);
+                    }
+                });
+            }
+            else
+            {
+                // 自己
+                pressure.PlayUnlockAnim();
+                AddNewBlock(newBlocks, pressure);
+
+                // 对手
+                var rival = MainManager.Ins._rivalController;
+                foreach (PressureBlock item in rival._PressureMatrix)
+                {
+                    if (item.Row == pressure.Row)
+                    {
+                        item.PlayUnlockAnim();
+                        rival.AddNewBlock(newBlocks, item);
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -1052,7 +1098,6 @@ public class GameController : MonoBehaviour
                 type = (int)data.type,
             });
         }
-        Debug.Log(_boardType + " -- send createBlock pressure[" + pressure.Row + " - " + pressure.xNum + "]");
         NetSender.Send<Protocol.createBlock>(req, (data) =>
         {
             var resp = data as SprotoType.createBlock.response;
@@ -1068,8 +1113,6 @@ public class GameController : MonoBehaviour
 
     public void UpdateBlockArea()
     {
-        // if (_boardType == CheckerboardType.mine)
-        //     Debug.Log("==========  update");
         Dictionary<Garbage, int> showGarbage = new Dictionary<Garbage, int>();
 
         // 方块
@@ -1106,38 +1149,57 @@ public class GameController : MonoBehaviour
                 continue;
 
             int cnt = garbage.EliminateCnt[trans];
-            // Debug.Log(" -- garbage:" + garbage.ID + " - trans:" + trans + " - cnt:" + cnt);
+            // Debug.Log(_boardType + " -- garbage:" + garbage.ID + " - trans:" + trans + " - cnt:" + cnt);
             // Combo
             if (cnt > 3 && !garbage.ComboShowed.Contains(trans))
             {
                 garbage.ComboShowed.Add(trans);
-                if (_boardType == CheckerboardType.mine && IsMultiPlayer())
+                if (_boardType == CheckerboardType.mine)
                 {
-                    var req = new SprotoType.eliminate.request();
-                    req.count = cnt;
-                    Debug.Log(_boardType + " -- send eliminate count: " + cnt);
-                    NetSender.Send<Protocol.eliminate>(req, (data) =>
+                    if (IsMultiPlayer())
                     {
-                        var resp = data as SprotoType.eliminate.response;
-                        Debug.LogFormat("{0} -- eliminate response: {1}", _boardType, resp.e);
-                        if (resp.e == 0)
+                        var req = new SprotoType.eliminate.request();
+                        req.count = cnt;
+                        Debug.Log(_boardType + " -- send eliminate count: " + cnt);
+                        NetSender.Send<Protocol.eliminate>(req, (data) =>
                         {
-                            Debug.Log(" -- show combo - garbage:" + garbage.ID + " - trans:" + trans);
-                            // 己方显示combo
-                            GameObject obj = GameObject.Instantiate(Config._comboObj, _effectObj.transform) as GameObject;
-                            Vector3 relative = garbage.Parent[trans].localPosition;
-                            obj.transform.localPosition = new Vector3(relative.x, relative.y, 0);
-                            Combo comb = obj.gameObject.GetComponent<Combo>();
-                            comb.Show(cnt, this);
+                            var resp = data as SprotoType.eliminate.response;
+                            Debug.LogFormat("{0} -- eliminate response: {1}", _boardType, resp.e);
+                            if (resp.e == 0)
+                            {
+                                Debug.Log("_boardType +  -- show combo - garbage:" + garbage.ID + " - trans:" + trans);
+                                // 己方显示combo
+                                GameObject obj = GameObject.Instantiate(Config._comboObj, _effectObj.transform) as GameObject;
+                                Vector3 relative = garbage.Parent[trans].localPosition;
+                                obj.transform.localPosition = new Vector3(relative.x, relative.y, 0);
+                                Combo comb = obj.gameObject.GetComponent<Combo>();
+                                comb.Show(cnt, this);
 
-                            // 对手生成压力块
-                            MainManager.Ins._rivalController.GreatPressureBlock(cnt);
-                        }
-                        else
-                        {
-                            Debug.LogError(_boardType + " -- eliminate response failed!");
-                        }
-                    });
+                                // 对手生成压力块
+                                MainManager.Ins._rivalController.GreatPressureBlock(cnt);
+                            }
+                            else
+                            {
+                                Debug.LogError(_boardType + " -- eliminate response failed!");
+                            }
+                        });
+                    }
+                    else
+                    {
+                        Debug.Log(_boardType + " -- show combo - garbage:" + garbage.ID + " - trans:" + trans);
+                        // 己方显示combo
+                        GameObject obj = GameObject.Instantiate(Config._comboObj, _effectObj.transform) as GameObject;
+                        Vector3 relative = garbage.Parent[trans].localPosition;
+                        obj.transform.localPosition = new Vector3(relative.x, relative.y, 0);
+                        Combo comb = obj.gameObject.GetComponent<Combo>();
+                        comb.Show(cnt, this);
+
+                        // 自己生成压力块
+                        GreatPressureBlock(cnt);
+
+                        // 对手生成压力块
+                        MainManager.Ins._rivalController.GreatPressureBlock(cnt);
+                    }
                 }
             }
             //Chain
@@ -1147,7 +1209,7 @@ public class GameController : MonoBehaviour
                 garbage.ChainCnt += 1;
                 if (garbage.ChainCnt >= 2)
                 {
-                    Debug.Log(" -- show chain - garbage:" + garbage.ID + " - trans:" + trans);
+                    Debug.Log(_boardType + " -- show chain - garbage:" + garbage.ID + " - trans:" + trans);
                     GameObject obj = GameObject.Instantiate(Config._chainObj, _effectObj.transform) as GameObject;
                     Vector3 relative = garbage.Parent[trans].localPosition;
                     obj.transform.localPosition = new Vector3(relative.x, relative.y, 0);

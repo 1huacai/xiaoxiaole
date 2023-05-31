@@ -84,7 +84,6 @@ class SelectionState : StateBase
                     {
                         if (selectedBlock != null && selectedBlock.Type != BlockType.None)
                         {
-                            // Debug.Log(_controller._boardType + " -- selected block[" + row + "," + column + "]");
                             first.IsSelected = false;
                             _controller._firstSelected = selectedBlock;
                             _controller._firstSelected.IsSelected = true;

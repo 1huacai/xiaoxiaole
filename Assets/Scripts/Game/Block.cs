@@ -183,8 +183,8 @@ public class Block : MonoBehaviour
 
     public enum BlockEffectType
     {
-        red= 1,
-        green =2,
+        red = 1,
+        green = 2,
         blue = 3,
         yellow = 4,
         purple = 5,
@@ -200,7 +200,7 @@ public class Block : MonoBehaviour
         var effectData = Resources.Load<SkeletonDataAsset>(path);
         Material minmaterial = new Material(Shader.Find("Spine/SkeletonGraphic"));
         SkeletonGraphic effect = SkeletonGraphic.NewSkeletonGraphicGameObject(effectData, this.transform, minmaterial);
-        effect.transform.localPosition =new Vector3(effect.transform.localPosition.x, effect.transform.localPosition.y - 70, effect.transform.localPosition.z);
+        effect.transform.localPosition = new Vector3(effect.transform.localPosition.x, effect.transform.localPosition.y - 70, effect.transform.localPosition.z);
 
         effect.skeletonDataAsset = effectData;
         effect.initialSkinName = "default";
@@ -225,7 +225,7 @@ public class Block : MonoBehaviour
         SkeletonGraphic effect = SkeletonGraphic.NewSkeletonGraphicGameObject(effectData, this.transform, minmaterial);
         //effect.transform.localPosition = new Vector3(effect.transform.localPosition.x, effect.transform.localPosition.y - 70, effect.transform.localPosition.z);
         effect.transform.localScale = new Vector3(3, 3, 3);
-        
+
         effect.skeletonDataAsset = effectData;
         effect.initialSkinName = "default";
         effect.startingAnimation = "animation";
@@ -321,7 +321,7 @@ public class Block : MonoBehaviour
                 Debug.Log(_controller._boardType + " -- block[" + Row + "," + Column + " - " + Type + "] Tagged");
                 _state |= 1 << (int)BlockState.Tagged;
                 IsLocked = true;
-                _controller._suspendRaise = _controller._suspendRaise + 1;
+                _controller._suspendRaise++;
                 if (_controller._firstSelected == this)
                     _controller.ChangeToState(GameBoardState.Idle);
             }
@@ -402,7 +402,7 @@ public class Block : MonoBehaviour
     {
         _type = BlockType.None;
         _image.sprite = Config._sprites[(int)_type];
-        _controller._suspendRaise = _controller._suspendRaise - 1;
+        _controller._suspendRaise--;
         _controller.BlockMoved(this);
     }
 
@@ -444,7 +444,6 @@ public class Block : MonoBehaviour
         block.Column = col;
         block.gameObject.name = row + " + " + col;
         block._controller = ctrl;
-        // Debug.Log(ctrl._boardType + " -- new block["+Row+","+Column+" - "+Type+"]");
         return block;
     }
 
