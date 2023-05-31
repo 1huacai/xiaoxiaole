@@ -38,7 +38,6 @@ public class GameController : MonoBehaviour
     public int _curSpeed = 0;
     public int _curRaiseTime;
     public bool _raiseOneRow = false;
-    public int _raiseStepCnt = 0;
     public bool _addNewRow = false;
     public int _suspendRaise = 0;
     public bool _alarmSet = false; // 危险警报
@@ -243,10 +242,8 @@ public class GameController : MonoBehaviour
         _pressureTrans.localPosition = new Vector3(_pressureTrans.localPosition.x, _pressureTrans.localPosition.y + Config.raiseDis, 0);
         Transform _effectTrans = _effectObj.transform;
         _effectTrans.localPosition = new Vector3(_effectTrans.localPosition.x, _effectTrans.localPosition.y + Config.raiseDis, 0);
-        _raiseStepCnt++;
-        if (_raiseStepCnt >= Config.raiseSteps)
+        if (_tran.localPosition.y > (_totalRowCnt - Config.initRows + 1) * Config.blockHeight - 11)
         {
-            _raiseStepCnt = 0;
             Transform _areaTran = _blockAreaObj.transform;
             _areaTran.localPosition = new Vector3(_areaTran.localPosition.x, _areaTran.localPosition.y - Config.blockHeight, 0);
             _addNewRow = true;
@@ -957,6 +954,9 @@ public class GameController : MonoBehaviour
             Debug.Log(_boardType + " -- block[" + block.Row + "," + block.Column + " - " + block.Type + "] garbage(" + garbage.ID + ") set null");
             block._garbage = null;
         }
+
+        if (_firstSelected == block && block.IsTagged == false)
+            _controller.ChangeToState(GameBoardState.Selection);
     }
 
     // 压力块移动结束处理逻辑
@@ -980,13 +980,17 @@ public class GameController : MonoBehaviour
             return;
 
         // 判断下方的方块
-        for (int j = 0; j < pressure.xNum; j++)
+        if (pressure.Row <= Config.matrixRows)
         {
-            var item = _blockMatrix[pressure.Row - 1, j];
-            if (item != null && item.Type != BlockType.None && item.fallCnt == 0)
+            for (int j = 0; j < pressure.xNum; j++)
             {
-                underFall = false;
-                break;
+
+                var item = _blockMatrix[pressure.Row - 1, j];
+                if (item != null && item.Type != BlockType.None && item.fallCnt == 0)
+                {
+                    underFall = false;
+                    break;
+                }
             }
         }
         if (underFall == false)

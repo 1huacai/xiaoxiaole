@@ -181,8 +181,8 @@ public class Config : ScriptableObject
 
     public const float XPosShift = -315.0f; // 方块位置x坐标偏移值
     public const float YPosShift = 756.0f; // 方块位置y坐标偏移值
-    public const int raiseSteps = 11; // 上升一行需要的步数
-    public const float raiseDis = blockHeight / raiseSteps; // 每次上升的距离
+    public const int raiseSteps = 10; // 上升一行需要的步数
+    public const float raiseDis = 12.6f; // blockHeight / raiseSteps; // 每次上升的距离
     public const float moveDuration = 0.075f; // 方块滑动移动时间
     public const float fallDuration = 0.075f; // 方块下落移动时间
 

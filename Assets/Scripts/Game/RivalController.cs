@@ -29,7 +29,6 @@ public class RivalController : GameController
             return;
 
         cntInit++;
-        _delta += Time.deltaTime;
 
         if (cntInit % 50 == 0)
         {
@@ -53,6 +52,7 @@ public class RivalController : GameController
         if (!_gameStart)
             return;
 
+        _delta += Time.deltaTime;
         UpdateState();
 
         if (_curRowCnt > Config.rows || _curMaxRowCnt > Config.rows)

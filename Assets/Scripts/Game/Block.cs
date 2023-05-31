@@ -298,8 +298,6 @@ public class Block : MonoBehaviour
             {
                 Debug.Log(_controller._boardType + " -- block[" + Row + "," + Column + " - " + Type + "] Moved");
                 _state |= 1 << (int)BlockState.Moved;
-                if (_controller._firstSelected == this)
-                    _controller.ChangeToState(GameBoardState.Selection);
             }
             else
                 _state &= ~(1 << (int)BlockState.Moved);
