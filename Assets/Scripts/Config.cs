@@ -12,7 +12,7 @@ public enum GameStatus { Ready, Start, Alarm, Over };
 public class Config : ScriptableObject
 {
     //
-    public const string serverIP = "124.221.89.86";
+    public const string serverIP = "101.201.116.189";
     public const int serverPort = 23001;
 
     //Root
